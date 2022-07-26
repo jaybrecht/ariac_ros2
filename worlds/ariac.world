@@ -1,0 +1,324 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="world">
+    <!-- Set the initial camera pose to be looking at the workspace. -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <!-- pretty overview shot-->
+        <pose frame=''>6.72633 4.82882 7.2056 0 0.485796 -2.71512</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+    <light name='user_spot_light_0' type='spot'>
+      <pose frame=''>-12.409511 -2.985986 4.049673 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0 0 -1</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0.6</inner_angle>
+        <outer_angle>1</outer_angle>
+        <falloff>1</falloff>
+      </spot>
+    </light>
+        <light name='user_spot_light_1' type='spot'>
+      <pose frame=''>-12.409511 2.985986 4.049673 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0 0 -1</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0.6</inner_angle>
+        <outer_angle>1</outer_angle>
+        <falloff>1</falloff>
+      </spot>
+    </light>
+    <light name='user_spot_light_2' type='spot'>
+      <pose frame=''>-7.530130 -2.985986 4.049673 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0 0 -1</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0.6</inner_angle>
+        <outer_angle>1</outer_angle>
+        <falloff>1</falloff>
+      </spot>
+    </light>
+    <light name='user_spot_light_3' type='spot'>
+      <pose frame=''>-7.530130 2.985986 4.049673 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0 0 -1</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0.6</inner_angle>
+        <outer_angle>1</outer_angle>
+        <falloff>1</falloff>
+      </spot>
+    </light>
+      <!-- A global light source -->
+      <light type="directional" name="sun">
+        <cast_shadows>true</cast_shadows>
+        <pose>0 0 10 0 0 0</pose>
+        <diffuse>0.8 0.8 0.8 1</diffuse>
+        <specular>0.2 0.2 0.2 1</specular>
+        <attenuation>
+          <range>1000</range>
+          <constant>0.9</constant>
+          <linear>0.01</linear>
+          <quadratic>0.001</quadratic>
+        </attenuation>
+        <direction>-0.5 0.1 -0.9</direction>
+      </light>
+      <!-- A directed light source -->
+      <light name="camera_spot_light" type='spot'>
+        <pose>14 -3.0 3.0 -1.55 0.0 -1.62</pose>
+        <diffuse>0.5 0.5 0.5 1</diffuse>
+        <specular>0.1 0.1 0.1 1</specular>
+        <direction>0 0 -1</direction>
+        <attenuation>
+          <range>50</range>
+          <constant>0.5</constant>
+          <linear>0.01</linear>
+          <quadratic>0.001</quadratic>
+        </attenuation>
+        <cast_shadows>0</cast_shadows>
+        <spot>
+          <inner_angle>0.6</inner_angle>
+          <outer_angle>1</outer_angle>
+          <falloff>1</falloff>
+        </spot>
+      </light>
+      <!-- A directed light source -->
+      <light name="camera_spot_light_1" type='point'>
+        <pose>-7 0 3.0 0 0.0 0</pose>
+        <diffuse>127 127 127 255</diffuse>
+        <specular>25 25 25 255</specular>
+        <attenuation>
+          <range>20</range>
+          <constant>0.5</constant>
+          <linear>0.01</linear>
+          <quadratic>0.001</quadratic>
+        </attenuation>
+        <cast_shadows>0</cast_shadows>
+        <spot>
+          <inner_angle>0.6</inner_angle>
+          <outer_angle>1</outer_angle>
+          <falloff>1</falloff>
+        </spot>
+      </light>
+
+      <!-- Models for aesthetics -->
+      <model name="CageFactory1">
+        <include>
+          <static>true</static>
+          <uri>model://cage_factory</uri>
+        </include>
+        <pose frame=''>-17.6 -0.5 0. 0 0 0</pose>
+      </model>
+      <model name="CageFactory2">
+        <include>
+          <static>true</static>
+          <uri>model://cage_factory</uri>
+        </include>
+        <pose frame=''>-17.6 4.8 0. 0 0 0</pose>
+      </model>
+      <model name="CageFactory3">
+        <include>
+          <static>true</static>
+          <uri>model://cage_factory</uri>
+        </include>
+        <pose frame=''>-17.0 -2.03 2.6 0 0 3.1415</pose>
+      </model>
+      <model name="FactoryShelf1">
+        <include>
+          <static>true</static>
+          <uri>model://factory_shelf</uri>
+        </include>
+        <pose frame=''>-2.357211 -10.597721 0.015890 0 0 -1.570048</pose>
+      </model>
+      <model name="FactoryShelf2">
+        <include>
+          <static>true</static>
+          <uri>model://factory_shelf</uri>
+        </include>
+        <pose frame=''>-4.714521 -9.957084 0.015890 0 0 1.570048</pose>
+      </model>
+      <model name="FactoryShelf3">
+        <include>
+          <static>true</static>
+          <uri>model://factory_shelf</uri>
+        </include>
+        <pose frame=''>-7.073606 -9.989021 0.015890 0 0 1.570048</pose>
+      </model>
+      <model name="FactoryShelf4">
+        <include>
+          <static>true</static>
+          <uri>model://factory_shelf</uri>
+        </include>
+        <pose frame=''>-9.429011 -9.995264 0.015890 0 0 1.570048</pose>
+      </model>
+      <model name="FactoryShelf5">
+        <include>
+          <static>true</static>
+          <uri>model://factory_shelf</uri>
+        </include>
+        <pose frame=''>-11.89 -10.748168   0.015890 0 0 -1.570048</pose>
+      </model>
+      <model name="FactoryShelf6">
+        <include>
+          <static>true</static>
+          <uri>model://factory_shelf</uri>
+        </include>
+        <pose frame=''>-14.137 -10.188283 0.015890 0 0 1.570048</pose>
+      </model>
+      <model name="Computer1">
+        <include>
+          <static>true</static>
+          <uri>model://computer_2</uri>
+        </include>
+        <pose frame=''>1.885278 4.035417 0.0 0 0 1.557780</pose>
+      </model>  
+      <model name="Computer2">
+        <include>
+          <static>true</static>
+          <uri>model://computer</uri>
+        </include>
+        <pose frame=''>1.691086 3.033527  0.0 0 0 0</pose>
+      </model>
+      <!-- <model name="BoxPallet2">
+        <include>
+          <static>true</static>
+          <uri>model://box_pallets_2</uri>
+        </include>
+          <pose frame=''>-18.33 -6.65 0.01589 0 0 -0.094651</pose>
+      </model>   -->
+      <!-- <model name="BoxPallet3">
+        <include>
+          <static>true</static>
+          <uri>model://box_pallets_2</uri>
+        </include>
+        <pose frame=''>0.2729 -6.247 0.01589 0 0 -0.094651</pose>
+      </model>   -->
+      <!-- <model name="BoxPallet4">
+        <include>
+          <static>true</static>
+          <uri>model://box_pallets</uri>
+        </include>
+        <pose frame=''>2.955 -4.343 0.01589 0 0 -1.570881</pose>
+      </model>                -->
+      <!-- <model name="BoxPallet5">
+        <include>
+          <static>true</static>
+          <uri>model://box_pallets_3</uri>
+        </include>
+        <pose frame=''>-15.87 -8.663 0.01589 0 0 -0.065512</pose>
+      </model>    -->
+      <model name="BoxPallet6">
+        <include>
+          <static>true</static>
+          <uri>model://box_pallets_3</uri>
+        </include>
+        <pose frame=''>0.5554 -7.468 0.01589 0 0 -0.065512</pose>
+      </model>   
+            <model name="PartCollector">
+        <include>
+          <static>true</static>
+          <uri>model://trash_bin_blue</uri>
+        </include>
+        <pose frame=''>-2.186829 0 -0.054593 0 0 0</pose>
+      </model>   
+
+        <model name="ConveyorCollector">
+        <include>
+          <static>true</static>
+          <uri>model://trash_bin_blue</uri>
+        </include>
+        <pose frame=''>-0.577 -4.719131 0 0 0 0</pose>
+      </model>   
+
+      <model name="ConveyorCollector2">
+        <include>
+          <static>true</static>
+          <uri>model://trash_bin_blue</uri>
+        </include>
+        <pose frame=''>-0.577 4.719131 0 0 0 0</pose>
+      </model>  
+
+      <model name="workcell_floor_2021">
+        <include>
+          <static>true</static>
+          <uri>model://workcell_floor_2021</uri>
+        </include>
+        <pose frame=''>-3.6 -3.32 0 0 0 0</pose>
+      </model>
+
+    <include>
+      <name>agv_path_1</name>
+      <uri>model://agv_path</uri>
+      <pose>-8.55 4.707484 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>agv_path_2</name>
+      <uri>model://agv_path</uri>
+      <pose>-8.55 1.302086 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>agv_path_3</name>
+      <uri>model://agv_path</uri>
+      <pose>-8.55 -1.295472 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>agv_path_4</name>
+      <uri>model://agv_path</uri>
+      <pose>-8.55 -4.696062 0 0 0 0</pose>
+    </include>
+      <!-- <model name="Forklift1">
+        <include>
+          <static>true</static>
+          <uri>model://factory_forklift_1</uri>
+        </include>
+        <pose frame=''>-18.923 -8.427 0.01589 0 0 1.570048</pose>
+      </model>   
+      <model name="Forklift2">
+        <include>
+          <static>true</static>
+          <uri>model://factory_forklift_1</uri>
+        </include>
+        <pose frame=''>-18.837 -6.4 0 0 0 1.570048</pose>
+      </model>
+      <model name="BoxPallet1">
+        <include>
+          <static>true</static>
+          <uri>model://box_pallets_2</uri>
+        </include>
+        <pose frame=''>5.018821 10.611216 0.01589 0 0 -0.094651</pose>
+      </model>
+  </world>
+</sdf>
