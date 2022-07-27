@@ -16,8 +16,14 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 
+find_package(gazebo_ros REQUIRED)
+find_package(gazebo_plugins REQUIRED)
+
 # Include Cpp "include" directory
-include_directories(include)
+include_directories(
+  include/ariac_ros2
+  ${GAZEBO_INCLUDE_DIRS}
+)
 
 # Create Cpp executable
 add_executable(cpp_executable src/cpp_node.cpp)
@@ -36,6 +42,31 @@ install(DIRECTORY
   worlds
   DESTINATION share/${PROJECT_NAME}
 )
+
+# Plugins
+set(side_contact_plugin_name SideContactPlugin)
+add_library(${side_contact_plugin_name} src/SideContactPlugin.cc)
+target_link_libraries(${side_contact_plugin_name}
+  ${GAZEBO_LIBRARIES}
+)
+install(TARGETS ${side_contact_plugin_name}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+set(object_disposal_plugin_name ObjectDisposalPlugin)
+add_library(${object_disposal_plugin_name} src/ObjectDisposalPlugin.cc)
+target_link_libraries(${object_disposal_plugin_name}
+  ${GAZEBO_LIBRARIES}
+  ${side_contact_plugin_name}
+)
+install(TARGETS ${object_disposal_plugin_name}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 
 # Install Python modules
 ament_python_install_package(${PROJECT_NAME})

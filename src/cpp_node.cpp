@@ -1,4 +1,4 @@
-#include "ariac_ros2/cpp_header.hpp"
+#include "cpp_header.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char **argv)
