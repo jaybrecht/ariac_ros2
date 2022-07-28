@@ -23,7 +23,9 @@ def launch_setup(context, *args, **kwargs):
     # Set the path to the SDF model files.
     gazebo_models_path = os.path.join(pkg_share, 'models')
     os.environ["GAZEBO_MODEL_PATH"] = gazebo_models_path
-
+    
+    gazebo_plugin_path = os.path.join(pkg_share)
+    os.environ["GAZEBO_PLUGIN_PATH"] = gazebo_plugin_path
 
     # General arguments
     launch_rviz = LaunchConfiguration("launch_rviz")
