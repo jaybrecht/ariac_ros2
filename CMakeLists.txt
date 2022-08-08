@@ -40,6 +40,8 @@ install(DIRECTORY
   launch
   models
   worlds
+  config
+  robots
   DESTINATION share/${PROJECT_NAME}
 )
 
