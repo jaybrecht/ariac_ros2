@@ -1,367 +1,57 @@
 <?xml version="1.0" ?>
 
 <robot name="gantry" xmlns:xacro="http://ros.org/wiki/xacro">  
-  <!-- Rail Properties -->
-  <xacro:property name="long_rail_length" value="15.0" />
-  <xacro:property name="long_rail_width" value="0.2" />
-  <xacro:property name="long_rail_offset" value="-5" />
-  <xacro:property name="small_rail_length" value="15.0" />
-  <xacro:property name="small_rail_width" value="0.2" />
-  <xacro:property name="rail_height" value="2.9" />
-  <xacro:property name="rail_thickness" value="0.1" />
-  <xacro:property name="torso_height" value="-2.3" />
-
-  <xacro:property name="gantry_arm" value="gantry_arm_" />
-
-  <link name="world" />
-
-  <!--Information on the rails-->
-  <link name='long_rail_1'>
-    <collision>
-      <origin xyz="${-small_rail_length / 2 + long_rail_width / 2} ${long_rail_offset} ${rail_height}" rpy="0 0 0"/>
-      <geometry>
-        <box size="${long_rail_width} ${long_rail_length} ${rail_thickness}"/>
-      </geometry>
-    </collision>
-    <visual>
-      <origin xyz="${-small_rail_length / 2 + long_rail_width / 2} ${long_rail_offset} ${rail_height}" rpy="0 0 0"/>
-      <geometry>
-        <box size="${long_rail_width} ${long_rail_length} ${rail_thickness}"/>
-      </geometry>
-    </visual>
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia
-          ixx="1" ixy="0.0" ixz="0.0"
-          iyy="1" iyz="0.0"
-          izz="1"/>
-    </inertial>
-  </link>
-
-  <gazebo reference="long_rail_1">
-    <material>Gazebo/DarkGrey</material>
-  </gazebo>
-
-  <joint name="rail_1_world" type="fixed">
-    <parent link="world"/>
-    <child link="long_rail_1"/>
-    <origin xyz="-2.0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
-  </joint>
-
-  <!-- Link long_rail_2 -->
-  <link name='long_rail_2'>
-    <collision>
-      <origin xyz="${small_rail_length / 2 - long_rail_width / 2} ${long_rail_offset} ${rail_height}" rpy="0 0 0"/>
-      <geometry>
-        <box size="${long_rail_width} ${long_rail_length} ${rail_thickness}"/>
-      </geometry>
-    </collision>
-    <visual>
-      <origin xyz="${small_rail_length / 2 - long_rail_width / 2} ${long_rail_offset} ${rail_height}" rpy="0 0 0"/>
-      <geometry>
-        <box size="${long_rail_width} ${long_rail_length} ${rail_thickness}"/>
-      </geometry>
-    </visual>
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia
-          ixx="1" ixy="0.0" ixz="0.0"
-          iyy="1" iyz="0.0"
-          izz="1"/>
-    </inertial>
-  </link>
-    
-  <gazebo reference="long_rail_2">
-    <material>Gazebo/DarkGrey</material>
-  </gazebo>
-
-  <joint name="rail_2_rail_1" type="fixed">
-    <parent link="long_rail_1"/>
-    <child link="long_rail_2"/>
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-  </joint>
-
-  <link name='small_rail'>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="${small_rail_width} ${small_rail_length} ${rail_thickness}"/>
-      </geometry>
-    </collision>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="${small_rail_width} ${small_rail_length} ${rail_thickness}"/>
-      </geometry>
-    </visual>
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia
-          ixx=".1" ixy="0.0" ixz="0.0"
-          iyy="1" iyz="0.0"
-          izz=".1"/>
-    </inertial>
-  </link>
-    
-  <gazebo reference="small_rail">
-    <material>Gazebo/GreyTransparent</material>
-  </gazebo>
-
-  <joint name="small_long_joint" type="prismatic">
-    <parent link="long_rail_2"/>
-    <child link="small_rail"/>
-    <origin xyz="0.0 0.0 ${rail_height + rail_thickness}" rpy="0.0 0.0 ${pi/2}"/>
-    <axis xyz="1 0 0"/>
-    <limit lower="${-long_rail_length / 2 + long_rail_offset + small_rail_width / 2}"
-	      upper="${long_rail_length / 2 + long_rail_offset - small_rail_width / 2}"
-        velocity="1"
-        effort="100000"/>
-  </joint>
+  <!-- Include gantry macro -->
+  <xacro:include filename="$(find ariac_ros2)/robots/gantry_description/urdf/gantry_macro.xacro"/>
   
-  <link name="torso_base">
-    <visual>
-      <geometry>
-        <mesh filename="package://ariac_ros2/robots/gantry_description/meshes/torso_base.dae" scale="2 2 2"/>
-      </geometry>
-    </visual>
-    <collision>
-      <geometry>
-        <mesh filename="package://ariac_ros2/robots/gantry_description/meshes/torso_base.dae" scale="2 2 2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia
-          ixx=".1" ixy="0.0" ixz="0.0"
-          iyy="1" iyz="0.0"
-          izz=".1"/>
-    </inertial>
-  </link>
-
-  <gazebo reference="torso_base">
-    <material>Gazebo/FlatBlack</material>
-    <selfCollide>1</selfCollide>
-  </gazebo>
-
-  <joint name="torso_rail_joint" type="prismatic">
-    <parent link="small_rail"/>
-    <child link="torso_base"/>
-    <origin xyz="0 0 ${torso_height}" rpy="${pi} ${pi} ${pi/2}"/>
-	  <axis xyz="1 0 0"/>
-	  <!--Add a 0.5m buffer for joint limits to avoid self-collisions-->
-	  <limit lower="${-small_rail_length / 2 + .5}"
-	    upper="${small_rail_length / 2 - .5}"
-      velocity="1"
-      effort="100000"/>
-  </joint>
-
-  <link name="torso_main">
-    <visual>
-      <geometry>
-        <mesh filename="package://ariac_ros2/robots/gantry_description/meshes/torso_fixed_normals.dae" scale="2 2 2"/>
-      </geometry>
-    </visual>
-    <collision>
-      <geometry>
-        <mesh filename="package://ariac_ros2/robots/gantry_description/meshes/torso_fixed_normals.dae" scale="2 2 2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia
-        ixx=".1" ixy="0.0" ixz="0.0"
-        iyy="1" iyz="0.0"
-        izz=".1"/>
-    </inertial>
-    
-    <gazebo>
-      <material>
-        <script>
-          <uri>file://media/materials/scripts/gazebo.material</uri>
-          <name>Gazebo/Grey</name>
-        </script>
-      </material>
-    </gazebo>
-  </link>
-
-  <gazebo reference="torso_main">
-    <selfCollide>1</selfCollide>
-  </gazebo>
-
-  <joint name="torso_base_main_joint" type="revolute">
-    <parent link="torso_base"/>
-      <child link="torso_main"/>
-      <origin xyz="0 0 0" rpy="${pi} ${pi} 0"/>
-      <axis xyz="0 0 1"/>
-	    <limit lower="${-2 * pi}"
-	      upper="${2 * pi}"
-        velocity="${pi/4}"
-        effort="100000"/>
-  </joint>
-  
-  <link name="torso_tray">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://ariac_ros2/models/gantry_tray/mesh/gantry_tray.dae" scale="0.5 0.5 1.2"/>
-      </geometry>
-    </visual>
-    <collision name="torso_tray_collision">
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="package://ariac_ros2/models/gantry_tray/mesh/gantry_tray.dae" scale="0.5 0.5 1.2"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia
-        ixx="0.0408" ixy="0.0" ixz="0.0"
-        iyy="0.02084" iyz="0.0"
-        izz="0.0616"/>
-    </inertial>
-  </link>
-
-  <!-- We have to make this a non-fixed joint otherwise it is not recofnized by Gazebo -->
-  <!-- The limit will not allow the joint to move -->
-  <joint name="torso_main_torso_tray_joint" type="revolute">
-    <parent link="torso_main"/>
-    <child link="torso_tray"/>
-    <origin xyz="-0.017851 0.0 0.637444" rpy="0 0 ${pi/2}"/>
-    <axis xyz="0 0 1"/>
-    <limit velocity="6.5" effort="1000" lower="0" upper="0" />
-  </joint>
-
-  
-  <!-- import main macro -->
+  <!-- Inclue ur robot macro -->
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
-  
-  <!-- parameters -->
-  <xacro:arg name="name" default="ur"/>
-  <xacro:arg name="ur_type" default="ur10e"/>
-  <xacro:arg name="prefix" default="" />
-  <xacro:arg name="joint_limit_params" default="$(find ur_description)/config/$(arg ur_type)/joint_limits.yaml"/>
-  <xacro:arg name="kinematics_params" default="$(find ur_description)/config/$(arg ur_type)/default_kinematics.yaml"/>
-  <xacro:arg name="physical_params" default="$(find ur_description)/config/$(arg ur_type)/physical_parameters.yaml"/>
-  <xacro:arg name="visual_params" default="$(find ur_description)/config/$(arg ur_type)/visual_parameters.yaml"/>
-  <xacro:arg name="transmission_hw_interface" default=""/>
-  <xacro:arg name="safety_limits" default="false"/>
-  <xacro:arg name="safety_pos_margin" default="0.15"/>
-  <xacro:arg name="safety_k_position" default="20"/>
-  <!-- ros2_control related parameters -->
-  <xacro:arg name="headless_mode" default="false" />
-  <xacro:arg name="robot_ip" default="0.0.0.0" />
-  <xacro:arg name="script_filename" default=""/>
-  <xacro:arg name="output_recipe_filename" default=""/>
-  <xacro:arg name="input_recipe_filename" default=""/>
-  <!--   tool communication related parameters-->
-  <xacro:arg name="use_tool_communication" default="false" />
-  <xacro:arg name="tool_voltage" default="24" />
-  <xacro:arg name="tool_parity" default="0" />
-  <xacro:arg name="tool_baud_rate" default="115200" />
-  <xacro:arg name="tool_stop_bits" default="1" />
-  <xacro:arg name="tool_rx_idle_chars" default="1.5" />
-  <xacro:arg name="tool_tx_idle_chars" default="3.5" />
-  <xacro:arg name="tool_device_name" default="/tmp/ttyUR" />
-  <xacro:arg name="tool_tcp_port" default="54321" />
-  <!-- Simulation parameters -->
-  <xacro:arg name="use_fake_hardware" default="false" />
-  <xacro:arg name="fake_sensor_commands" default="false" />
-  <xacro:arg name="sim_gazebo" default="true" />
-  <xacro:arg name="sim_ignition" default="false" />
-  <xacro:arg name="simulation_controllers" default="" />
 
-  <!-- initial position for simulations (Fake Hardware, Gazebo, Ignition) -->
   <xacro:arg name="initial_positions_file" default="$(find ariac_ros2)/config/gantry_initial_positions.yaml"/>
-
-  <!-- convert to property to use substitution in function -->
   <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
-  <xacro:ur_robot
-    name="$(arg name)"
-    prefix="$(arg prefix)"
-    parent="torso_main"
-    joint_limits_parameters_file="$(arg joint_limit_params)"
-    kinematics_parameters_file="$(arg kinematics_params)"
-    physical_parameters_file="$(arg physical_params)"
-    visual_parameters_file="$(arg visual_params)"
-    transmission_hw_interface="$(arg transmission_hw_interface)"
-    safety_limits="$(arg safety_limits)"
-    safety_pos_margin="$(arg safety_pos_margin)"
-    safety_k_position="$(arg safety_k_position)"
-    use_fake_hardware="$(arg use_fake_hardware)"
-    fake_sensor_commands="$(arg fake_sensor_commands)"
-    sim_gazebo="$(arg sim_gazebo)"
-    sim_ignition="$(arg sim_ignition)"
-    headless_mode="$(arg headless_mode)"
+  <!-- Create a world link -->
+  <link name="world" />
+
+  <!-- Run gantry macro -->
+  <xacro:gantry
+    parent="world"
+    long_rail_length="15.0"
+    long_rail_width="0.2"
+    long_rail_offset="-5.0"
+    small_rail_length="15.0"
+    small_rail_width="0.2"
+    rail_height="2.9"
+    rail_thickness="0.1"
+    torso_height="-2.3"
     initial_positions="${load_yaml(initial_positions_file)}"
-    use_tool_communication="$(arg use_tool_communication)"
-    tool_voltage="$(arg tool_voltage)"
-    tool_parity="$(arg tool_parity)"
-    tool_baud_rate="$(arg tool_baud_rate)"
-    tool_stop_bits="$(arg tool_stop_bits)"
-    tool_rx_idle_chars="$(arg tool_rx_idle_chars)"
-    tool_tx_idle_chars="$(arg tool_tx_idle_chars)"
-    tool_device_name="$(arg tool_device_name)"
-    tool_tcp_port="$(arg tool_tcp_port)"
-    robot_ip="$(arg robot_ip)"
-    script_filename="$(arg script_filename)"
-    output_recipe_filename="$(arg output_recipe_filename)"
-    input_recipe_filename="$(arg input_recipe_filename)"
     >
-    <origin xyz="0.51 0.0 1.3" rpy="0 1.57 0" />  <!-- position robot in the world -->
+  </xacro:gantry>
+
+  <!-- Run ur macro -->
+  <xacro:ur_robot
+    name="$gantry_arm"
+    prefix=""
+    parent="torso_main"
+    joint_limits_parameters_file="$(find ur_description)/config/ur10e/joint_limits.yaml"
+    kinematics_parameters_file="$(find ur_description)/config/ur10e/default_kinematics.yaml"
+    physical_parameters_file="$(find ur_description)/config/ur10e/physical_parameters.yaml"
+    visual_parameters_file="$(find ur_description)/config/ur10e/visual_parameters.yaml"
+    sim_gazebo="true"
+    initial_positions="${load_yaml(initial_positions_file)}">
+    <origin xyz="0.51 0.0 1.3" rpy="0 1.57 0" />
   </xacro:ur_robot>
 
-  <!--Transmissions for the rails and the torso-->
-  <transmission name="small_long_transmission">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="small_long_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="small_long_motor">
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
+  <gazebo 
+    reference="world">
+  </gazebo>
   
-  <transmission name="torso_rail_transmission">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="torso_rail_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="torso_rail_motor">
-      <mechanicalReduction>10</mechanicalReduction>
-    </actuator>
-  </transmission>
-  
-  <transmission name="torso_base_main_transmission">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="torso_base_main_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="torso_base_main_motor">
-      <mechanicalReduction>10</mechanicalReduction>
-    </actuator>
-  </transmission>
-  
-  <transmission name="torso_main_torso_tray_transmission">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="torso_main_torso_tray_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="torso_main_tray_main_motor">
-      <mechanicalReduction>10</mechanicalReduction>
-    </actuator>
-  </transmission>
+  <xacro:arg name="arm_controllers" default="$(find ariac_ros2)/robots/gantry_description/controller/gantry_arm_controllers.yaml" />
+  <!-- <xacro:arg name="gantry_controllers" default="$(find ariac_ros2)/robots/gantry_description/controller/gantry_control.yaml" /> -->
 
   <gazebo>
-    <static>false</static>
-    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters>$(arg arm_controllers)</parameters>
     </plugin>
   </gazebo>
 

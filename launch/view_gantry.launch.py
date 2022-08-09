@@ -15,20 +15,6 @@ def generate_launch_description():
         ]
     )
 
-    # robot_description_content = Command(
-    #     [
-    #         PathJoinSubstitution([FindExecutable(name="xacro")]),
-    #         " ",
-    #         PathJoinSubstitution([FindPackageShare("ariac_ros2"), "robots/gantry_description/urdf", "gantry_robot.urdf.xacro"]),
-    #         " ",
-    #         "name:=gantry",
-    #         " ",
-    #         "ur_type:=ur10e",
-    #         " ",
-    #         "ur_sim_gazebo:=true",
-    #     ]
-    # )
-
     robot_description = {"robot_description": robot_description_content}
 
     rviz_config_file = PathJoinSubstitution(
