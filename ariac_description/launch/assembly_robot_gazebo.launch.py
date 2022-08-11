@@ -14,7 +14,7 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ariac_ros2"), "robots/gantry_description/urdf", "gantry.urdf.xacro"]), 
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "assembly_robot.urdf.xacro"]), 
             " "
         ]
     )
@@ -29,7 +29,7 @@ def generate_launch_description():
     )
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("ariac_ros2"), "config", "view_gantry.rviz"]
+        [FindPackageShare("ariac_description"), "config", "assembly_robot.rviz"]
     )
 
     rviz_node = Node(
@@ -58,13 +58,13 @@ def generate_launch_description():
     initial_joint_controller_spawner_started = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_trajectory_controller", "-c", "/controller_manager"],
+        arguments=["arm_joint_trajectory_controller", "-c", "/controller_manager"],
     )
 
     gantry_joint_controller_spawner_started = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["gantry_controller", "-c", "/controller_manager"],
+        arguments=["gantry_joint_trajectory_controller", "-c", "/controller_manager"],
     )
 
     # Gazebo nodes
@@ -79,7 +79,7 @@ def generate_launch_description():
         package="gazebo_ros",
         executable="spawn_entity.py",
         name="spawn_gantry",
-        arguments=["-entity", "gantry", "-topic", "robot_description"],
+        arguments=["-entity", "assembly_robot", "-topic", "robot_description"],
         output="screen",
     )
 

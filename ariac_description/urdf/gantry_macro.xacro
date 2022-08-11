@@ -13,7 +13,7 @@
     initial_positions">
 
     <!-- ROS2 Control -->
-    <xacro:include filename="$(find ariac_ros2)/robots/gantry_description/urdf/gantry_ros2_control.xacro"/>
+    <xacro:include filename="$(find ariac_description)/urdf/gantry.ros2_control.xacro"/>
     <xacro:gantry_ros2_control
       name="gantry"
       initial_positions="${initial_positions}"
@@ -128,12 +128,12 @@
     <link name="torso_base">
       <visual>
         <geometry>
-          <mesh filename="file://$(find ariac_ros2)/robots/gantry_description/meshes/torso_base.dae" scale="2 2 2"/>
+          <mesh filename="file://$(find ariac_description)/meshes/gantry/torso_base.dae" scale="2 2 2"/>
         </geometry>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="file://$(find ariac_ros2)/robots/gantry_description/meshes/torso_base.dae" scale="2 2 2"/>
+          <mesh filename="file://$(find ariac_description)/meshes/gantry/torso_base.dae" scale="2 2 2"/>
         </geometry>
       </collision>
       <inertial>
@@ -166,12 +166,12 @@
     <link name="torso_main">
       <visual>
         <geometry>
-          <mesh filename="file://$(find ariac_ros2)/robots/gantry_description/meshes/torso_fixed_normals.dae" scale="2 2 2"/>
+          <mesh filename="file://$(find ariac_description)/meshes/gantry/torso_fixed_normals.dae" scale="2 2 2"/>
         </geometry>
       </visual>
       <collision>
         <geometry>
-          <mesh filename="file://$(find ariac_ros2)/robots/gantry_description/meshes/torso_fixed_normals.dae" scale="2 2 2"/>
+          <mesh filename="file://$(find ariac_description)/meshes/gantry/torso_fixed_normals.dae" scale="2 2 2"/>
         </geometry>
       </collision>
       <inertial>
@@ -212,13 +212,13 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="file://$(find ariac_ros2)/models/gantry_tray/mesh/gantry_tray.dae" scale="0.5 0.5 1.2"/>
+          <mesh filename="file://$(find ariac_description)/meshes/gantry/gantry_tray.dae" scale="0.5 0.5 1.2"/>
         </geometry>
       </visual>
       <collision name="torso_tray_collision">
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="file://$(find ariac_ros2)/models/gantry_tray/mesh/gantry_tray.dae" scale="0.5 0.5 1.2"/>
+          <mesh filename="file://$(find ariac_description)/meshes/gantry/gantry_tray.dae" scale="0.5 0.5 1.2"/>
         </geometry>
       </collision>
       <inertial>

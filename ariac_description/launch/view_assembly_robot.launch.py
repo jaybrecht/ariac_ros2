@@ -10,7 +10,7 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ariac_ros2"), "robots/gantry_description/urdf", "gantry.urdf.xacro"]), 
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "assembly_robot.urdf.xacro"]), 
             " "
         ]
     )
@@ -18,7 +18,7 @@ def generate_launch_description():
     robot_description = {"robot_description": robot_description_content}
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("ariac_ros2"), "config", "view_gantry.rviz"]
+        [FindPackageShare("ariac_description"), "config", "assembly_robot.rviz"]
     )
 
     joint_state_publisher_node = Node(

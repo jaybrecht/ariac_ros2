@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ariac_ros2)
+project(ariac_gazebo)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -21,7 +21,7 @@ find_package(gazebo_plugins REQUIRED)
 
 # Include Cpp "include" directory
 include_directories(
-  include/ariac_ros2
+  include/ariac_gazebo
   ${GAZEBO_INCLUDE_DIRS}
 )
 
@@ -41,7 +41,6 @@ install(DIRECTORY
   models
   worlds
   config
-  robots
   DESTINATION share/${PROJECT_NAME}
 )
 

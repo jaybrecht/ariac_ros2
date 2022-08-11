@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:macro name="linear_actuator" params="
+    parent
+    initial_positions">
+
+    <!-- ROS2 Control -->
+    <xacro:include filename="$(find ariac_description)/urdf/linear_actuator.ros2_control.xacro"/>
+    <xacro:gantry_ros2_control
+      name="linear_actuator"
+      initial_positions="${initial_positions}"
+    />
+
+    <link name="slide_bar">
+      <visual>
+        <geometry>
+          <box size="0.05 10 0.05"/>
+        </geometry>
+        <origin xyz="0 0 0"/>
+        <material name="green">
+          <color rgba="0 0.8 .8 1"/>
+        </material>
+      </visual>
+      <inertial>
+        <mass value="100"/>
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      </inertial>
+    </link>
+
+    <link name="robot_base">
+      <inertial>
+        <mass value="1"/>
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      </inertial>
+    </link>
+
+    <joint name="world_to_base" type="fixed">
+      <parent link="${parent}"/>
+      <child link="slide_bar"/>
+      <origin xyz="0.0 0.0 0.5" rpy="0.0 0.0 ${-pi/2}"/>
+    </joint>
+
+    <joint name="linear_actuator" type="prismatic">
+      <axis xyz="0 1 0"/>
+      <origin xyz="0.0 0.0 0.0"/>
+      <parent link="slide_bar"/>
+      <child link="robot_base"/>
+      <limit effort="1000.0" lower="-4.8" upper="4.8" velocity="5"/>
+      <dynamics damping="20.0" friction="500.0" />
+    </joint>
+
+  </xacro:macro>
+</robot>

@@ -14,7 +14,7 @@ from launch_ros.substitutions import FindPackageShare
 
 def launch_setup(context, *args, **kwargs):    
     # Set the path to this package.
-    pkg_share = FindPackageShare(package='ariac_ros2').find('ariac_ros2')
+    pkg_share = FindPackageShare(package='ariac_gazebo').find('ariac_gazebo')
     
     # Set the path to the world file
     world_file_name = 'ariac.world'
