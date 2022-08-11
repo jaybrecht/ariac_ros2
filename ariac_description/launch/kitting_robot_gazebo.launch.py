@@ -22,6 +22,7 @@ def generate_launch_description():
     robot_description = {"robot_description": robot_description_content}
 
     robot_state_publisher_node = Node(
+        namespace="kitting",
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
@@ -43,7 +44,7 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=["joint_state_broadcaster", "--controller-manager", "/kitting/controller_manager"],
     )
 
     # Delay rviz start after `joint_state_broadcaster`
@@ -58,13 +59,13 @@ def generate_launch_description():
     initial_joint_controller_spawner_started = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["arm_joint_trajectory_controller", "-c", "/controller_manager"],
+        arguments=["arm_joint_trajectory_controller", "-c", "/kitting/controller_manager"],
     )
 
     gantry_joint_controller_spawner_started = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["linear_actuator_joint_trajectory_controller", "-c", "/controller_manager"],
+        arguments=["linear_actuator_joint_trajectory_controller", "-c", "/kitting/controller_manager"],
     )
 
     # Gazebo nodes
@@ -79,7 +80,7 @@ def generate_launch_description():
         package="gazebo_ros",
         executable="spawn_entity.py",
         name="spawn_gantry",
-        arguments=["-entity", "kitting_robot", "-topic", "robot_description"],
+        arguments=["-entity", "kitting_robot", "-topic", "kitting/robot_description"],
         output="screen",
     )
 

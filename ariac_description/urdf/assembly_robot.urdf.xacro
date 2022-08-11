@@ -31,7 +31,7 @@
   <!-- Run ur macro -->
   <xacro:ur_robot
     name="assembly_arm"
-    prefix=""
+    prefix="assembly_"
     parent="torso_main"
     joint_limits_parameters_file="$(find ur_description)/config/ur10e/joint_limits.yaml"
     kinematics_parameters_file="$(find ur_description)/config/ur10e/default_kinematics.yaml"
@@ -50,7 +50,11 @@
 
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <ros>
+        <namespace>/assembly</namespace>
+      </ros>
       <parameters>$(arg controllers)</parameters>
+      <robot_param_node>/assembly/robot_state_publisher</robot_param_node>
     </plugin>
   </gazebo>
 
