@@ -6,16 +6,15 @@ kitting/controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    arm_joint_trajectory_controller:
+    joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
     
-    linear_actuator_joint_trajectory_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
 
 
-kitting/arm_joint_trajectory_controller:
+kitting/joint_trajectory_controller:
   ros__parameters:
     joints:
+      - linear_actuator 
       - kitting_shoulder_pan_joint
       - kitting_shoulder_lift_joint
       - kitting_elbow_joint
@@ -39,21 +38,3 @@ kitting/arm_joint_trajectory_controller:
       kitting_wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
       kitting_wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
       kitting_wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
-
-
-kitting/linear_actuator_joint_trajectory_controller:
-  ros__parameters:
-    joints:
-      - linear_actuator 
-    interface_name: position
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      - velocity
-    constraints:
-      goal_time: 0.6
-      stopped_velocity_tolerance: 0.05
-      small_long_joint: {trajectory: 0.1, goal: 0.1}
-      torso_rail_joint:  {trajectory: 0.1, goal: 0.1}
-      torso_base_main_joint: {trajectory: 0.1, goal: 0.1}

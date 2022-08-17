@@ -1,0 +1,16 @@
+controller_names:
+  - joint_trajectory_controller
+
+joint_trajectory_controller:
+  action_ns: follow_joint_trajectory
+  type: FollowJointTrajectory
+  default: true
+  joints:
+    - linear_actuator
+    - kitting_shoulder_pan_joint
+    - kitting_shoulder_lift_joint
+    - kitting_elbow_joint
+    - kitting_wrist_1_joint
+    - kitting_wrist_2_joint
+    - kitting_wrist_3_joint
+    

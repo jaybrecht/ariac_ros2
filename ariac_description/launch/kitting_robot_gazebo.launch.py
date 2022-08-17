@@ -56,16 +56,10 @@ def generate_launch_description():
     )
 
     # There may be other controllers of the joints, but this is the initially-started one
-    initial_joint_controller_spawner_started = Node(
+    joint_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["arm_joint_trajectory_controller", "-c", "/kitting/controller_manager"],
-    )
-
-    gantry_joint_controller_spawner_started = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["linear_actuator_joint_trajectory_controller", "-c", "/kitting/controller_manager"],
+        arguments=["joint_trajectory_controller", "-c", "/kitting/controller_manager"],
     )
 
     # Gazebo nodes
@@ -88,8 +82,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         joint_state_broadcaster_spawner,
         delay_rviz_after_joint_state_broadcaster_spawner,
-        initial_joint_controller_spawner_started,
-        gantry_joint_controller_spawner_started,
+        joint_controller_spawner,
         gazebo,
         gazebo_spawn_robot,
     ]
