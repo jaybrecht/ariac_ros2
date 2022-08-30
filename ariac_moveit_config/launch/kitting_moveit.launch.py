@@ -1,34 +1,3 @@
-# Copyright (c) 2021 PickNik, Inc.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
-#
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#
-#    * Neither the name of the {copyright_holder} nor the names of its
-#      contributors may be used to endorse or promote products derived from
-#      this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
-#
-# Author: Denis Stogl
-
 import os
 import yaml
 
@@ -65,6 +34,7 @@ def load_yaml(package_name, file_path):
 
 
 def generate_launch_description():
+    # Generate Robot Description parameter from xacro
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -73,33 +43,13 @@ def generate_launch_description():
             " "
         ]
     )
-    
     robot_description = {"robot_description": robot_description_content}
 
-    robot_description_semantic_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [FindPackageShare("ariac_moveit_config"), "srdf", "ur.srdf.xacro"]
-            ),
-            " ",
-            "name:=",
-            "kitting_robot",
-            " ",
-            "prefix:=",
-            "kitting_",
-            " ",
-        ]
-    )
-    robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
+    ## Moveit Parameters
+    robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/kitting_robot.srdf")}
 
-    kinematics_yaml = load_yaml(
-        "ariac_moveit_config", "config/kinematics.yaml"
-    )
-    robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
+    robot_description_kinematics = {"robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
 
-    # Planning Functionality
     ompl_planning_pipeline_config = {
         "move_group": {
             "planning_plugin": "ompl_interface/OMPLPlanner",
@@ -111,11 +61,9 @@ def generate_launch_description():
         "ariac_moveit_config", "config/ompl_planning.yaml"
     )
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
-
-    controllers_yaml = load_yaml("ariac_moveit_config", "config/kitting_controllers.yaml")
     
     moveit_controllers = {
-        "moveit_simple_controller_manager": controllers_yaml,
+        "moveit_simple_controller_manager": load_yaml("ariac_moveit_config", "config/kitting_controllers.yaml"),
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
     }
 
@@ -126,7 +74,6 @@ def generate_launch_description():
         "trajectory_execution.allowed_start_tolerance": 0.01,
     }
 
-
     planning_scene_monitor_parameters = {
         "publish_planning_scene": True,
         "publish_geometry_updates": True,
@@ -134,6 +81,7 @@ def generate_launch_description():
         "publish_transforms_updates": True,
     }
 
+    # Nodes
     robot_state_publisher_node = Node(
         namespace="kitting",
         package="robot_state_publisher",
@@ -146,7 +94,7 @@ def generate_launch_description():
         ],
     )
 
-    # Start the actual move_group node/action server
+    # Move group node
     move_group_node = Node(
         namespace="kitting",
         package="moveit_ros_move_group",
@@ -164,7 +112,7 @@ def generate_launch_description():
         ],
     )
 
-    # Controllers
+    # Gazebo Controllers
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -212,7 +160,6 @@ def generate_launch_description():
             {"use_sim_time": True}
         ],
     )
-
     
     nodes_to_start = [
         robot_state_publisher_node,
