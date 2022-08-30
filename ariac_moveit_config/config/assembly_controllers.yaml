@@ -1,0 +1,18 @@
+controller_names:
+  - joint_trajectory_controller
+
+joint_trajectory_controller:
+  action_ns: follow_joint_trajectory
+  type: FollowJointTrajectory
+  default: true
+  joints:
+    - small_long_joint
+    - torso_rail_joint
+    - torso_base_main_joint
+    - assembly_shoulder_pan_joint
+    - assembly_shoulder_lift_joint
+    - assembly_elbow_joint
+    - assembly_wrist_1_joint
+    - assembly_wrist_2_joint
+    - assembly_wrist_3_joint
+    

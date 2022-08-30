@@ -39,14 +39,14 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "kitting_robot.urdf.xacro"]), 
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "assembly_robot.urdf.xacro"]), 
             " "
         ]
     )
     robot_description = {"robot_description": robot_description_content}
 
     ## Moveit Parameters
-    robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/kitting_robot.srdf")}
+    robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/assembly_robot.srdf")}
 
     robot_description_kinematics = {"robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
 
@@ -63,7 +63,7 @@ def generate_launch_description():
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
     
     moveit_controllers = {
-        "moveit_simple_controller_manager": load_yaml("ariac_moveit_config", "config/kitting_controllers.yaml"),
+        "moveit_simple_controller_manager": load_yaml("ariac_moveit_config", "config/assembly_controllers.yaml"),
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
     }
 
@@ -83,7 +83,7 @@ def generate_launch_description():
 
     # Nodes
     robot_state_publisher_node = Node(
-        namespace="kitting",
+        namespace="assembly",
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
@@ -96,7 +96,7 @@ def generate_launch_description():
 
     # Move group node
     move_group_node = Node(
-        namespace="kitting",
+        namespace="assembly",
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
@@ -116,13 +116,13 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/kitting/controller_manager"],
+        arguments=["joint_state_broadcaster", "--controller-manager", "/assembly/controller_manager"],
     )
 
     joint_controller_spawner= Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_trajectory_controller", "-c", "/kitting/controller_manager"],
+        arguments=["joint_trajectory_controller", "-c", "/assembly/controller_manager"],
     )
 
     # Gazebo nodes
@@ -137,13 +137,13 @@ def generate_launch_description():
         package="gazebo_ros",
         executable="spawn_entity.py",
         name="spawn_gantry",
-        arguments=["-entity", "kitting_robot", "-topic", "/kitting/robot_description"],
+        arguments=["-entity", "assembly_robot", "-topic", "/assembly/robot_description"],
         output="screen",
     )
 
     # rviz with moveit configuration
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("ariac_moveit_config"), "config", "view_kitting_robot.rviz"]
+        [FindPackageShare("ariac_moveit_config"), "config", "view_assembly_robot.rviz"]
     )
 
     rviz_node = Node(

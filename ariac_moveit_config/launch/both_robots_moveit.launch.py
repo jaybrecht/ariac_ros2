@@ -35,7 +35,17 @@ def load_yaml(package_name, file_path):
 
 def generate_launch_description():
     # Generate Robot Description parameter from xacro
-    robot_description_content = Command(
+    assembly_robot_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "assembly_robot.urdf.xacro"]), 
+            " "
+        ]
+    )
+    assembly_robot_description = {"robot_description": assembly_robot_description_content}
+
+    kitting_robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
@@ -43,10 +53,12 @@ def generate_launch_description():
             " "
         ]
     )
-    robot_description = {"robot_description": robot_description_content}
+    kitting_robot_description = {"robot_description": kitting_robot_description_content}
 
     ## Moveit Parameters
-    robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/kitting_robot.srdf")}
+    assembly_robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/assembly_robot.srdf")}
+    
+    kitting_robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/kitting_robot.srdf")}
 
     robot_description_kinematics = {"robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
 
@@ -62,7 +74,12 @@ def generate_launch_description():
     )
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
     
-    moveit_controllers = {
+    assembly_moveit_controllers = {
+        "moveit_simple_controller_manager": load_yaml("ariac_moveit_config", "config/assembly_controllers.yaml"),
+        "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
+    }
+
+    kitting_moveit_controllers = {
         "moveit_simple_controller_manager": load_yaml("ariac_moveit_config", "config/kitting_controllers.yaml"),
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
     }
@@ -82,44 +99,85 @@ def generate_launch_description():
     }
 
     # Nodes
-    robot_state_publisher_node = Node(
+    assembly_robot_state_publisher_node = Node(
+        namespace="assembly",
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[assembly_robot_description,
+            assembly_robot_description_semantic,
+            robot_description_kinematics,
+            {"use_sim_time": True},
+        ],
+    )
+
+    kitting_robot_state_publisher_node = Node(
         namespace="kitting",
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description,
-            robot_description_semantic,
+        parameters=[kitting_robot_description,
+            kitting_robot_description_semantic,
             robot_description_kinematics,
             {"use_sim_time": True},
         ],
     )
 
     # Move group node
-    move_group_node = Node(
+    assembly_move_group_node = Node(
+        namespace="assembly",
+        package="moveit_ros_move_group",
+        executable="move_group",
+        output="screen",
+        parameters=[
+            assembly_robot_description,
+            assembly_robot_description_semantic,
+            robot_description_kinematics,
+            ompl_planning_pipeline_config,
+            trajectory_execution,
+            assembly_moveit_controllers,
+            planning_scene_monitor_parameters,
+            {"use_sim_time": True},
+        ],
+    )
+
+    kitting_move_group_node = Node(
         namespace="kitting",
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
         parameters=[
-            robot_description,
-            robot_description_semantic,
+            kitting_robot_description,
+            kitting_robot_description_semantic,
             robot_description_kinematics,
             ompl_planning_pipeline_config,
             trajectory_execution,
-            moveit_controllers,
+            kitting_moveit_controllers,
             planning_scene_monitor_parameters,
             {"use_sim_time": True},
         ],
     )
 
     # Gazebo Controllers
-    joint_state_broadcaster_spawner = Node(
+    assembly_joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster", "--controller-manager", "/assembly/controller_manager"],
+    )
+
+    assembly_joint_controller_spawner= Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_trajectory_controller", "-c", "/assembly/controller_manager"],
+    )
+
+    kitting_joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/kitting/controller_manager"],
     )
 
-    joint_controller_spawner= Node(
+    kitting_joint_controller_spawner= Node(
         package="controller_manager",
         executable="spawner",
         arguments=["joint_trajectory_controller", "-c", "/kitting/controller_manager"],
@@ -133,7 +191,15 @@ def generate_launch_description():
     )
 
     # Spawn robot
-    gazebo_spawn_robot = Node(
+    gazebo_spawn_assembly_robot = Node(
+        package="gazebo_ros",
+        executable="spawn_entity.py",
+        name="spawn_gantry",
+        arguments=["-entity", "assembly_robot", "-topic", "/assembly/robot_description"],
+        output="screen",
+    )
+
+    gazebo_spawn_kitting_robot = Node(
         package="gazebo_ros",
         executable="spawn_entity.py",
         name="spawn_gantry",
@@ -142,19 +208,38 @@ def generate_launch_description():
     )
 
     # rviz with moveit configuration
-    rviz_config_file = PathJoinSubstitution(
+    assembly_rviz_config_file = PathJoinSubstitution(
+        [FindPackageShare("ariac_moveit_config"), "config", "view_assembly_robot.rviz"]
+    )
+
+    assembly_rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="assembly_rviz2",
+        output="log",
+        arguments=["-d", assembly_rviz_config_file],
+        parameters=[
+            assembly_robot_description,
+            assembly_robot_description_semantic,
+            ompl_planning_pipeline_config,
+            robot_description_kinematics,
+            {"use_sim_time": True}
+        ],
+    )
+
+    kitting_rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("ariac_moveit_config"), "config", "view_kitting_robot.rviz"]
     )
 
-    rviz_node = Node(
+    kitting_rviz_node = Node(
         package="rviz2",
         executable="rviz2",
-        name="rviz2_moveit",
+        name="kitting_rviz2",
         output="log",
-        arguments=["-d", rviz_config_file],
+        arguments=["-d", kitting_rviz_config_file],
         parameters=[
-            robot_description,
-            robot_description_semantic,
+            kitting_robot_description,
+            kitting_robot_description_semantic,
             ompl_planning_pipeline_config,
             robot_description_kinematics,
             {"use_sim_time": True}
@@ -162,13 +247,19 @@ def generate_launch_description():
     )
     
     nodes_to_start = [
-        robot_state_publisher_node,
-        joint_state_broadcaster_spawner,
-        joint_controller_spawner,
+        assembly_robot_state_publisher_node,
+        kitting_robot_state_publisher_node,
+        assembly_joint_state_broadcaster_spawner,
+        kitting_joint_state_broadcaster_spawner,
+        assembly_joint_controller_spawner,
+        kitting_joint_controller_spawner,
         gazebo,
-        gazebo_spawn_robot,
-        move_group_node,
-        rviz_node
+        gazebo_spawn_assembly_robot,
+        gazebo_spawn_kitting_robot,
+        assembly_move_group_node,
+        kitting_move_group_node,
+        assembly_rviz_node,
+        kitting_rviz_node,
     ]
 
     return LaunchDescription(nodes_to_start)
