@@ -4,7 +4,7 @@ project(ariac_moveit_config)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
-install(DIRECTORY config launch srdf
+install(DIRECTORY config srdf
   DESTINATION share/${PROJECT_NAME}
 )
 

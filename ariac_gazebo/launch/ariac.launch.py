@@ -55,7 +55,6 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={'start_moveit': start_moveit, 'start_rviz': start_rviz}.items()
     )
 
-
     nodes_to_start = [
         gazebo,
         floor_robot_bringup,
