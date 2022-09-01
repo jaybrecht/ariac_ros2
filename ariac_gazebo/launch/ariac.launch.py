@@ -28,19 +28,10 @@ def launch_setup(context, *args, **kwargs):
     os.environ["GAZEBO_PLUGIN_PATH"] = gazebo_plugin_path
 
     # General arguments
-    launch_rviz = LaunchConfiguration("launch_rviz")
-
+    start_rviz = LaunchConfiguration("start_rviz")
+    start_moveit = LaunchConfiguration("start_moveit")
     
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        arguments=[],
-        condition=IfCondition(launch_rviz),
-    )
-
-    # Gazebo nodes
+    # Gazebo node
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("gazebo_ros"), "/launch", "/gazebo.launch.py"]
@@ -48,9 +39,27 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={'world': world_path}.items()
     )
 
+    # Floor Robot Bringup
+    floor_robot_bringup = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ariac_description"), "/launch", "/floor_robot_bringup.launch.py"]
+        ),
+        launch_arguments={'start_moveit': start_moveit, 'start_rviz': start_rviz}.items()
+    )
+
+    # Ceiling Robot Bringup
+    ceiling_robot_bringup = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ariac_description"), "/launch", "/ceiling_robot_bringup.launch.py"]
+        ),
+        launch_arguments={'start_moveit': start_moveit, 'start_rviz': start_rviz}.items()
+    )
+
+
     nodes_to_start = [
         gazebo,
-        rviz_node,
+        floor_robot_bringup,
+        ceiling_robot_bringup,
     ]
 
     return nodes_to_start
@@ -59,7 +68,11 @@ def generate_launch_description():
     declared_arguments = []
     
     declared_arguments.append(
-        DeclareLaunchArgument("launch_rviz", default_value="false", description="Launch RViz?")
+        DeclareLaunchArgument("start_rviz", default_value="false", description="Launch RViz?")
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument("start_moveit", default_value="false", description="Start moveit nodes for the robots?")
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

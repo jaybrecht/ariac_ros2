@@ -2,10 +2,14 @@ import os
 import yaml
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    OpaqueFunction,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -33,20 +37,24 @@ def load_yaml(package_name, file_path):
         return None
 
 
-def generate_launch_description():
+def launch_setup(context, *args, **kwargs):
+    # Arguments 
+    start_moveit = LaunchConfiguration("start_moveit")
+    start_rviz = LaunchConfiguration("start_rviz")
+
     # Generate Robot Description parameter from xacro
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "assembly_robot.urdf.xacro"]), 
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "kitting_robot.urdf.xacro"]), 
             " "
         ]
     )
     robot_description = {"robot_description": robot_description_content}
 
     ## Moveit Parameters
-    robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/assembly_robot.srdf")}
+    robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/kitting_robot.srdf")}
 
     robot_description_kinematics = {"robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
 
@@ -63,7 +71,7 @@ def generate_launch_description():
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
     
     moveit_controllers = {
-        "moveit_simple_controller_manager": load_yaml("ariac_moveit_config", "config/assembly_controllers.yaml"),
+        "moveit_simple_controller_manager": load_yaml("ariac_moveit_config", "config/kitting_controllers.yaml"),
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
     }
 
@@ -83,7 +91,7 @@ def generate_launch_description():
 
     # Nodes
     robot_state_publisher_node = Node(
-        namespace="assembly",
+        namespace="kitting",
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
@@ -96,7 +104,7 @@ def generate_launch_description():
 
     # Move group node
     move_group_node = Node(
-        namespace="assembly",
+        namespace="kitting",
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
@@ -110,26 +118,20 @@ def generate_launch_description():
             planning_scene_monitor_parameters,
             {"use_sim_time": True},
         ],
+        condition=IfCondition(start_moveit),
     )
 
     # Gazebo Controllers
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/assembly/controller_manager"],
+        arguments=["joint_state_broadcaster", "--controller-manager", "/kitting/controller_manager"],
     )
 
     joint_controller_spawner= Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_trajectory_controller", "-c", "/assembly/controller_manager"],
-    )
-
-    # Gazebo nodes
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [FindPackageShare("gazebo_ros"), "/launch", "/gazebo.launch.py"]
-        ),
+        arguments=["joint_trajectory_controller", "-c", "/kitting/controller_manager"],
     )
 
     # Spawn robot
@@ -137,13 +139,13 @@ def generate_launch_description():
         package="gazebo_ros",
         executable="spawn_entity.py",
         name="spawn_gantry",
-        arguments=["-entity", "assembly_robot", "-topic", "/assembly/robot_description"],
+        arguments=["-entity", "kitting_robot", "-topic", "/kitting/robot_description"],
         output="screen",
     )
 
     # rviz with moveit configuration
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("ariac_moveit_config"), "config", "view_assembly_robot.rviz"]
+        [FindPackageShare("ariac_moveit_config"), "config", "view_kitting_robot.rviz"]
     )
 
     rviz_node = Node(
@@ -159,16 +161,32 @@ def generate_launch_description():
             robot_description_kinematics,
             {"use_sim_time": True}
         ],
+        condition=IfCondition(start_rviz),
     )
+    
     
     nodes_to_start = [
         robot_state_publisher_node,
         joint_state_broadcaster_spawner,
         joint_controller_spawner,
-        gazebo,
         gazebo_spawn_robot,
         move_group_node,
-        rviz_node
+        rviz_node,      
     ]
 
-    return LaunchDescription(nodes_to_start)
+    return nodes_to_start
+
+
+def generate_launch_description():
+    declared_arguments = []
+
+    declared_arguments.append(
+        DeclareLaunchArgument("start_moveit", default_value="false", description="Start moveit nodes for the robots?")
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument("start_rviz", default_value="false", description="Start rviz?")
+    )
+
+
+    return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
