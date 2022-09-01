@@ -8,6 +8,10 @@
   <group name="kitting_arm">
     <chain base_link="world" tip_link="kitting_tool0" />
   </group>
+
+    <group name="ee">
+        <link name="kitting_tool0"/>
+    </group>
   
   <!--DISABLE COLLISIONS - -->
   <group_state name="kitting_home" group="kitting_arm">
@@ -39,7 +43,7 @@
   </group_state>
   
   <!--END EFFECTOR - Purpose - Represent information about an end effector.-->
-  <end_effector name="kitting_ee" parent_group="kitting_arm" parent_link="kitting_tool0"/>
+  <end_effector group="ee" name="kitting_ee" parent_group="kitting_arm" parent_link="kitting_wrist_3_link"/>
   
   <!--VIRTUAL JOINT - Purpose - this element defines a virtual joint between a robot link and an external frame of reference 
   (considered fixed with respect to the robot)-->

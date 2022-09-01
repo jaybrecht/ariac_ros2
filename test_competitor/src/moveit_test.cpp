@@ -43,6 +43,7 @@ int main(int argc, char * argv[])
 
 
   cieling_move_group_interface.setNamedTarget("assembly_test_configuration");
+  cieling_move_group_interface.setMaxVelocityScalingFactor(0.5);
 
   moveit::planning_interface::MoveGroupInterface::Plan plan1;
   if (cieling_move_group_interface.plan(plan1) == moveit_msgs::msg::MoveItErrorCodes::SUCCESS) {
@@ -53,6 +54,7 @@ int main(int argc, char * argv[])
   }
 
   floor_move_group_interface.setNamedTarget("kitting_test_configuration");
+  floor_move_group_interface.setMaxVelocityScalingFactor(0.5);
 
   moveit::planning_interface::MoveGroupInterface::Plan plan2;
   if (floor_move_group_interface.plan(plan2) == moveit_msgs::msg::MoveItErrorCodes::SUCCESS) {

@@ -79,6 +79,7 @@ def generate_launch_description():
     ## Moveit Parameters
     floor_robot_description_semantic = {"floor/robot_description_semantic": load_file("ariac_moveit_config", "srdf/kitting_robot.srdf")}
 
+    floor_robot_kinematics = {"floor/robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
     
     # Generate Robot Description parameter from xacro
     robot_description_content = Command(
@@ -94,7 +95,7 @@ def generate_launch_description():
     ## Moveit Parameters
     ceiling_robot_description_semantic = {"ceiling/robot_description_semantic": load_file("ariac_moveit_config", "srdf/assembly_robot.srdf")}
 
-    kinematics = {"robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
+    ceiling_robot_kinematics = {"ceiling/robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
 
     moveit_test = Node(
         package="test_competitor",
@@ -103,9 +104,10 @@ def generate_launch_description():
         parameters=[
             floor_robot_description,
             floor_robot_description_semantic,
+            floor_robot_kinematics,
             ceiling_robot_description,
             ceiling_robot_description_semantic,
-            kinematics,
+            ceiling_robot_kinematics,
             {"use_sim_time": True},
         ],
     )
