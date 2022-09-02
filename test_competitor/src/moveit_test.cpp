@@ -25,24 +25,24 @@ int main(int argc, char * argv[])
   // Create a ROS logger
   auto const logger = rclcpp::get_logger("moveit_test");
 
-  std::string group = "kitting_arm";
+  std::string group = "floor_arm";
   std::string desc = "floor/robot_description";
-  std::string move_group_namespace = "kitting";
+  std::string move_group_namespace = "floor";
 
   moveit::planning_interface::MoveGroupInterface::Options opt1(group, desc, move_group_namespace);
 
   moveit::planning_interface::MoveGroupInterface floor_move_group_interface(node, opt1);
 
-  group = "assembly_arm";
+  group = "ceiling_arm";
   desc = "ceiling/robot_description";
-  move_group_namespace = "assembly";
+  move_group_namespace = "ceiling";
 
   moveit::planning_interface::MoveGroupInterface::Options opt2(group, desc, move_group_namespace);
 
   moveit::planning_interface::MoveGroupInterface cieling_move_group_interface(node, opt2);
 
 
-  cieling_move_group_interface.setNamedTarget("assembly_test_configuration");
+  cieling_move_group_interface.setNamedTarget("ceiling_test_configuration");
   cieling_move_group_interface.setMaxVelocityScalingFactor(0.5);
 
   moveit::planning_interface::MoveGroupInterface::Plan plan1;
@@ -53,7 +53,7 @@ int main(int argc, char * argv[])
     RCLCPP_WARN(logger, "Unable to generate plan to home");
   }
 
-  floor_move_group_interface.setNamedTarget("kitting_test_configuration");
+  floor_move_group_interface.setNamedTarget("floor_test_configuration");
   floor_move_group_interface.setMaxVelocityScalingFactor(0.5);
 
   moveit::planning_interface::MoveGroupInterface::Plan plan2;

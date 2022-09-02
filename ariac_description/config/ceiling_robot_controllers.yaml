@@ -1,4 +1,4 @@
-assembly/controller_manager:
+ceiling/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
@@ -10,18 +10,18 @@ assembly/controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
     
 
-assembly/joint_trajectory_controller:
+ceiling/joint_trajectory_controller:
   ros__parameters:
     joints:
       - small_long_joint
       - torso_rail_joint
       - torso_base_main_joint
-      - assembly_shoulder_pan_joint
-      - assembly_shoulder_lift_joint
-      - assembly_elbow_joint
-      - assembly_wrist_1_joint
-      - assembly_wrist_2_joint
-      - assembly_wrist_3_joint
+      - ceiling_shoulder_pan_joint
+      - ceiling_shoulder_lift_joint
+      - ceiling_elbow_joint
+      - ceiling_wrist_1_joint
+      - ceiling_wrist_2_joint
+      - ceiling_wrist_3_joint
     command_interfaces:
       - position
     state_interfaces:
@@ -36,10 +36,10 @@ assembly/joint_trajectory_controller:
       small_long_joint: {trajectory: 0.1, goal: 0.1}
       torso_rail_joint:  {trajectory: 0.1, goal: 0.1}
       torso_base_main_joint: {trajectory: 0.1, goal: 0.1}
-      assembly_shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
-      assembly_shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
-      assembly_elbow_joint: { trajectory: 0.2, goal: 0.1 }
-      assembly_wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
-      assembly_wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
-      assembly_wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
+      ceiling_shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
+      ceiling_shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
+      ceiling_elbow_joint: { trajectory: 0.2, goal: 0.1 }
+      ceiling_wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
+      ceiling_wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
+      ceiling_wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
       

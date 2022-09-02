@@ -70,14 +70,14 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "kitting_robot.urdf.xacro"]), 
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "floor_robot.urdf.xacro"]), 
             " "
         ]
     )
     floor_robot_description = {"floor/robot_description": robot_description_content}
 
     ## Moveit Parameters
-    floor_robot_description_semantic = {"floor/robot_description_semantic": load_file("ariac_moveit_config", "srdf/kitting_robot.srdf")}
+    floor_robot_description_semantic = {"floor/robot_description_semantic": load_file("ariac_moveit_config", "srdf/floor_robot.srdf")}
 
     floor_robot_kinematics = {"floor/robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
     
@@ -86,14 +86,14 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "assembly_robot.urdf.xacro"]), 
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf", "ceiling_robot.urdf.xacro"]), 
             " "
         ]
     )
     ceiling_robot_description = {"ceiling/robot_description": robot_description_content}
 
     ## Moveit Parameters
-    ceiling_robot_description_semantic = {"ceiling/robot_description_semantic": load_file("ariac_moveit_config", "srdf/assembly_robot.srdf")}
+    ceiling_robot_description_semantic = {"ceiling/robot_description_semantic": load_file("ariac_moveit_config", "srdf/ceiling_robot.srdf")}
 
     ceiling_robot_kinematics = {"ceiling/robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
 

@@ -4,7 +4,7 @@
   <name>ariac_moveit_config</name>
   <version>0.0.0</version>
   <description>
-     An package with MoveIt2 configurations for the ariac kitting and assembly robots.
+     An package with MoveIt2 configurations for the ariac floor and ceiling robots.
   </description>
   <maintainer email="justin.albrecht@nist.gov">Justin Albrecht</maintainer>
 

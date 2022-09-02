@@ -7,10 +7,10 @@ joint_trajectory_controller:
   default: true
   joints:
     - linear_actuator
-    - kitting_shoulder_pan_joint
-    - kitting_shoulder_lift_joint
-    - kitting_elbow_joint
-    - kitting_wrist_1_joint
-    - kitting_wrist_2_joint
-    - kitting_wrist_3_joint
+    - floor_shoulder_pan_joint
+    - floor_shoulder_lift_joint
+    - floor_elbow_joint
+    - floor_wrist_1_joint
+    - floor_wrist_2_joint
+    - floor_wrist_3_joint
     
