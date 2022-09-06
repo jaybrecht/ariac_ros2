@@ -3,7 +3,6 @@
   <world name="world">
     <!-- Set the initial camera pose to be looking at the workspace. -->
     <gui fullscreen='0'>
- 
       <camera name='user_camera'>
         <!-- pretty overview shot-->
         <pose frame=''>6.72633 4.82882 7.2056 0 0.485796 -2.71512</pose>
@@ -12,9 +11,12 @@
       </camera>
     </gui>
 
-    <!-- Disable shadows. -->
     <scene>
-      <shadows>false</shadows>
+      <shadows>0</shadows>
+      <grid>0</grid>
+      <origin_visual>0</origin_visual>
+      <ambient>0.5 0.5 0.5 1</ambient>
+      <background>0.5 0.5 0.5 1</background>
     </scene>
 
     <light name='user_spot_light_0' type='spot'>
@@ -109,7 +111,7 @@
     </light>
       
     <!-- A directed light source -->
-    <light name="camera_spot_light" type='spot'>
+    <!-- <light name="camera_spot_light" type='spot'>
       <pose>14 -3.0 3.0 -1.55 0.0 -1.62</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
@@ -126,7 +128,7 @@
         <outer_angle>1</outer_angle>
         <falloff>1</falloff>
       </spot>
-    </light>
+    </light> -->
     
     <!-- A directed light source -->
     <light name="camera_spot_light_1" type='point'>

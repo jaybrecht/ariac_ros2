@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<robot name="agv" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Include macro -->
+  <xacro:include filename="$(find ariac_description)/urdf/AGV/agv_macro.xacro"/>
+
+  <!-- Create a world link -->
+  <link name="world"/>
+
+  <!-- Run agv macro -->
+  <xacro:agv
+    number="1"
+    >
+  </xacro:agv>
+
+  <gazebo 
+    reference="world">
+  </gazebo>
+
+  <xacro:arg name="controllers" default="$(find ariac_description)/config/agv_controllers.yaml" />
+
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <ros>
+        <namespace>/agv</namespace>
+      </ros>
+      <parameters>$(arg controllers)</parameters>
+      <robot_param_node>/agv/robot_state_publisher</robot_param_node>
+    </plugin>
+  </gazebo>
+
+</robot>

@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:macro name="agv" params="
+    number">
+    
+    <xacro:include filename="$(find ariac_description)/urdf/AGV/agv.ros2_control.xacro"/>
+
+    <!-- Run ROS2 control macro -->
+    <xacro:agv_ros2_control
+      name="agv"
+    />
+
+    <link name="track">
+      <inertial>
+        <mass value="100"/>
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      </inertial>
+    </link>
+
+    <link name="agv">      
+      <visual>
+        <geometry>
+          <mesh filename="file://$(find ariac_description)/meshes/AGV/robot.dae" scale="1 -1 1"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="file://$(find ariac_description)/meshes/AGV/robot.dae" scale="1 -1 1"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="50.0"/>
+        <inertia
+            ixx="4.525499333333333" ixy="0.0" ixz="0.0"
+            iyy="1.4504741933333334" iyz="0.0"
+            izz="5.6426401933333326"/>
+      </inertial>
+    </link>
+
+    <joint name="world_to_track" type="fixed">
+      <parent link="world"/>
+      <child link="track"/>
+      <origin xyz="-2 4.707484 0.0" rpy="0.0 0.0 ${pi/2}"/>
+    </joint>
+
+    <joint name="agv_joint" type="prismatic">
+      <axis xyz="0 1 0"/>
+      <origin xyz="0.0 0.0 0.0"/>
+      <parent link="track"/>
+      <child link="agv"/>
+      <limit effort="1000.0" lower="0" upper="12" velocity="10"/>
+      <dynamics damping="20.0" friction="500.0" />
+    </joint>
+
+  </xacro:macro>
+</robot>

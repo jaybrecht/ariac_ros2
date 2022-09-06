@@ -55,8 +55,17 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={'start_moveit': start_moveit, 'start_rviz': start_rviz}.items()
     )
 
+    # AGV Bringup
+    agv_bringup = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
+        ),
+    )
+
+
     nodes_to_start = [
         gazebo,
+        agv_bringup,
         floor_robot_bringup,
         ceiling_robot_bringup,
     ]
