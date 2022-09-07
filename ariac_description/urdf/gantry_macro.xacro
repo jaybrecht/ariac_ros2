@@ -117,10 +117,10 @@
     <joint name="small_long_joint" type="prismatic">
       <parent link="long_rail_2"/>
       <child link="small_rail"/>
-      <origin xyz="0.0 0.0 ${rail_height + rail_thickness}" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="0.0 -5.0 ${rail_height + rail_thickness}" rpy="0.0 0.0 ${pi/2}"/>
       <axis xyz="1 0 0"/>
-      <limit lower="${-long_rail_length / 2 + long_rail_offset + small_rail_width / 2}"
-          upper="${long_rail_length / 2 + long_rail_offset - small_rail_width / 2}"
+      <limit lower="${-long_rail_length / 2 + small_rail_width / 2}"
+          upper="${long_rail_length / 2 - small_rail_width / 2}"
           velocity="1"
           effort="100000"/>
     </joint>

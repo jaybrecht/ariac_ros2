@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
   <xacro:macro name="agv" params="
-    number">
+    agv_number
+    y_position">
     
     <xacro:include filename="$(find ariac_description)/urdf/AGV/agv.ros2_control.xacro"/>
 
     <!-- Run ROS2 control macro -->
     <xacro:agv_ros2_control
-      name="agv"
+      name="$(arg agv_number)"
     />
 
     <link name="track">
@@ -41,7 +42,7 @@
     <joint name="world_to_track" type="fixed">
       <parent link="world"/>
       <child link="track"/>
-      <origin xyz="-2 4.707484 0.0" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="-2 $(arg y_position) 0.0" rpy="0.0 0.0 ${pi/2}"/>
     </joint>
 
     <joint name="agv_joint" type="prismatic">

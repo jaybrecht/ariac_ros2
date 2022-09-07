@@ -118,6 +118,7 @@ def launch_setup(context, *args, **kwargs):
             planning_scene_monitor_parameters,
             {"use_sim_time": True},
         ],
+        condition=IfCondition(start_moveit),
     )
 
     # Gazebo Controllers

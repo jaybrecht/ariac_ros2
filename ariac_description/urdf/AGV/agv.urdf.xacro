@@ -4,12 +4,19 @@
   <!-- Include macro -->
   <xacro:include filename="$(find ariac_description)/urdf/AGV/agv_macro.xacro"/>
 
+  <xacro:arg name="agv_number" default="agv_1"/>
+  <xacro:property name="agv_number" default="$(arg agv_number)"/>
+
+  <xacro:arg name="y_position" default="0"/>
+  <xacro:property name="y_position" default="$(arg y_position)"/>
+
   <!-- Create a world link -->
   <link name="world"/>
 
   <!-- Run agv macro -->
   <xacro:agv
-    number="1"
+    agv_number="$(arg agv_number)"
+    y_position="$(arg y_position)"
     >
   </xacro:agv>
 
@@ -22,10 +29,10 @@
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
       <ros>
-        <namespace>/agv</namespace>
+        <namespace>/$(arg agv_number)</namespace>
       </ros>
       <parameters>$(arg controllers)</parameters>
-      <robot_param_node>/agv/robot_state_publisher</robot_param_node>
+      <robot_param_node>/$(arg agv_number)/robot_state_publisher</robot_param_node>
     </plugin>
   </gazebo>
 

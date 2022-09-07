@@ -16,55 +16,67 @@ from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 
 def launch_setup(context, *args, **kwargs):  
-    # Generate Robot Description parameter from xacro
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/AGV", "agv.urdf.xacro"]), 
-            " "
-        ]
-    )
-    robot_description = {"robot_description": robot_description_content}
+    # Define y_positions for agvs
+    y_positions = ["4.707484", "1.302086", "-1.295472", "-4.696062"]
+    
+    nodes_to_start = []
 
-    robot_state_publisher_node = Node(
-        namespace="agv",
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[robot_description,
-            {"use_sim_time": True},
-        ],
-    )
+    for i, pos in enumerate(y_positions):
+        agv_number = "agv_" + str(i+1)
+    
+        # Generate Robot Description parameter from xacro
+        robot_description_content = Command(
+            [
+                PathJoinSubstitution([FindExecutable(name="xacro")]),
+                " ",
+                PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/AGV", "agv.urdf.xacro"]), 
+                " ",
+                "agv_number:=",
+                agv_number,
+                " ",
+                "y_position:=",
+                pos,
+                " ",
+            ]
+        )
+        robot_description = {"robot_description": robot_description_content}
 
-    # Gazebo Controllers
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/agv/controller_manager"],
-    )
+        robot_state_publisher_node = Node(
+            namespace=agv_number,
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            output="both",
+            parameters=[robot_description,
+                {"use_sim_time": True},
+            ],
+        )
 
-    position_controller_spawner= Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["agv_controller", "-c", "/agv/controller_manager"],
-    )
+        # Gazebo Controllers
+        joint_state_broadcaster_spawner = Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["joint_state_broadcaster", "--controller-manager", "/" + agv_number + "/controller_manager"],
+        )
 
-    # Spawn robot
-    gazebo_spawn_robot = Node(
-        package="gazebo_ros",
-        executable="spawn_entity.py",
-        name="spawn_gantry",
-        arguments=["-entity", "agv", "-topic", "/agv/robot_description"],
-        output="screen",
-    )
+        position_controller_spawner= Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["agv_controller", "-c", "/" + agv_number + "/controller_manager"],
+        )
 
-    nodes_to_start = [
-        robot_state_publisher_node,
-        joint_state_broadcaster_spawner,
-        position_controller_spawner,
-        gazebo_spawn_robot,
-    ]
+        # Spawn robot
+        gazebo_spawn_robot = Node(
+            package="gazebo_ros",
+            executable="spawn_entity.py",
+            name="spawn_gantry",
+            arguments=["-entity", agv_number, "-topic", "/" + agv_number + "/robot_description"],
+            output="screen",
+        )
+
+        nodes_to_start.append(robot_state_publisher_node)
+        nodes_to_start.append(joint_state_broadcaster_spawner)
+        nodes_to_start.append(position_controller_spawner)
+        nodes_to_start.append(gazebo_spawn_robot)
 
     return nodes_to_start
 
