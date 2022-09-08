@@ -64,7 +64,7 @@
     <joint name="world_to_track" type="fixed">
       <parent link="world"/>
       <child link="$(arg agv_number)_track"/>
-      <origin xyz="-2 $(arg y_position) 0.0" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="-2.27 $(arg y_position) 0.0" rpy="0.0 0.0 ${pi/2}"/>
     </joint>
 
     <joint name="agv_joint" type="prismatic">
@@ -72,7 +72,7 @@
       <origin xyz="0.0 0.0 0.0"/>
       <parent link="$(arg agv_number)_track"/>
       <child link="$(arg agv_number)_base"/>
-      <limit effort="1000.0" lower="0" upper="12" velocity="10"/>
+      <limit effort="1000.0" lower="0" upper="11" velocity="10"/>
       <dynamics damping="20.0" friction="500.0" />
     </joint>
 

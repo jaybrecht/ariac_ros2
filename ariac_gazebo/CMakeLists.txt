@@ -15,9 +15,9 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
-# find_package(Boost REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(gazebo_plugins REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # Include Cpp "include" directory
 include_directories(
@@ -95,6 +95,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/py_node.py
+  scripts/AGV_mover.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

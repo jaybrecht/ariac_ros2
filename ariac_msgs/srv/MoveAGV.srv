@@ -1,0 +1,4 @@
+string station
+---
+bool success
+string message
