@@ -89,11 +89,14 @@ class AGV_Mover(Node):
         self.action_result = future.result().result
         self.action_done_event.set()
 
-    def go_to_station_cb(self, request, response):        
+    def go_to_station_cb(self, request, response:MoveAGV.Response):        
         self.send_goal(request.station)
 
         if self.action_result.error_code == FollowJointTrajectory.Result.SUCCESSFUL:
             response.success = True
+        else:
+            response.success = False
+            response.message = "The action was not successful"
 
         return response
 
