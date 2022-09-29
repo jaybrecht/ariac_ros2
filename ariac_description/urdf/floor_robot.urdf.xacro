@@ -7,6 +7,9 @@
   <!-- Inclue ur robot macro -->
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
 
+  <!-- Inclue gripper macro -->
+  <xacro:include filename="$(find ariac_description)/urdf/vacuum_gripper/vacuum_gripper_macro.xacro"/>
+
   <xacro:arg name="initial_positions_file" default="$(find ariac_description)/config/floor_robot_initial_positions.yaml"/>
   <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
@@ -33,6 +36,13 @@
     initial_positions="${load_yaml(initial_positions_file)}">
     <origin xyz="0 0 0.025" rpy="0 0 0" />
   </xacro:ur_robot>
+
+  <!-- Run gripper macro -->
+  <xacro:vacuum_gripper
+    parent="wrist_3_link"
+    prefix="floor"
+    >
+  </xacro:vacuum_gripper>
 
   <gazebo 
     reference="world">
