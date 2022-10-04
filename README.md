@@ -1,12 +1,48 @@
 # ARIAC ROS2 
 
-## To start the environment with RVIZ
+This package is built for ROS2 Galactic running on Ubuntu 20.04 (Focal)
 
-Launch the ARIAC environment:
+## Install
+
+- Install ROS2 Galactic Desktop using the [instructions on the ROS2 wiki](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html#)
+
+- Create a colcon workspace 
+
+```
+$ source /opt/ros/galactic/setup.bash
+$ mkdir -p ~/ariac_ws/src
+$ cd ~/ariac_ws
+```
+
+- Clone this repository into the src directory of the ariac_ws
+
+```
+$ git clone https://github.com/jaybrecht/ariac_ros2.git src/ariac_ros2`
+```
+
+- Install dependencies
+
+```
+$ rosdep install --from-paths src -y --ignore-src
+```
+
+- Build the colcon workspace
+
+```
+$ colcon build
+```
+
+## Starting the Environment
+
+To launch the ARIAC environment:
+
+`ros2 launch ariac_gazebo ariac.launch.py`
+
+To launch the ARIAC environment with MoveIt and RVIZ
 
 `ros2 launch ariac_gazebo ariac.launch.py start_moveit:=true start_rviz:=true`
 
-## To run the test competitor
+## Running the test competitor
 
 Launch the ARIAC environment:
 
