@@ -63,17 +63,17 @@ def launch_setup(context, *args, **kwargs):
         )
 
         # AGV Move service node
-        agv_mover = Node(
-            package="ariac_gazebo",
-            executable="AGV_mover.py",
-            name=agv_number + "_mover",
-            arguments=[agv_number])
+        # agv_mover = Node(
+        #     package="ariac_gazebo",
+        #     executable="AGV_mover.py",
+        #     name=agv_number + "_mover",
+        #     arguments=[agv_number])
 
         nodes_to_start.append(robot_state_publisher_node)
         nodes_to_start.append(joint_state_broadcaster_spawner)
         nodes_to_start.append(position_controller_spawner)
         nodes_to_start.append(gazebo_spawn_robot)
-        nodes_to_start.append(agv_mover)
+        # nodes_to_start.append(agv_mover)
 
     return nodes_to_start
 

@@ -13,7 +13,7 @@
     initial_positions">
 
     <!-- ROS2 Control -->
-    <xacro:include filename="$(find ariac_description)/urdf/gantry.ros2_control.xacro"/>
+    <xacro:include filename="$(find ariac_description)/urdf/ceiling_robot/gantry.ros2_control.xacro"/>
     <xacro:gantry_ros2_control
       name="gantry"
       initial_positions="${initial_positions}"

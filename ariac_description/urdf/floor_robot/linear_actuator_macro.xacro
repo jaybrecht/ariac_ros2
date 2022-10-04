@@ -5,7 +5,7 @@
     initial_positions">
 
     <!-- ROS2 Control -->
-    <xacro:include filename="$(find ariac_description)/urdf/linear_actuator.ros2_control.xacro"/>
+    <xacro:include filename="$(find ariac_description)/urdf/floor_robot/linear_actuator.ros2_control.xacro"/>
     <xacro:gantry_ros2_control
       name="linear_actuator"
       initial_positions="${initial_positions}"
