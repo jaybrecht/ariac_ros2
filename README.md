@@ -36,18 +36,29 @@ $ colcon build
 
 To launch the ARIAC environment:
 
-`ros2 launch ariac_gazebo ariac.launch.py`
+```
+$ . ~/ariac_ws/install/setup.bash
+$ ros2 launch ariac_gazebo ariac.launch.py
+```
 
 To launch the ARIAC environment with MoveIt and RVIZ
 
-`ros2 launch ariac_gazebo ariac.launch.py start_moveit:=true start_rviz:=true`
-
+```
+$ . ~/ariac_ws/install/setup.bash
+$ ros2 launch ariac_gazebo ariac.launch.py start_moveit:=true start_rviz:=true
+```
 ## Running the test competitor
 
 Launch the ARIAC environment:
 
-`ros2 launch ariac_gazebo ariac.launch.py start_moveit:=true`
+```
+$ . ~/ariac_ws/install/setup.bash
+$ ros2 launch ariac_gazebo ariac.launch.py start_moveit:=true
+```
 
-Launch the test competitor:
+In another terminal start the test competitor:
 
-`ros2 launch test_competitor moveit_test.launch.py`
+```
+$ . ~/ariac_ws/install/setup.bash
+$ ros2 launch test_competitor moveit_test.launch.py
+```
