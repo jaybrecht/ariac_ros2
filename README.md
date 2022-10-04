@@ -17,7 +17,7 @@ $ cd ~/ariac_ws
 - Clone this repository into the src directory of the ariac_ws
 
 ```
-$ git clone https://github.com/jaybrecht/ariac_ros2.git src/ariac_ros2`
+$ git clone https://github.com/jaybrecht/ariac_ros2.git src/ariac_ros2
 ```
 
 - Install dependencies
