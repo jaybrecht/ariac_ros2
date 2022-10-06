@@ -62,3 +62,18 @@ In another terminal start the test competitor:
 $ . ~/ariac_ws/install/setup.bash
 $ ros2 launch test_competitor moveit_test.launch.py
 ```
+
+## Controlling the diffbot
+
+Launch the ARIAC environment:
+
+```
+$ . ~/ariac_ws/install/setup.bash
+$ ros2 launch ariac_gazebo ariac.launch.py
+```
+
+In another terminal send twist commands:
+
+```
+$ ros2 topic pub --rate 30 /diffbot/diff_drive_base_controller/cmd_vel_unstamped geometry_msgs/msg/Twist "{linear: {x: 0.2, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+```
