@@ -7,7 +7,7 @@ https://github.com/ros-simulation/gazebo_ros_demos/blob/kinetic-devel/diffbot_de
 
   <xacro:macro name="diffbot_gazebo" params="prefix">
 
-    <gazebo reference="${prefix}base_link">
+    <gazebo reference="${prefix}base">
       <material>Gazebo/Blue</material>
     </gazebo>
 
@@ -23,11 +23,7 @@ https://github.com/ros-simulation/gazebo_ros_demos/blob/kinetic-devel/diffbot_de
       <material>Gazebo/Black</material>
     </gazebo>
 
-    <gazebo reference="${prefix}caster_frontal_wheel">
-      <material>Gazebo/Black</material>
-    </gazebo>
-
-    <gazebo reference="${prefix}caster_rear_wheel">
+    <gazebo reference="${prefix}caster">
       <material>Gazebo/Black</material>
     </gazebo>
     
