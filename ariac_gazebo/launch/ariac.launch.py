@@ -62,10 +62,10 @@ def launch_setup(context, *args, **kwargs):
         ),
     )
 
-    # Human Bringup
-    diffbot_bringup = IncludeLaunchDescription(
+    # Mobile Robot Bringup
+    mobile_robot_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/diffbot.launch.py"]
+            [FindPackageShare("ariac_mobile_robot"), "/launch", "/mobile_robot_bringup.launch.py"]
         ),
     )
 
@@ -74,7 +74,7 @@ def launch_setup(context, *args, **kwargs):
         agv_bringup,
         floor_robot_bringup,
         ceiling_robot_bringup,
-        diffbot_bringup,
+        mobile_robot_bringup,
     ]
 
     return nodes_to_start
