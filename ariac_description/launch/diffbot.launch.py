@@ -33,6 +33,7 @@ def launch_setup(context, *args, **kwargs):
     robot_description = {"robot_description": robot_description_content}
 
     robot_state_publisher = Node(
+        namespace="diffbot",
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
@@ -43,14 +44,14 @@ def launch_setup(context, *args, **kwargs):
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "-c", "/controller_manager"],
+        arguments=["joint_state_broadcaster", "-c", "/diffbot/controller_manager"],
         parameters=[{"use_sim_time": True}]
     )
 
     position_controller_spawner= Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_drive_base_controller", "-c", "controller_manager"],
+        arguments=["diff_drive_base_controller", "-c", "/diffbot/controller_manager"],
         parameters=[{"use_sim_time": True}]
     )
 
@@ -59,7 +60,7 @@ def launch_setup(context, *args, **kwargs):
         package="gazebo_ros",
         executable="spawn_entity.py",
         name="spawn_diffbot",
-        arguments=["-entity", "diffbot", "-topic", "/robot_description", "-x", "-4.0", "-y", "3.5", "-z", "0.1"],
+        arguments=["-entity", "diffbot", "-topic", "/diffbot/robot_description", "-x", "-4.0", "-y", "3.5", "-z", "0.1"],
         output="screen",
     )
 

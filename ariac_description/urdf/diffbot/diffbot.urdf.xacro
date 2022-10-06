@@ -37,7 +37,11 @@ https://github.com/ros-simulation/gazebo_ros_demos/blob/kinetic-devel/diffbot_de
 
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <ros>
+        <namespace>/diffbot</namespace>
+      </ros>
       <parameters>$(arg controllers)</parameters>
+      <robot_param_node>/diffbot/robot_state_publisher</robot_param_node>
     </plugin>
   </gazebo>
 
