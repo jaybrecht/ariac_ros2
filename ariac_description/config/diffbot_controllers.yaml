@@ -14,8 +14,8 @@ diffbot/diff_drive_base_controller:
     left_wheel_names: ["left_wheel_joint"]
     right_wheel_names: ["right_wheel_joint"]
 
-    wheel_separation: 1.25
-    wheel_radius: 0.3
+    wheel_separation: 0.1
+    wheel_radius: 0.05
 
     wheel_separation_multiplier: 1.0
     left_wheel_radius_multiplier: 1.0

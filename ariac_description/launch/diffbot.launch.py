@@ -60,7 +60,7 @@ def launch_setup(context, *args, **kwargs):
         package="gazebo_ros",
         executable="spawn_entity.py",
         name="spawn_diffbot",
-        arguments=["-entity", "diffbot", "-topic", "/diffbot/robot_description", "-x", "-4.0", "-y", "3.5", "-z", "0.1"],
+        arguments=["-entity", "diffbot", "-topic", "/diffbot/robot_description", "-x", "-4.0", "-y", "3.5", "-z", "0.1", "-Y", "3.14"],
         output="screen",
     )
 

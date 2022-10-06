@@ -71,9 +71,9 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         gazebo,
-        # agv_bringup,
-        # floor_robot_bringup,
-        # ceiling_robot_bringup,
+        agv_bringup,
+        floor_robot_bringup,
+        ceiling_robot_bringup,
         diffbot_bringup,
     ]
 
