@@ -63,7 +63,8 @@ class GazeboRobotSpawner(Node):
         self.client = self.create_client(SpawnEntity, '/spawn_entity')
         
         while not self.client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('spawn service not available, waiting again...')
+            pass
+            # self.get_logger().info('spawn service not available, waiting again...')
 
     def spawn_from_params(self, params: RobotSpawnParams) -> bool:
         req = SpawnEntity.Request()
@@ -97,7 +98,7 @@ class GazeboRobotSpawner(Node):
         self.subscription = self.create_subscription(String, topic, entity_xml_cb, latched_qos)
 
         while rclpy.ok() and entity_xml == '':
-            self.get_logger().info(f'Waiting for entity xml on {topic}', throttle_duration_sec=1)
+            # self.get_logger().info(f'Waiting for entity xml on {topic}', throttle_duration_sec=1)
             rclpy.spin_once(self)
             pass
 
@@ -116,8 +117,14 @@ class GazeboRobotSpawner(Node):
 def main():
     rclpy.init()
 
-    # Create spawn params for the URDF robots
     robot_params = []
+    
+    # Create spawn params for the mobile robot
+    model_path = os.path.join(get_package_share_directory('ariac_mobile_robot'), 'models', "mobile_robot", 'model.sdf')
+
+    robot_params.append(RobotSpawnParams('mobile_robot', file_path=model_path, x=-4.0, y=3.5, Y=3.14))
+
+    # Create spawn params for the URDF robots
     robot_names = ['floor_robot', 'ceiling_robot', 'agv1', 'agv2', 'agv3', 'agv4']
     
     for name in robot_names:
@@ -130,16 +137,6 @@ def main():
     for params in robot_params:
         if not robot_spawner.spawn_from_params(params):
             robot_spawner.get_logger().error(f"Unable to spawn {params.name}")
-
-    time.sleep(2)
-
-    # Create spawn params for the mobile robot
-    model_path = os.path.join(get_package_share_directory('ariac_mobile_robot'), 'models', "mobile_robot", 'model.sdf')
-
-    mobile_robot_params = RobotSpawnParams('mobile_robot', file_path=model_path, x=-4.0, y=3.5, Y=3.14)
-    robot_spawner.spawn_from_params(mobile_robot_params)
-
-    robot_spawner.get_logger().info("Spawned all robots")
 
     robot_spawner.destroy_node()
     rclpy.shutdown()
