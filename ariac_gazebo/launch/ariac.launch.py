@@ -69,12 +69,20 @@ def launch_setup(context, *args, **kwargs):
         ),
     )
 
+    # Robot Spawner Node
+    robot_spawner = Node(
+        package='ariac_gazebo',
+        executable='spawn_robots.py',
+        output='screen',
+    )
+
     nodes_to_start = [
         gazebo,
         agv_bringup,
         floor_robot_bringup,
         ceiling_robot_bringup,
         mobile_robot_bringup,
+        robot_spawner
     ]
 
     return nodes_to_start

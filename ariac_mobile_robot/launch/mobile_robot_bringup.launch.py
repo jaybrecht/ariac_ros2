@@ -42,22 +42,14 @@ def launch_setup(context, *args, **kwargs):
     gazebo_spawn_robot = Node(
         package="gazebo_ros",
         executable="spawn_entity.py",
-        name="spawn_diffbot",
-        arguments=["-entity", "turtlebot", "-file", model_path, "-x", "-4.0", "-y", "3.5", "-z", "0.0", "-Y", "3.14"],
+        name="spawn_mobile_robot",
+        arguments=["-entity", "mobile_robot", "-robot_namespace", "mobile_robot", "-file", model_path, "-x", "-4.0", "-y", "3.5", "-z", "0.0", "-Y", "3.14"],
         output="screen",
-    )
-
-    odom_transform_pub = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        output="screen" ,
-        arguments=["0", "0", "0", "0", "0", "0", "world", "odom"]
     )
 
     nodes_to_start = [
         robot_state_publisher,
-        gazebo_spawn_robot,
-        # odom_transform_pub
+        # gazebo_spawn_robot,
     ]
 
     return nodes_to_start

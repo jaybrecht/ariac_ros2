@@ -91,7 +91,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Nodes
     robot_state_publisher_node = Node(
-        namespace="ceiling",
+        namespace="ceiling_robot",
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
@@ -104,7 +104,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Move group node
     move_group_node = Node(
-        namespace="ceiling",
+        namespace="ceiling_robot",
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
@@ -125,21 +125,21 @@ def launch_setup(context, *args, **kwargs):
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/ceiling/controller_manager"],
+        arguments=["joint_state_broadcaster", "--controller-manager", "/ceiling_robot/controller_manager"],
     )
 
     joint_controller_spawner= Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_trajectory_controller", "-c", "/ceiling/controller_manager"],
+        arguments=["joint_trajectory_controller", "-c", "/ceiling_robot/controller_manager"],
     )
 
     # Spawn robot
     gazebo_spawn_robot = Node(
         package="gazebo_ros",
         executable="spawn_entity.py",
-        name="spawn_gantry",
-        arguments=["-entity", "ceiling_robot", "-topic", "/ceiling/robot_description"],
+        # name="spawn_ceiling_robot",
+        arguments=["-entity", "ceiling_robot", "-robot_namespace", "ceiling", "-topic", "/ceiling/robot_description"],
         output="screen",
     )
 
@@ -168,7 +168,7 @@ def launch_setup(context, *args, **kwargs):
         robot_state_publisher_node,
         joint_state_broadcaster_spawner,
         joint_controller_spawner,
-        gazebo_spawn_robot,
+        # gazebo_spawn_robot,
         move_group_node,
         rviz_node,
     ]

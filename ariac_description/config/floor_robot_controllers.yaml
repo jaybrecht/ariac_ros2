@@ -1,4 +1,4 @@
-floor/controller_manager:
+floor_robot/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
@@ -10,8 +10,7 @@ floor/controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
     
 
-
-floor/joint_trajectory_controller:
+floor_robot/joint_trajectory_controller:
   ros__parameters:
     joints:
       - linear_actuator 

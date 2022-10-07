@@ -61,10 +61,10 @@
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
       <ros>
-        <namespace>/ceiling</namespace>
+        <namespace>/ceiling_robot</namespace>
       </ros>
       <parameters>$(arg controllers)</parameters>
-      <robot_param_node>/ceiling/robot_state_publisher</robot_param_node>
+      <robot_param_node>/ceiling_robot/robot_state_publisher</robot_param_node>
     </plugin>
   </gazebo>
 

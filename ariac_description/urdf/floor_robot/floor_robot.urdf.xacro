@@ -53,10 +53,10 @@
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
       <ros>
-        <namespace>/floor</namespace>
+        <namespace>/floor_robot</namespace>
       </ros>
       <parameters>$(arg controllers)</parameters>
-      <robot_param_node>/floor/robot_state_publisher</robot_param_node>
+      <robot_param_node>/floor_robot/robot_state_publisher</robot_param_node>
     </plugin>
   </gazebo>
 
