@@ -27,7 +27,7 @@
   <xacro:arg name="controllers" default="$(find ariac_description)/config/agv_controllers.yaml" />
 
   <gazebo>
-    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+    <plugin filename="libgazebo_ros2_control.so" name="$(arg agv_number)_gazebo_ros2_control">
       <ros>
         <namespace>/$(arg agv_number)</namespace>
       </ros>
