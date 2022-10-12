@@ -349,6 +349,5 @@
       <uri>model://assembly_station</uri>
     </include>
 
-
   </world>
 </sdf>

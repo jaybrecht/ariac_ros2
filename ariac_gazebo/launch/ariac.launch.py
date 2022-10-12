@@ -7,6 +7,7 @@ from launch.actions import (
 )
 from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
+from launch.actions import RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -21,8 +22,8 @@ def launch_setup(context, *args, **kwargs):
     world_path = os.path.join(pkg_share, 'worlds', world_file_name)
     
     # Set the path to the SDF model files.
-    gazebo_models_path = os.path.join(pkg_share, 'models')
-    os.environ["GAZEBO_MODEL_PATH"] = gazebo_models_path
+    # gazebo_models_path = os.path.join(pkg_share, 'models')
+    # os.environ["GAZEBO_MODEL_PATH"] = gazebo_models_path
     
     gazebo_plugin_path = os.path.join(pkg_share)
     os.environ["GAZEBO_PLUGIN_PATH"] = gazebo_plugin_path
@@ -69,6 +70,13 @@ def launch_setup(context, *args, **kwargs):
         ),
     )
 
+    sensor_spawner = Node(
+        package='ariac_gazebo',
+        executable='spawn_sensors.py',
+        output='screen',
+        arguments=[]
+    )
+
     # Robot Spawner Node
     robot_spawner = Node(
         package='ariac_gazebo',
@@ -77,13 +85,22 @@ def launch_setup(context, *args, **kwargs):
         arguments=[]
     )
 
+    spawn_robots_after_sensors = RegisterEventHandler(
+        OnProcessExit(
+            target_action=sensor_spawner,
+            on_exit=[robot_spawner]
+        )
+    )
+
+
     nodes_to_start = [
         gazebo,
-        agv_bringup,
-        floor_robot_bringup,
-        ceiling_robot_bringup,
+        # agv_bringup,
+        # floor_robot_bringup,
+        # ceiling_robot_bringup,
         # mobile_robot_bringup,
-        robot_spawner
+        sensor_spawner,
+        # robot_spawner
     ]
 
     return nodes_to_start

@@ -1,0 +1,12 @@
+sensors:
+  breakbeam_1:
+    type: break_beam
+    pose:
+      xyz: [-0.346650, 2.664459, 0.934996]
+      rpy: [0.000000, 0.000000, 3.141593]
+
+  breakbeam_2:
+    type: break_beam
+    pose:
+      xyz: [-0.346650, 3, 0.934996]
+      rpy: [0.000000, 0.000000, 3.141593]

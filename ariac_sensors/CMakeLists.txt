@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ariac_mobile_robot)
+project(ariac_sensors)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -18,7 +18,8 @@ include_directories(
   ${GAZEBO_INCLUDE_DIRS}
 )
 
-install(DIRECTORY launch models urdf
+install(DIRECTORY models
   DESTINATION share/${PROJECT_NAME}/
 )
+
 ament_package()
