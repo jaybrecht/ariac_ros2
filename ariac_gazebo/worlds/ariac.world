@@ -150,121 +150,101 @@
     </light>
 
     <!-- Models for aesthetics -->
-    <model name="CageFactory1">
-      <include>
-        <static>true</static>
-        <uri>model://cage_factory</uri>
-      </include>
-      <pose frame=''>-17.6 -0.5 0. 0 0 0</pose>
-    </model>
-    <model name="CageFactory2">
-      <include>
-        <static>true</static>
-        <uri>model://cage_factory</uri>
-      </include>
-      <pose frame=''>-17.6 4.8 0. 0 0 0</pose>
-    </model>
-    <model name="CageFactory3">
-      <include>
-        <static>true</static>
-        <uri>model://cage_factory</uri>
-      </include>
-      <pose frame=''>-17.0 -2.03 2.6 0 0 3.1415</pose>
-    </model>
-    <model name="FactoryShelf1">
-      <include>
-        <static>true</static>
-        <uri>model://factory_shelf</uri>
-      </include>
-      <pose frame=''>-2.357211 -10.597721 0.015890 0 0 -1.570048</pose>
-    </model>
-    <model name="FactoryShelf2">
-      <include>
-        <static>true</static>
-        <uri>model://factory_shelf</uri>
-      </include>
-      <pose frame=''>-4.714521 -9.957084 0.015890 0 0 1.570048</pose>
-    </model>
-    <model name="FactoryShelf3">
-      <include>
-        <static>true</static>
-        <uri>model://factory_shelf</uri>
-      </include>
-      <pose frame=''>-7.073606 -9.989021 0.015890 0 0 1.570048</pose>
-    </model>
-    <model name="FactoryShelf4">
-      <include>
-        <static>true</static>
-        <uri>model://factory_shelf</uri>
-      </include>
-      <pose frame=''>-9.429011 -9.995264 0.015890 0 0 1.570048</pose>
-    </model>
-    <model name="FactoryShelf5">
-      <include>
-        <static>true</static>
-        <uri>model://factory_shelf</uri>
-      </include>
-      <pose frame=''>-11.89 -10.748168   0.015890 0 0 -1.570048</pose>
-    </model>
-    <model name="FactoryShelf6">
-      <include>
-        <static>true</static>
-        <uri>model://factory_shelf</uri>
-      </include>
-      <pose frame=''>-14.137 -10.188283 0.015890 0 0 1.570048</pose>
-    </model>
-    <model name="Computer1">
-      <include>
-        <static>true</static>
-        <uri>model://computer_2</uri>
-      </include>
-      <pose frame=''>1.885278 4.035417 0.0 0 0 1.557780</pose>
-    </model>  
-    <model name="Computer2">
-      <include>
-        <static>true</static>
-        <uri>model://computer</uri>
-      </include>
-      <pose frame=''>1.691086 3.033527  0.0 0 0 0</pose>
-    </model>
-    <model name="BoxPallet6">
-      <include>
-        <static>true</static>
-        <uri>model://box_pallets_3</uri>
-      </include>
-      <pose frame=''>0.5554 -7.468 0.01589 0 0 -0.065512</pose>
-    </model>   
-          <model name="PartCollector">
-      <include>
-        <static>true</static>
-        <uri>model://trash_bin_blue</uri>
-      </include>
-      <pose frame=''>-2.186829 0 -0.054593 0 0 0</pose>
-    </model>   
+    <include>
+      <name>CageFactory1</name>
+      <uri>model://cage_factory</uri>
+      <pose>-17.6 -0.5 0. 0 0 0</pose>
+    </include>
 
-      <model name="ConveyorCollector">
-      <include>
-        <static>true</static>
-        <uri>model://trash_bin_blue</uri>
-      </include>
-      <pose frame=''>-0.577 -4.719131 0 0 0 0</pose>
-    </model>   
+    <include>
+      <name>CageFactory2</name>
+      <uri>model://cage_factory</uri>
+      <pose>-17.6 4.8 0. 0 0 0</pose>
+    </include>
 
-    <model name="ConveyorCollector2">
-      <include>
-        <static>true</static>
-        <uri>model://trash_bin_blue</uri>
-      </include>
-      <pose frame=''>-0.577 4.719131 0 0 0 0</pose>
-    </model>  
+    <include>
+      <name>CageFactory3</name>
+      <uri>model://cage_factory</uri>
+      <pose>-17.0 -2.03 2.6 0 0 3.1415</pose>
+    </include>
 
-    <model name="workcell_floor_2021">
-      <include>
-        <static>true</static>
-        <uri>model://workcell_floor_2021</uri>
-      </include>
-      <pose frame=''>-3.6 -3.32 0 0 0 0</pose>
-    </model>
+    <include>
+      <name>FactoryShelf1</name>
+      <uri>model://factory_shelf</uri>
+      <pose>-2.357211 -10.597721 0.015890 0 0 -1.570048</pose>
+    </include>
+
+    <include>
+      <name>FactoryShelf2</name>
+      <uri>model://factory_shelf</uri>
+      <pose>-4.714521 -9.957084 0.015890 0 0 1.570048</pose>
+    </include>
+
+    <include>
+      <name>FactoryShelf3</name>
+      <uri>model://factory_shelf</uri>
+      <pose>-7.073606 -9.989021 0.015890 0 0 1.570048</pose>
+    </include>
+
+    <include>
+      <name>FactoryShelf4</name>
+      <uri>model://factory_shelf</uri>
+      <pose>-9.429011 -9.995264 0.015890 0 0 1.570048</pose>
+    </include>
+
+    <include>
+      <name>FactoryShelf5</name>
+      <uri>model://factory_shelf</uri>
+      <pose>-11.89 -10.748168 0.015890 0 0 -1.570048</pose>
+    </include>
+
+    <include>
+      <name>FactoryShelf6</name>
+      <uri>model://factory_shelf</uri>
+      <pose>-14.137 -10.188283 0.015890 0 0 1.570048</pose>
+    </include>
+
+    <include>
+      <name>Computer1</name>
+      <uri>model://computer_2</uri>
+      <pose>1.885278 4.035417 0.0 0 0 1.557780</pose>
+    </include>
+
+    <include>
+      <name>Computer2</name>
+      <uri>model://computer</uri>
+      <pose>1.691086 3.033527  0.0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>BoxPallet6</name>
+      <uri>model://box_pallets_3</uri>
+      <pose>0.5554 -7.468 0.01589 0 0 -0.065512</pose>
+    </include>
+
+    <include>
+      <name>PartCollector</name>
+      <uri>model://trash_bin_blue</uri>
+      <pose>-2.186829 0 -0.054593 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>ConveyorCollector</name>
+      <uri>model://trash_bin_blue</uri>
+      <pose>-0.577 -4.719131 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>ConveyorCollector2</name>
+      <uri>model://trash_bin_blue</uri>
+      <pose>-0.577 4.719131 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>workcell_floor</name>
+      <uri>model://workcell_floor_2021</uri>
+      <pose>-3.6 -3.32 0 0 0 0</pose>
+    </include>
 
     <!-- Insert AGV paths -->
     <include>
