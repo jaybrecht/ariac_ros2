@@ -118,14 +118,20 @@ def main():
     rclpy.init()
 
     robot_params = []
+    robot_names = []
     
     # Create spawn params for the mobile robot
     model_path = os.path.join(get_package_share_directory('ariac_mobile_robot'), 'models', "mobile_robot", 'model.sdf')
 
-    robot_params.append(RobotSpawnParams('mobile_robot', file_path=model_path, x=-4.0, y=3.5, Y=3.14))
+    # robot_params.append(RobotSpawnParams('mobile_robot', file_path=model_path, x=-4.0, y=3.5, Y=3.14))
 
     # Create spawn params for the URDF robots
-    robot_names = ['floor_robot', 'ceiling_robot', 'agv1', 'agv2', 'agv3', 'agv4']
+    robot_names.append('floor_robot')
+    robot_names.append('ceiling_robot')
+    robot_names.append('agv1')
+    robot_names.append('agv2')
+    robot_names.append('agv3')
+    robot_names.append('agv4')
     
     for name in robot_names:
         robot_params.append(RobotSpawnParams(name))
