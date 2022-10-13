@@ -70,13 +70,14 @@ def quaternion_from_euler(roll, pitch, yaw):
     return q
 
 class SensorSpawnParams:
-    def __init__(self, name, sensor_type, xyz=[0,0,0], rpy=[0,0,0], ns='', rf=''):
+    def __init__(self, name, sensor_type, xyz=[0,0,0], rpy=[0,0,0], ns='', rf='', visulize=True):
         self.name = name
         self.sensor_type = sensor_type
         self.robot_namespace = ns
         self.initial_pose = self.pose_info(xyz, rpy)
         self.file_path = os.path.join(get_package_share_directory('ariac_sensors'), 'models', sensor_type, 'model.sdf')
         self.reference_frame = rf
+        self.visualize = visulize
 
     def pose_info(self, xyz: list, rpy: list) -> Pose:
         xyz_floats = []
@@ -136,6 +137,8 @@ class GazeboSensorSpawner(Node):
     def modify_xml(self, params: SensorSpawnParams):
         xml = ET.fromstring(self.get_xml_from_file(params.file_path))
 
+        xml.find('model').find('link').find('sensor').find("visualize").text = str(params.visualize)
+
         if params.sensor_type == "break_beam":
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
@@ -145,12 +148,21 @@ class GazeboSensorSpawner(Node):
             plugin.find('change_topic').text = params.name + "_change"
             plugin.find('frame_name').text = params.name + "_frame"
 
-        if params.sensor_type == "proximity_sensor" or params.sensor_type == "laser_profiler":
+        ray_sensors = ["proximity_sensor", "laser_profiler", "depth_camera"]
+        if params.sensor_type in ray_sensors:
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
             plugin.find('ros').find('namespace').text = "/ariac" 
             plugin.find('ros').find('remapping').text = "~/out:=" + params.name
+            plugin.find('frame_name').text = params.name + "_frame"
+
+        if params.sensor_type == 'rgb_camera':
+            plugin = xml.find('model').find('link').find('sensor').find('plugin')
+
+            plugin.set('name', str(params.name + "_ros_plugin"))
+            plugin.find('ros').find('namespace').text = "/ariac" 
+            plugin.find('camera_name').text = params.name
             plugin.find('frame_name').text = params.name + "_frame"
 
         return ET.tostring(xml, encoding="unicode")
@@ -207,8 +219,12 @@ def main():
         type = sensors[sensor_name]['type']
         xyz = sensors[sensor_name]['pose']['xyz']
         rpy = sensors[sensor_name]['pose']['rpy']
+        if 'visualize_fov' in sensors[sensor_name].keys():
+            vis = sensors[sensor_name]['visualize_fov']
+        else:
+            vis = True
 
-        sensor_params.append(SensorSpawnParams(sensor_name, type, xyz=xyz, rpy=rpy))
+        sensor_params.append(SensorSpawnParams(sensor_name, type, xyz=xyz, rpy=rpy, visulize=vis))
 
     # Spawn the robots into gazebo
     for params in sensor_params:
