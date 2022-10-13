@@ -12,32 +12,47 @@ import rclpy
 from rclpy.node import Node
 
 from gazebo_msgs.srv import SpawnEntity
-from geometry_msgs.msg import Pose, TransformStamped
+from geometry_msgs.msg import Pose, TransformStamped, Vector3
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
-class SensorSpawnParams:
-    def __init__(self, name, sensor_type, ns='', rf='', x=0.0, y=0.0, z=0.0, R=0.0, P=0.0, Y=0.0):
-        self.name = name
-        self.sensor_type = sensor_type
-        self.robot_namespace = ns
-        self.initial_pose = self.set_initial_pose(x, y, z, R, P, Y)
-        self.file_path = os.path.join(get_package_share_directory('ariac_sensors'), 'models', sensor_type, 'model.sdf')
-        self.reference_frame = rf
+def convert_pi_string_to_float(s: str) -> float:
+    """Takes a string that contains pi and evaluates the expression. Returns a float
+    Returns 0.0 if the expression cannot be evaluated"""
+    value = 0.0
 
-    def set_initial_pose(self, x, y, z, R, P, Y):
-        initial_pose = Pose()
-        initial_pose.position.x = x
-        initial_pose.position.y = y
-        initial_pose.position.z = z
+    if s.isdigit():
+        return float(s)
 
-        q = quaternion_from_euler(R, P, Y)
-        initial_pose.orientation.w = q[0]
-        initial_pose.orientation.x = q[1]
-        initial_pose.orientation.y = q[2]
-        initial_pose.orientation.z = q[3]
+    if s.find('pi') == -1:
+        # Return 0 if string does not contain pi
+        return value
 
-        return initial_pose
-    
+    split = s.split('pi')
+    if not len(split) == 2:
+        # Can't evaluate strings with multiple pi's, return 0
+        return value
+
+    before, after = split
+    if before and after:
+        before = before.replace('*', '')
+        if before.isdigit():
+            value = float(before) * math.pi
+        after = after.replace('/', '')
+        if after.isdigit():
+            value /= float(after)
+    elif before:
+        before = before.replace('*', '')
+        if before.isdigit():
+            value = float(before) * math.pi
+    elif after:
+        after = after.replace('/', '')
+        if after.isdigit():
+            value = math.pi / float(after)
+    else:
+        value = math.pi
+
+    return value
+
 def quaternion_from_euler(roll, pitch, yaw):
     cy = math.cos(yaw * 0.5)
     sy = math.sin(yaw * 0.5)
@@ -53,6 +68,42 @@ def quaternion_from_euler(roll, pitch, yaw):
     q[3] = sy * cp * cr - cy * sp * sr
 
     return q
+
+class SensorSpawnParams:
+    def __init__(self, name, sensor_type, xyz=[0,0,0], rpy=[0,0,0], ns='', rf=''):
+        self.name = name
+        self.sensor_type = sensor_type
+        self.robot_namespace = ns
+        self.initial_pose = self.pose_info(xyz, rpy)
+        self.file_path = os.path.join(get_package_share_directory('ariac_sensors'), 'models', sensor_type, 'model.sdf')
+        self.reference_frame = rf
+
+    def pose_info(self, xyz: list, rpy: list) -> Pose:
+        xyz_floats = []
+        rpy_floats = []
+        for s in xyz:
+            try:
+                xyz_floats.append(float(s))
+            except ValueError:
+                xyz_floats.append(convert_pi_string_to_float(s))
+        for s in rpy:
+            try:
+                rpy_floats.append(float(s))
+            except ValueError:
+                rpy_floats.append(convert_pi_string_to_float(s))
+
+        pose = Pose()
+        pose.position.x = xyz_floats[0]
+        pose.position.y = xyz_floats[1]
+        pose.position.z = xyz_floats[2]
+        q = quaternion_from_euler(*rpy_floats)
+        pose.orientation.w = q[0]
+        pose.orientation.x = q[1]
+        pose.orientation.y = q[2]
+        pose.orientation.z = q[3]
+
+        return pose
+
 
 class GazeboSensorSpawner(Node):
     def __init__(self):
@@ -94,7 +145,7 @@ class GazeboSensorSpawner(Node):
             plugin.find('change_topic').text = params.name + "_change"
             plugin.find('frame_name').text = params.name + "_frame"
 
-        if params.sensor_type == "proximity_sensor":
+        if params.sensor_type == "proximity_sensor" or params.sensor_type == "laser_profiler":
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
@@ -154,10 +205,10 @@ def main():
 
     for sensor_name in sensors:
         type = sensors[sensor_name]['type']
-        x, y, z = sensors[sensor_name]['pose']['xyz']
-        roll, pitch, yaw = sensors[sensor_name]['pose']['rpy']
+        xyz = sensors[sensor_name]['pose']['xyz']
+        rpy = sensors[sensor_name]['pose']['rpy']
 
-        sensor_params.append(SensorSpawnParams(sensor_name, type, x=float(x), y=float(y), z=float(z), R=float(roll), P=float(pitch), Y=float(yaw)))
+        sensor_params.append(SensorSpawnParams(sensor_name, type, xyz=xyz, rpy=rpy))
 
     # Spawn the robots into gazebo
     for params in sensor_params:

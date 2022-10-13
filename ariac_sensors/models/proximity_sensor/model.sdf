@@ -56,5 +56,18 @@
         </plugin>
       </sensor>
     </link>
+
+    <link name="cord">
+      <gravity>false</gravity>
+      <visual name="visual">
+        <pose>-0.025 0 0 0 1.5708 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.001</radius> 
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+      </visual>
+    </link>
   </model>
 </sdf>
