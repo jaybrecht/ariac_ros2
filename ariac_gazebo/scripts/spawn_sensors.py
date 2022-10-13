@@ -89,8 +89,9 @@ class GazeboSensorSpawner(Node):
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
-            plugin.find('ros').find('namespace').text = "ariac/" + params.name
-            plugin.find('ros').find('remapping').text = "~/out:=scan"
+            plugin.find('ros').find('namespace').text = "/ariac" 
+            plugin.find('status_topic').text = params.name + "_status"
+            plugin.find('change_topic').text = params.name + "_change"
             plugin.find('frame_name').text = params.name + "_frame"
 
         return ET.tostring(xml, encoding="unicode")
