@@ -94,6 +94,14 @@ class GazeboSensorSpawner(Node):
             plugin.find('change_topic').text = params.name + "_change"
             plugin.find('frame_name').text = params.name + "_frame"
 
+        if params.sensor_type == "proximity_sensor":
+            plugin = xml.find('model').find('link').find('sensor').find('plugin')
+
+            plugin.set('name', str(params.name + "_ros_plugin"))
+            plugin.find('ros').find('namespace').text = "/ariac" 
+            plugin.find('ros').find('remapping').text = "~/out:=" + params.name
+            plugin.find('frame_name').text = params.name + "_frame"
+
         return ET.tostring(xml, encoding="unicode")
 
     def get_xml_from_file(self, file_path: str) -> str:
