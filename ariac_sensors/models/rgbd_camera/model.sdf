@@ -9,7 +9,7 @@
         <pose>0.007 0 -0.033 0 0 0</pose>
           <geometry>
           <mesh>
-              <uri>model://rgb_camera/meshes/SR4000.stl</uri>
+              <uri>model://rgbd_camera/meshes/SR4000.stl</uri>
           </mesh>
           </geometry>
           <material>
@@ -20,7 +20,8 @@
           </material>
       </visual>
 
-      <sensor type="camera" name="rgb_camera">
+      <sensor type="depth" name="rgb_camera">
+        <pose>0 0 0 1.5708 -1.5708 0</pose>
         <!-- Set always_on only sensor, not on plugin -->
         <always_on>0</always_on>
 

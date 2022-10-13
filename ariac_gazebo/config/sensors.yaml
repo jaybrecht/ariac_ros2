@@ -30,9 +30,9 @@ sensors:
   #     xyz: [-1.9, 2.565, 1.6]
   #     rpy: [0, 'pi/2', 'pi/2']
 
-  rgb_camera_0:
-    type: rgb_camera
+  rgbd_camera_0:
+    type: rgbd_camera
     pose:
       xyz: [-1.9, 2.565, 1.6]
-      rpy: [0, 'pi/2', 'pi/2']
+      rpy: [0, pi, 0]
   

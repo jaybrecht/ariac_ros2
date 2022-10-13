@@ -157,7 +157,7 @@ class GazeboSensorSpawner(Node):
             plugin.find('ros').find('remapping').text = "~/out:=" + params.name
             plugin.find('frame_name').text = params.name + "_frame"
 
-        if params.sensor_type == 'rgb_camera':
+        if params.sensor_type == 'rgb_camera' or params.sensor_type == 'rgbd_camera':
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
