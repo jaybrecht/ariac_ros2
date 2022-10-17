@@ -36,6 +36,16 @@ ament_target_dependencies(gazebo_ros_break_beam_sensor
 )
 ament_export_libraries(gazebo_ros_break_beam_sensor)
 
+add_library(gazebo_ros_logical_camera SHARED
+  src/gazebo_ros_logical_camera.cpp
+)
+target_include_directories(gazebo_ros_logical_camera PUBLIC include)
+ament_target_dependencies(gazebo_ros_logical_camera
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(gazebo_ros_logical_camera)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -43,6 +53,7 @@ install(DIRECTORY include/
 
 install(TARGETS
     gazebo_ros_break_beam_sensor
+    gazebo_ros_logical_camera
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="post">
+    <static>true</static>
+    <link name="logical_camera">
+      <visual name="visual">
+        <pose>-0.02 0 -0.02 0 0 -1.5708</pose>
+        <geometry>
+          <mesh>
+            <uri>model://logical_camera/meshes/camera.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <sensor name="logical_camera" type="logical_camera">
+        <logical_camera>
+            <near>0.2</near>
+            <far>1.1</far>
+            <horizontal_fov>1.5</horizontal_fov>
+            <aspect_ratio>1.2</aspect_ratio>
+        </logical_camera>
+
+        <visualize>true</visualize>
+        <always_on>true</always_on>
+        <update_rate>10</update_rate>
+
+        <plugin name="ros_logical_camera" filename="libgazebo_ros_logical_camera.so">
+          <ros>
+            <namespace></namespace>
+          </ros>
+          <frame_name>logical_camera_frame</frame_name>
+          <camera_name>custom_camera</camera_name>
+        </plugin>
+      </sensor>
+    </link>
+  </model>
+</sdf>

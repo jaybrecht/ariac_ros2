@@ -6,7 +6,7 @@
 
     <link name="link">
       <visual name="visual">
-        <pose>0.007 0 -0.033 0 0 0</pose>
+        <pose>-0.03 0 -0.032 0 0</pose>
           <geometry>
           <mesh>
               <uri>model://depth_camera/meshes/SR4000.stl</uri>
@@ -26,19 +26,19 @@
             <horizontal>
               <samples>100</samples>
               <resolution>1</resolution>
-              <min_angle>-0.6</min_angle>
-              <max_angle>0.6</max_angle>
+              <min_angle>-0.75</min_angle>
+              <max_angle>0.75</max_angle>
             </horizontal>
             <vertical>
               <samples>100</samples>
               <resolution>1</resolution>
-              <min_angle>-0.8</min_angle>
-              <max_angle>0.8</max_angle>
+              <min_angle>-0.55</min_angle>
+              <max_angle>0.55</max_angle>
             </vertical>
           </scan>
           <range>
-            <min>0.4</min>
-            <max>1.5</max>
+            <min>0.2</min>
+            <max>1.8</max>
             <resolution>0.001</resolution>
           </range>
           <!-- Using gazebo's noise instead of plugin's -->

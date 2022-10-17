@@ -19,6 +19,7 @@ def convert_pi_string_to_float(s: str) -> float:
     """Takes a string that contains pi and evaluates the expression. Returns a float
     Returns 0.0 if the expression cannot be evaluated"""
     value = 0.0
+    negative = False
 
     if s.isdigit():
         return float(s)
@@ -26,6 +27,10 @@ def convert_pi_string_to_float(s: str) -> float:
     if s.find('pi') == -1:
         # Return 0 if string does not contain pi
         return value
+
+    if not s.find('-') == -1:
+        negative = True
+        s = s.replace('-', '')
 
     split = s.split('pi')
     if not len(split) == 2:
@@ -51,7 +56,10 @@ def convert_pi_string_to_float(s: str) -> float:
     else:
         value = math.pi
 
-    return value
+    if negative:
+        return -value
+    else:
+        return value
 
 def quaternion_from_euler(roll, pitch, yaw):
     cy = math.cos(yaw * 0.5)
@@ -157,7 +165,7 @@ class GazeboSensorSpawner(Node):
             plugin.find('ros').find('remapping').text = "~/out:=" + params.name
             plugin.find('frame_name').text = params.name + "_frame"
 
-        if params.sensor_type == 'rgb_camera' or params.sensor_type == 'rgbd_camera':
+        if params.sensor_type == 'rgb_camera' or params.sensor_type == 'logical_camera':
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))

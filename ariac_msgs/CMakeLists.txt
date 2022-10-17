@@ -13,7 +13,9 @@ find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
+  "msg/Model.msg"
   "msg/BreakBeamStatus.msg"
+  "msg/LogicalCameraImage.msg"
 )
 
 set(srv_files
