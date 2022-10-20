@@ -94,9 +94,9 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  scripts/py_node.py
   scripts/spawn_robots.py
   scripts/spawn_sensors.py
+  scripts/sensor_tf_broadcaster.py
   scripts/AGV_mover.py
   DESTINATION lib/${PROJECT_NAME}
 )
