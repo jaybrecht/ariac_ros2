@@ -44,7 +44,7 @@
         <update_rate>30</update_rate>
         <visualize>true</visualize>
 
-        <plugin name="break_beam_ros_plugin" filename="libgazebo_ros_break_beam_sensor.so">
+        <plugin name="break_beam_ros_plugin" filename="libbreak_beam_sensor.so">
           <ros>
             <namespace></namespace>
           </ros>

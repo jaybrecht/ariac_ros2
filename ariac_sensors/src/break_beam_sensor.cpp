@@ -15,7 +15,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/variant.hpp>
 #include <gazebo/transport/transport.hh>
-#include <ariac_sensors/gazebo_ros_break_beam_sensor.hpp>
+#include <ariac_sensors/break_beam_sensor.hpp>
 #include <gazebo_ros/conversions/sensor_msgs.hpp>
 #include <gazebo_ros/node.hpp>
 #include <gazebo_ros/utils.hpp>
@@ -30,7 +30,7 @@
 namespace ariac_sensors
 {
 
-class GazeboRosBreakBeamSensorPrivate
+class BreakBeamSensorPrivate
 {
 public:
   /// Node for ROS communication.
@@ -60,12 +60,12 @@ public:
   gazebo::transport::SubscriberPtr laser_scan_sub_;
 };
 
-GazeboRosBreakBeamSensor::GazeboRosBreakBeamSensor()
-: impl_(std::make_unique<GazeboRosBreakBeamSensorPrivate>())
+BreakBeamSensor::BreakBeamSensor()
+: impl_(std::make_unique<BreakBeamSensorPrivate>())
 {
 }
 
-GazeboRosBreakBeamSensor::~GazeboRosBreakBeamSensor()
+BreakBeamSensor::~BreakBeamSensor()
 {
   // Must release subscriber and then call fini on node to remove it from topic manager.
   impl_->laser_scan_sub_.reset();
@@ -75,7 +75,7 @@ GazeboRosBreakBeamSensor::~GazeboRosBreakBeamSensor()
   impl_->gazebo_node_.reset();
 }
 
-void GazeboRosBreakBeamSensor::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
+void BreakBeamSensor::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
 {
   // Create ros_node configured from sdf
   impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
@@ -117,13 +117,13 @@ void GazeboRosBreakBeamSensor::Load(gazebo::sensors::SensorPtr _sensor, sdf::Ele
   impl_->SubscribeGazeboLaserScan();
 }
 
-void GazeboRosBreakBeamSensorPrivate::SubscribeGazeboLaserScan()
+void BreakBeamSensorPrivate::SubscribeGazeboLaserScan()
 {
   laser_scan_sub_ = gazebo_node_->Subscribe(
-      sensor_topic_, &GazeboRosBreakBeamSensorPrivate::ReadLaserScan, this);
+      sensor_topic_, &BreakBeamSensorPrivate::ReadLaserScan, this);
 }
 
-void GazeboRosBreakBeamSensorPrivate::ReadLaserScan(ConstLaserScanStampedPtr & _msg)
+void BreakBeamSensorPrivate::ReadLaserScan(ConstLaserScanStampedPtr & _msg)
 {
   // Convert Laser scan to ROS LaserScan
   auto ls = gazebo_ros::Convert<sensor_msgs::msg::LaserScan>(*_msg, 0.0);
@@ -156,6 +156,6 @@ void GazeboRosBreakBeamSensorPrivate::ReadLaserScan(ConstLaserScanStampedPtr & _
 }
 
 // Register this plugin with the simulator
-GZ_REGISTER_SENSOR_PLUGIN(GazeboRosBreakBeamSensor)
+GZ_REGISTER_SENSOR_PLUGIN(BreakBeamSensor)
 
 }  // namespace ariac_sensors

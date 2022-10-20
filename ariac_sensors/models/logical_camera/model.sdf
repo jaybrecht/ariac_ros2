@@ -24,7 +24,7 @@
         <always_on>true</always_on>
         <update_rate>10</update_rate>
 
-        <plugin name="ros_logical_camera" filename="libgazebo_ros_logical_camera.so">
+        <plugin name="ros_logical_camera" filename="liblogical_camera.so">
           <ros>
             <namespace></namespace>
           </ros>

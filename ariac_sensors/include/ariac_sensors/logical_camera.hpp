@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GAZEBO_ROS_LOGICAL_CAMERA_HPP_
-#define GAZEBO_ROS_LOGICAL_CAMERA_HPP_
+#ifndef LOGICAL_CAMERA_HPP_
+#define LOGICAL_CAMERA_HPP_
 
 #include <gazebo/common/Plugin.hh>
 
@@ -22,25 +22,25 @@
 namespace ariac_sensors
 {
 
-class GazeboRosLogicalCameraPrivate;
+class LogicalCameraPrivate;
 
 /// Plugin to attach to a gazebo LogicalCamera sensor and publish ROS message of output
-class GazeboRosLogicalCamera : public gazebo::SensorPlugin
+class LogicalCamera : public gazebo::SensorPlugin
 {
 public:
   /// Constructor.
-  GazeboRosLogicalCamera();
+  LogicalCamera();
   /// Destructor.
-  virtual ~GazeboRosLogicalCamera();
+  virtual ~LogicalCamera();
 
   // Documentation Inherited
   void Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _sdf) override;
 
 private:
   /// Private data pointer
-  std::unique_ptr<GazeboRosLogicalCameraPrivate> impl_;
+  std::unique_ptr<LogicalCameraPrivate> impl_;
 };
 
 }  // namespace ariac_sensors
 
-#endif  // GAZEBO_ROS_LOGICAL_CAMERA_HPP_
+#endif  // LOGICAL_CAMERA_HPP_

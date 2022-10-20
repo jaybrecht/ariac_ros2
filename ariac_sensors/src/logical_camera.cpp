@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include <ariac_sensors/gazebo_ros_logical_camera.hpp>
+#include <ariac_sensors/logical_camera.hpp>
 #include <gazebo/sensors/LogicalCameraSensor.hh>
 #include <ariac_msgs/msg/logical_camera_image.hpp>
 #include <gazebo_ros/conversions/builtin_interfaces.hpp>
@@ -26,7 +26,7 @@
 namespace ariac_sensors
 {
 
-class GazeboRosLogicalCameraPrivate
+class LogicalCameraPrivate
 {
 public:
   /// Node for ros communication
@@ -47,16 +47,16 @@ public:
   void OnUpdate();
 };
 
-GazeboRosLogicalCamera::GazeboRosLogicalCamera()
-: impl_(std::make_unique<GazeboRosLogicalCameraPrivate>())
+LogicalCamera::LogicalCamera()
+: impl_(std::make_unique<LogicalCameraPrivate>())
 {
 }
 
-GazeboRosLogicalCamera::~GazeboRosLogicalCamera()
+LogicalCamera::~LogicalCamera()
 {
 }
 
-void GazeboRosLogicalCamera::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
+void LogicalCamera::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
 {
   this->impl_->sensor_ = std::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(_sensor);
   this->impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
@@ -84,10 +84,10 @@ void GazeboRosLogicalCamera::Load(gazebo::sensors::SensorPtr _sensor, sdf::Eleme
   impl_->msg_ = std::make_shared<ariac_msgs::msg::LogicalCameraImage>();
 
   impl_->sensor_update_event_ = impl_->sensor_->ConnectUpdated(
-    std::bind(&GazeboRosLogicalCameraPrivate::OnUpdate, impl_.get()));
+    std::bind(&LogicalCameraPrivate::OnUpdate, impl_.get()));
 }
 
-void GazeboRosLogicalCameraPrivate::OnUpdate()
+void LogicalCameraPrivate::OnUpdate()
 {
   const auto & image = this->sensor_->Image();
 
@@ -123,6 +123,6 @@ void GazeboRosLogicalCameraPrivate::OnUpdate()
   this->pub_->publish(*msg_);
 }
 
-GZ_REGISTER_SENSOR_PLUGIN(GazeboRosLogicalCamera)
+GZ_REGISTER_SENSOR_PLUGIN(LogicalCamera)
 
 }  // namespace ariac_sensors
