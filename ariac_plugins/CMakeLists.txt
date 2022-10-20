@@ -14,15 +14,15 @@ find_package(ariac_msgs REQUIRED)
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
-add_library(ariac_plugin_template SHARED
-  src/ariac_plugin_template.cpp
+add_library(vacuum_gripper SHARED
+  src/vacuum_gripper.cpp
 )
-target_include_directories(ariac_plugin_template PUBLIC include)
-ament_target_dependencies(ariac_plugin_template
+target_include_directories(vacuum_gripper PUBLIC include)
+ament_target_dependencies(vacuum_gripper
   "gazebo_ros"
   "ariac_msgs"
 )
-ament_export_libraries(ariac_plugin_template)
+ament_export_libraries(vacuum_gripper)
 
 ament_package()
 
@@ -30,7 +30,7 @@ install(DIRECTORY include/
         DESTINATION include)
 
 install(TARGETS
-    ariac_plugin_template
+    vacuum_gripper
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
