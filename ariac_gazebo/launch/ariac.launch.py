@@ -84,6 +84,13 @@ def launch_setup(context, *args, **kwargs):
         arguments=[]
     )
 
+    bins_tf_broadcaster = Node(
+        package='ariac_gazebo',
+        executable='bins_tf_broadcaster.py',
+        output='screen',
+        arguments=[]
+    )
+
     # Robot Spawner Node
     robot_spawner = Node(
         package='ariac_gazebo',
@@ -107,6 +114,7 @@ def launch_setup(context, *args, **kwargs):
         # mobile_robot_bringup,
         sensor_spawner,
         sensor_tf_broadcaster,
+        bins_tf_broadcaster,
         spawn_robots_after_sensors
     ]
 

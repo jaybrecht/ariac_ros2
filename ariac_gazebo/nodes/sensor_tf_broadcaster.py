@@ -13,7 +13,7 @@ from ariac_gazebo.spawn_params import GazeboSpawnParams
 def main():
     rclpy.init()
 
-    sensor_tf_broadcaster = TFBroadcaster()
+    sensor_tf_broadcaster = TFBroadcaster("sensor_tf_broadcaster")
     sensor_params = []
 
     config = os.path.join(get_package_share_directory('ariac_gazebo'), 'config', "sensors.yaml")
@@ -42,7 +42,7 @@ def main():
 
     # Spawn the robots into gazebo
     for params in sensor_params:
-        sensor_tf_broadcaster.generate_transform(params)
+        sensor_tf_broadcaster.generate_transform('world', params.name + "_frame", params.initial_pose)
 
     # Send tf transforms
     sensor_tf_broadcaster.send_transforms()

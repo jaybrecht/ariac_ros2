@@ -33,6 +33,7 @@ sensors:
 
   right_bins_logical_camera:
     type: logical_camera
+    visualize_fov: false
     pose:
       xyz: [-2.286, 2.96, 1.8]
       rpy: [pi, pi/2, 0]

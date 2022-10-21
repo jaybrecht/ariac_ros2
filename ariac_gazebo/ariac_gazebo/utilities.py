@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import math
+from geometry_msgs.msg import Pose
 
 def convert_pi_string_to_float(s: str) -> float:
     """Takes a string that contains pi and evaluates the expression. Returns a float
@@ -63,3 +64,29 @@ def quaternion_from_euler(roll, pitch, yaw):
     q[3] = sy * cp * cr - cy * sp * sr
 
     return q
+
+def pose_info(xyz: list, rpy: list) -> Pose:
+    xyz_floats = []
+    rpy_floats = []
+    for s in xyz:
+        try:
+            xyz_floats.append(float(s))
+        except ValueError:
+            xyz_floats.append(convert_pi_string_to_float(s))
+    for s in rpy:
+        try:
+            rpy_floats.append(float(s))
+        except ValueError:
+            rpy_floats.append(convert_pi_string_to_float(s))
+
+    pose = Pose()
+    pose.position.x = xyz_floats[0]
+    pose.position.y = xyz_floats[1]
+    pose.position.z = xyz_floats[2]
+    q = quaternion_from_euler(*rpy_floats)
+    pose.orientation.w = q[0]
+    pose.orientation.x = q[1]
+    pose.orientation.y = q[2]
+    pose.orientation.z = q[3]
+
+    return pose
