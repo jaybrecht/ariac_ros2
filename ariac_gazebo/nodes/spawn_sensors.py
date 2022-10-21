@@ -41,7 +41,8 @@ def main():
         else:
             vis = True
 
-        sensor_params.append(GazeboSpawnParams(sensor_name, file_path=file_path, xyz=xyz, rpy=rpy, visulize=vis))
+        sensor_params.append(GazeboSpawnParams(sensor_name, model_type=type, file_path=file_path, 
+            xyz=xyz, rpy=rpy, visulize=vis))
 
     # Spawn the robots into gazebo
     for params in sensor_params:

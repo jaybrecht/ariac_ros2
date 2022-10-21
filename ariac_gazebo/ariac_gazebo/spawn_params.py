@@ -9,7 +9,7 @@ from geometry_msgs.msg import Pose
 from ariac_gazebo.utilities import convert_pi_string_to_float, quaternion_from_euler
 
 class GazeboSpawnParams:
-    def __init__(self, name, file_path=None, xyz=[0,0,0], rpy=[0,0,0], ns='', rf='', visulize=True):
+    def __init__(self, name, model_type=None, file_path=None, xyz=[0,0,0], rpy=[0,0,0], ns='', rf='', visulize=True):
         self.name = name
         self.robot_namespace = ns
         
@@ -17,11 +17,14 @@ class GazeboSpawnParams:
         
         if not file_path:
             self.topic_name = self.name + '/robot_description'
-        else:    
-            self.file_path = file_path
+        
+        self.file_path = file_path
 
         self.reference_frame = rf
+
+        # Sensor specific 
         self.visualize = visulize
+        self.model_type = model_type
 
     def pose_info(self, xyz: list, rpy: list) -> Pose:
         xyz_floats = []

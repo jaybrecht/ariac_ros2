@@ -15,7 +15,6 @@ def main():
 
     sensor_tf_broadcaster = TFBroadcaster()
     sensor_params = []
-    transforms = []
 
     config = os.path.join(get_package_share_directory('ariac_gazebo'), 'config', "sensors.yaml")
 
@@ -43,10 +42,10 @@ def main():
 
     # Spawn the robots into gazebo
     for params in sensor_params:
-        transforms.append(sensor_tf_broadcaster.generate_transform(params))
+        sensor_tf_broadcaster.generate_transform(params)
 
     # Send tf transforms
-    sensor_tf_broadcaster.tf_static_broadcaster.sendTransform(transforms)
+    sensor_tf_broadcaster.send_transforms()
 
     try:
         rclpy.spin(sensor_tf_broadcaster)

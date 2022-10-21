@@ -18,15 +18,15 @@ def main():
     # Create spawn params for the mobile robot
     model_path = os.path.join(get_package_share_directory('ariac_mobile_robot'), 'models', "mobile_robot", 'model.sdf')
 
-    robot_params.append(GazeboSpawnParams('mobile_robot', file_path=model_path, xyz=[-4.0, 3.5, 0], rpy = [0, 0, 3.14]))
+    # robot_params.append(GazeboSpawnParams('mobile_robot', file_path=model_path, xyz=[-4.0, 3.5, 0], rpy = [0, 0, 3.14]))
 
     # Create spawn params for the URDF robots
     robot_names.append('floor_robot')
-    robot_names.append('ceiling_robot')
-    robot_names.append('agv1')
-    robot_names.append('agv2')
-    robot_names.append('agv3')
-    robot_names.append('agv4')
+    # robot_names.append('ceiling_robot')
+    # robot_names.append('agv1')
+    # robot_names.append('agv2')
+    # robot_names.append('agv3')
+    # robot_names.append('agv4')
     
     for name in robot_names:
         robot_params.append(GazeboSpawnParams(name))

@@ -47,7 +47,7 @@ class GazeboSensorSpawner(Node):
 
         xml.find('model').find('link').find('sensor').find("visualize").text = str(params.visualize)
 
-        if params.sensor_type == "break_beam":
+        if params.model_type == "break_beam":
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
@@ -57,7 +57,7 @@ class GazeboSensorSpawner(Node):
             plugin.find('frame_name').text = params.name + "_frame"
 
         ray_sensors = ["proximity_sensor", "laser_profiler", "depth_camera"]
-        if params.sensor_type in ray_sensors:
+        if params.model_type in ray_sensors:
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
@@ -65,7 +65,7 @@ class GazeboSensorSpawner(Node):
             plugin.find('ros').find('remapping').text = "~/out:=" + params.name
             plugin.find('frame_name').text = params.name + "_frame"
 
-        if params.sensor_type == 'rgb_camera' or params.sensor_type == 'logical_camera':
+        if params.model_type == 'rgb_camera' or params.model_type == 'logical_camera':
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))

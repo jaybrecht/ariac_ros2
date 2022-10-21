@@ -101,10 +101,10 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         gazebo,
-        agv_bringup,
+        # agv_bringup,
         floor_robot_bringup,
-        ceiling_robot_bringup,
-        mobile_robot_bringup,
+        # ceiling_robot_bringup,
+        # mobile_robot_bringup,
         sensor_spawner,
         sensor_tf_broadcaster,
         spawn_robots_after_sensors
