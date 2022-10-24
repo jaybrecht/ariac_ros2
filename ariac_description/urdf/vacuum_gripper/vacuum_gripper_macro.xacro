@@ -6,14 +6,17 @@
 
     <link name="${prefix}_gripper">
       <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/>
         </geometry>
       </visual>
       
-      <collision>
+      <collision name="${prefix}_gripper_collision">
+        <origin xyz="0 0 -0.005" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/>
+          <!-- <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/> -->
+          <cylinder radius="0.05" length="0.01" />
         </geometry>
       </collision>
       
@@ -28,27 +31,38 @@
       <material>Gazebo/Black</material>
     </gazebo>
 
-    <joint name="${prefix}_robot_to_gripper" type="fixed">
+    <joint name="${prefix}_gripper_joint" type="revolute">
+      <axis xyz="0 0 1"/>
       <parent link="${prefix}_${parent}"/>
       <child link="${prefix}_gripper"/>
+      <limit lower="0" upper="0" effort="0" velocity="0" />
       <origin xyz="0.0 0.0 0.01" rpy="0.0 0.0 0.0"/>
     </joint>
 
-    <!-- <gazebo>
-      <plugin name='vacuum_gripper' filename='libgazebo_ros_vacuum_gripper.so'>
+    <!-- Add a contact sensor to the gripper -->
+    <gazebo reference="${prefix}_gripper">
+      <sensor type="contact" name="bumper">
+        <update_rate>10</update_rate>
+        <contact>
+          <collision>${prefix}_gripper_collision_collision</collision>
+        </contact>
+        <plugin name="${prefix}_gripper_contact_sensor" filename="libgazebo_ros_bumper.so">
+          <ros>
+            <namespace>${prefix}_robot</namespace>
+          </ros>
+          <frame_name>${prefix}_gripper</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <gazebo>
+      <plugin filename="libvacuum_gripper.so" name="${prefix}_vacuum_gripper_plugin">
         <ros>
-          <namespace>/${prefix}</namespace>
-          <remapping>switch:=activate_gripper</remapping>
-          <remapping>grasping:=gripper_state</remapping>
+          <namespace>${prefix}_robot</namespace>
         </ros>
-
-        <link_name>${prefix}_gripper</link_name>
-
-        <max_distance>10.0</max_distance>
-        
-        <fixed>ground_plane</fixed>
+        <gripper_link>${prefix}_gripper</gripper_link>
       </plugin>
-    </gazebo> -->
+    </gazebo>
 
   </xacro:macro>
 </robot>
