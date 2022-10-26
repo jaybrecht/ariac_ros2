@@ -15,27 +15,22 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(ariac_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 
 add_executable(moveit_test src/moveit_test.cpp)
-
 ament_target_dependencies(moveit_test rclcpp moveit_ros_planning_interface)
+
+add_executable(pick_test src/pick_test.cpp)
+ament_target_dependencies(pick_test rclcpp moveit_ros_planning_interface ariac_msgs)
 
 install(TARGETS
   moveit_test
+  pick_test
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
-)
-
-# Install Python modules
-ament_python_install_package(${PROJECT_NAME})
-
-# Install Python executables
-install(PROGRAMS
-  nodes/pick_part.py
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

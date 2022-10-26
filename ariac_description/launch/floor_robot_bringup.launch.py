@@ -48,7 +48,9 @@ def launch_setup(context, *args, **kwargs):
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/floor_robot", "floor_robot.urdf.xacro"]), 
-            " "
+            " ",
+            "moveit:=",
+            "false",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
