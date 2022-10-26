@@ -16,6 +16,7 @@ set(msg_files
   "msg/Model.msg"
   "msg/BreakBeamStatus.msg"
   "msg/LogicalCameraImage.msg"
+  "msg/VacuumGripperState.msg"
 )
 
 set(srv_files

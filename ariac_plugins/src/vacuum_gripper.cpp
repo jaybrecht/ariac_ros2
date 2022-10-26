@@ -22,6 +22,7 @@
 #include <gazebo/transport/Node.hh>
 #include <ariac_plugins/vacuum_gripper.hpp>
 #include <ariac_msgs/srv/vacuum_gripper_control.hpp>
+#include <ariac_msgs/msg/vacuum_gripper_state.hpp>
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/trigger.hpp>
@@ -40,6 +41,8 @@ public:
 
   /// Node for ROS communication.
   gazebo_ros::Node::SharedPtr ros_node_;
+  rclcpp::Publisher<ariac_msgs::msg::VacuumGripperState>::SharedPtr status_pub_;
+  ariac_msgs::msg::VacuumGripperState status_msg_;
 
   bool enabled_;
   bool part_attached_;
@@ -62,6 +65,7 @@ public:
   bool CheckModelContact(ConstContactsPtr&);
   void AttachJoint();
   void DetachJoint();
+  void PublishState();
 
   /// Callback for enable service
   void EnableGripper(
@@ -86,6 +90,10 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   // can be handled.
   impl_->model_ = model;
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
+
+  const gazebo_ros::QoS & qos = impl_->ros_node_->get_qos();
+  rclcpp::QoS pub_qos = qos.get_publisher_qos("~/out", rclcpp::SensorDataQoS().reliable());
+  impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::VacuumGripperState>("gripper_state", pub_qos);
 
   gazebo::physics::WorldPtr world = impl_->model_->GetWorld();
   impl_->picked_part_joint_ = world->Physics()->CreateJoint("fixed", impl_->model_);
@@ -130,6 +138,7 @@ void VacuumGripper::OnUpdate()
   }
 
   // Publish gripper state
+  impl_->PublishState();
 
 }
 
@@ -233,6 +242,13 @@ void VacuumGripperPrivate::EnableGripper(
       RCLCPP_WARN(ros_node_->get_logger(), "Gripper is already off");
     }
   }
+}
+
+void VacuumGripperPrivate::PublishState() {
+  status_msg_.attached = part_attached_;
+  status_msg_.enabled = enabled_;
+  
+  status_pub_->publish(status_msg_);
 }
 
 // Register this plugin with the simulator
