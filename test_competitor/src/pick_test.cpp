@@ -251,5 +251,22 @@ int main(int argc, char *argv[])
 
   floor_robot_commander->move_group_.execute(trajectory);
 
+  pose.pose.position.z += 0.164;
+
+  waypoints.clear();
+  waypoints.push_back(pose.pose);
+
+  moveit_msgs::msg::RobotTrajectory trajectory2;
+  fraction = floor_robot_commander->move_group_.computeCartesianPath(waypoints, 0.01, 0.0, trajectory2);
+
+  // Retime trajectory 
+  rt.setRobotTrajectoryMsg(*floor_robot_commander->move_group_.getCurrentState(), trajectory2);
+  totg.computeTimeStamps(rt, 0.05, 0.1);
+  rt.getRobotTrajectoryMsg(trajectory2);
+
+  RCLCPP_INFO_STREAM(floor_robot_commander->get_logger(), "Path fraction: " << fraction);
+
+  floor_robot_commander->move_group_.execute(trajectory2);
+
   rclcpp::shutdown();
 }

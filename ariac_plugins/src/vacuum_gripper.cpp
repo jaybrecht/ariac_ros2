@@ -42,7 +42,9 @@ public:
   gazebo_ros::Node::SharedPtr ros_node_;
 
   bool enabled_;
-  gazebo::physics::LinkPtr gripper_link;
+  bool part_attached_;
+  bool in_contact_;
+  gazebo::physics::LinkPtr gripper_link_;
 
   gazebo::transport::SubscriberPtr contact_sub_;
   gazebo::transport::NodePtr gznode_;
@@ -51,11 +53,15 @@ public:
   rclcpp::Service<ariac_msgs::srv::VacuumGripperControl>::SharedPtr enable_service_;
 
   gazebo::physics::ModelPtr model_;
+  gazebo::physics::JointPtr picked_part_joint_;
+  gazebo::physics::CollisionPtr model_collision_;
   std::map<std::string, gazebo::physics::CollisionPtr> collisions_;
 
   std::vector<std::string> pickable_part_types;
 
   bool CheckModelContact(ConstContactsPtr&);
+  void AttachJoint();
+  void DetachJoint();
 
   /// Callback for enable service
   void EnableGripper(
@@ -81,13 +87,17 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   impl_->model_ = model;
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
 
+  gazebo::physics::WorldPtr world = impl_->model_->GetWorld();
+  impl_->picked_part_joint_ = world->Physics()->CreateJoint("fixed", impl_->model_);
+  impl_->picked_part_joint_->SetName("picked_part_fixed_joints");
+
   // Initialize a gazebo node and subscribe to the contacts for the vacuum gripper
   impl_->gznode_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
   impl_->gznode_->Init(impl_->model_->GetWorld()->Name());
 
   // Get gripper link
   std::string link_name = sdf->GetElement("gripper_link")->Get<std::string>();
-  impl_->gripper_link = impl_->model_->GetLink(link_name);
+  impl_->gripper_link_ = impl_->model_->GetLink(link_name);
   
   std::string topic = "/gazebo/world/floor_robot/floor_gripper/bumper/contacts";
   impl_->contact_sub_ = impl_->gznode_->Subscribe(topic, &VacuumGripper::OnContact, this);
@@ -101,10 +111,6 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
       &VacuumGripperPrivate::EnableGripper, impl_.get(),
       std::placeholders::_1, std::placeholders::_2));
 
-  // The model pointer gives you direct access to the physics object,
-  // for example:
-  // RCLCPP_INFO(impl_->ros_node_->get_logger(), model->GetName().c_str());
-
   // Create a connection so the OnUpdate function is called at every simulation
   // iteration. Remove this call, the connection and the callback if not needed.
   impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -113,20 +119,38 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
 
 void VacuumGripper::OnUpdate()
 {
-  // if (enabled_){
-  //   // List collision
+  // If gripper is enabled and in contact with gripable model attach joint
+  if (impl_->enabled_ && !impl_->part_attached_ && impl_->in_contact_) {
+    impl_->AttachJoint();
+  }
 
-  // }
-  // Do something every simulation iteration
+  // If part attached and gripper is disabled remove joint
+  if (impl_->part_attached_ && !impl_->enabled_){
+    impl_->DetachJoint();
+  }
+
+  // Publish gripper state
+
 }
 
 void VacuumGripper::OnContact(ConstContactsPtr& _msg){
   if (impl_->enabled_) {
-    if (impl_->CheckModelContact(_msg)){
-      // Create link 
-      
-    }
+    impl_->in_contact_ = impl_->CheckModelContact(_msg);
   }
+}
+
+void VacuumGripperPrivate::AttachJoint(){
+  RCLCPP_INFO(ros_node_->get_logger(), "Picking Part");
+  picked_part_joint_->Load(gripper_link_, model_collision_->GetLink(), ignition::math::Pose3d());
+  picked_part_joint_->Init();
+
+  part_attached_ = true;
+}
+
+void VacuumGripperPrivate::DetachJoint(){
+  RCLCPP_INFO(ros_node_->get_logger(), "Dropping Part");
+  picked_part_joint_->Detach();
+  part_attached_ = false;
 }
 
 bool VacuumGripperPrivate::CheckModelContact(ConstContactsPtr& msg){
@@ -157,6 +181,8 @@ bool VacuumGripperPrivate::CheckModelContact(ConstContactsPtr& msg){
     if (part_type.empty()){
       continue;
     }
+
+    model_collision_ = boost::dynamic_pointer_cast<gazebo::physics::Collision>(model_->GetWorld()->EntityByName(part_in_contact));
 
     return true;
     
