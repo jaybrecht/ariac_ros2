@@ -35,7 +35,7 @@
       <axis xyz="0 0 1"/>
       <parent link="${prefix}_${parent}"/>
       <child link="${prefix}_gripper"/>
-      <limit lower="0" upper="0" effort="0" velocity="0" />
+      <limit lower="-.1" upper=".1" effort="0" velocity="0" />
       <origin xyz="0.0 0.0 0.01" rpy="0.0 0.0 0.0"/>
     </joint>
 
@@ -63,6 +63,17 @@
         <gripper_link>${prefix}_gripper</gripper_link>
       </plugin>
     </gazebo>
+
+    <ros2_control name="${prefix}_gripper_control" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+      <joint name="${prefix}_gripper_joint">
+        <state_interface name="position">
+          <param name="initial_value">0</param>
+        </state_interface>
+      </joint>
+    </ros2_control>
 
   </xacro:macro>
 </robot>

@@ -96,6 +96,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   nodes/spawn_robots.py
   nodes/spawn_sensors.py
+  nodes/spawn_parts.py
   nodes/sensor_tf_broadcaster.py
   nodes/bins_tf_broadcaster.py
   nodes/AGV_mover.py

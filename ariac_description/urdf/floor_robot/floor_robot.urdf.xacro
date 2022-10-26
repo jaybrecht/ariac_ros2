@@ -34,7 +34,7 @@
     visual_parameters_file="$(find ur_description)/config/ur10e/visual_parameters.yaml"
     sim_gazebo="true"
     initial_positions="${load_yaml(initial_positions_file)}">
-    <origin xyz="0 0 0.025" rpy="0 0 0" />
+    <origin xyz="0 0 0.06" rpy="0 0 0" />
   </xacro:ur_robot>
 
   <!-- Run gripper macro -->

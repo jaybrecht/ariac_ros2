@@ -16,6 +16,8 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(ariac_msgs REQUIRED)
+find_package(shape_msgs REQUIRED)
+find_package(moveit_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 
 add_executable(moveit_test src/moveit_test.cpp)
@@ -29,7 +31,7 @@ install(TARGETS
   pick_test
   DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY launch
+install(DIRECTORY launch meshes rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

@@ -124,6 +124,7 @@ void VacuumGripper::OnContact(ConstContactsPtr& _msg){
   if (impl_->enabled_) {
     if (impl_->CheckModelContact(_msg)){
       // Create link 
+      
     }
   }
 }
@@ -156,26 +157,29 @@ bool VacuumGripperPrivate::CheckModelContact(ConstContactsPtr& msg){
     if (part_type.empty()){
       continue;
     }
+
+    return true;
     
     // Check number of contacts
-    if (!msg->contact(i).position_size() > min_contacts){
-      continue;
-    }
+    // bool in_contact = false;
+    // if (!msg->contact(i).position_size() > min_contacts){
+    //   in_contact = true;
+    // }
 
     //Check normals
-    bool in_contact = false;
-    for (int j = 0; j < msg->contact(i).normal_size(); ++j){
-      ignition::math::Vector3d contact_normal = -1 * gazebo::msgs::ConvertIgn(msg->contact(i).normal(j));
-      ignition::math::Vector3d gripper_normal =  gripper_link->WorldPose().Rot().RotateVector(ignition::math::Vector3d(0, 0, 1));
+    // 
+    // for (int j = 0; j < msg->contact(i).normal_size(); ++j){
+    //   ignition::math::Vector3d contact_normal = -1 * gazebo::msgs::ConvertIgn(msg->contact(i).normal(j));
+    //   ignition::math::Vector3d gripper_normal =  gripper_link->WorldPose().Rot().RotateVector(ignition::math::Vector3d(0, 0, 1));
 
-      double alignment = gripper_normal.Dot(contact_normal);
+    //   double alignment = gripper_normal.Dot(contact_normal);
 
-      if (alignment > 0.95) {
-        in_contact = true;
-      }
-    }
+    //   if (alignment > 0.95) {
+    //     in_contact = true;
+    //   }
+    // }
 
-    return in_contact;
+    // return in_contact;
     
   }
 

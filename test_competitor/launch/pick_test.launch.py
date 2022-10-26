@@ -84,6 +84,7 @@ def generate_launch_description():
     pick_test = Node(
         package="test_competitor",
         executable="pick_test",
+        namespace="floor_robot",
         output="screen",
         parameters=[
             floor_robot_description,
@@ -93,4 +94,26 @@ def generate_launch_description():
         ],
     )
 
-    return LaunchDescription([pick_test])
+        # rviz with moveit configuration
+    rviz_config_file = PathJoinSubstitution(
+        [FindPackageShare("test_competitor"), "rviz", "pick_test.rviz"]
+    )
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        namespace="floor_robot",
+        name="rviz2_moveit",
+        output="log",
+        arguments=["-d", rviz_config_file],
+        parameters=[
+            floor_robot_description,
+            floor_robot_description_semantic,
+            {"use_sim_time": True}
+        ],
+    )
+
+    return LaunchDescription(
+        [pick_test, 
+        # rviz_node,
+        ])
