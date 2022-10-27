@@ -1,4 +1,4 @@
-agv_1/controller_manager:
+agv1/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
@@ -7,28 +7,18 @@ agv_1/controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     agv_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+      type: velocity_controllers/JointGroupVelocityController
     
-
-agv_1/agv_controller:
+agv1/agv_controller:
   ros__parameters:
     joints:
       - agv_joint
     command_interfaces:
-      - position
+      - velocity
     state_interfaces:
       - position
-      - velocity
-    state_publish_rate: 100.0
-    action_monitor_rate: 20.0
-    allow_partial_joints_goal: false
-    constraints:
-      stopped_velocity_tolerance: 0.2
-      goal_time: 0.0
-      agv_joint: {trajectory: 0.1, goal: 0.1}
 
-
-agv_2/controller_manager:
+agv2/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
@@ -37,28 +27,18 @@ agv_2/controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     agv_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+      type: velocity_controllers/JointGroupVelocityController
     
-
-agv_2/agv_controller:
+agv2/agv_controller:
   ros__parameters:
     joints:
       - agv_joint
     command_interfaces:
-      - position
+      - velocity
     state_interfaces:
       - position
-      - velocity
-    state_publish_rate: 100.0
-    action_monitor_rate: 20.0
-    allow_partial_joints_goal: false
-    constraints:
-      stopped_velocity_tolerance: 0.2
-      goal_time: 0.0
-      agv_joint: {trajectory: 0.1, goal: 0.1}
 
-
-agv_3/controller_manager:
+agv3/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
@@ -67,28 +47,19 @@ agv_3/controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     agv_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+      type: velocity_controllers/JointGroupVelocityController
     
-
-agv_3/agv_controller:
+agv3/agv_controller:
   ros__parameters:
     joints:
       - agv_joint
     command_interfaces:
-      - position
+      - velocity
     state_interfaces:
       - position
-      - velocity
-    state_publish_rate: 100.0
-    action_monitor_rate: 20.0
-    allow_partial_joints_goal: false
-    constraints:
-      stopped_velocity_tolerance: 0.2
-      goal_time: 0.0
-      agv_joint: {trajectory: 0.1, goal: 0.1}
 
 
-agv_4/controller_manager:
+agv4/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
@@ -97,24 +68,17 @@ agv_4/controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     agv_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+      type: velocity_controllers/JointGroupVelocityController
     
-
-agv_4/agv_controller:
+agv4/agv_controller:
   ros__parameters:
     joints:
       - agv_joint
     command_interfaces:
-      - position
+      - velocity
     state_interfaces:
       - position
-      - velocity
-    state_publish_rate: 100.0
-    action_monitor_rate: 20.0
-    allow_partial_joints_goal: false
-    constraints:
-      stopped_velocity_tolerance: 0.2
-      goal_time: 0.0
-      agv_joint: {trajectory: 0.1, goal: 0.1}
+
+
 
 

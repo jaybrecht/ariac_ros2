@@ -4,7 +4,7 @@
   <!-- Include macro -->
   <xacro:include filename="$(find ariac_description)/urdf/AGV/agv_macro.xacro"/>
 
-  <xacro:arg name="agv_number" default="agv_1"/>
+  <xacro:arg name="agv_number" default="agv1"/>
   <xacro:property name="agv_number" default="$(arg agv_number)"/>
 
   <xacro:arg name="y_position" default="0"/>
@@ -27,7 +27,7 @@
   <xacro:arg name="controllers" default="$(find ariac_description)/config/agv_controllers.yaml" />
 
   <gazebo>
-    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+    <plugin filename="libgazebo_ros2_control.so" name="$(arg agv_number)_gazebo_ros2_control">
       <ros>
         <namespace>/$(arg agv_number)</namespace>
       </ros>

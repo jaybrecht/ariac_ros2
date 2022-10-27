@@ -1,4 +1,4 @@
-ceiling/controller_manager:
+ceiling_robot/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
@@ -10,7 +10,7 @@ ceiling/controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
     
 
-ceiling/joint_trajectory_controller:
+ceiling_robot/joint_trajectory_controller:
   ros__parameters:
     joints:
       - small_long_joint

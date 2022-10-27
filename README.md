@@ -62,3 +62,26 @@ In another terminal start the test competitor:
 $ . ~/ariac_ws/install/setup.bash
 $ ros2 launch test_competitor moveit_test.launch.py
 ```
+
+## Controlling the mobile robot
+
+Launch the ARIAC environment:
+
+```
+$ . ~/ariac_ws/install/setup.bash
+$ ros2 launch ariac_gazebo ariac.launch.py
+```
+
+In another terminal send twist commands:
+
+```
+$ ros2 topic pub --rate 30 /mobile_robot/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.2, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+```
+
+To use the keyboard teleop:
+
+```
+$ sudo apt install ros-galactic-turtlebot3-teleop
+$ export TURTLEBOT3_MODEL=waffle
+$ ros2 run turtlebot3_teleop teleop_keyboard --ros-args -r __ns:=/mobile_robot
+```

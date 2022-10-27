@@ -11,7 +11,7 @@ def launch_setup(context, *args, **kwargs):
     nodes_to_start = []
 
     for i, pos in enumerate(y_positions):
-        agv_number = "agv_" + str(i+1)
+        agv_number = "agv" + str(i+1)
     
         # Generate Robot Description parameter from xacro
         robot_description_content = Command(
@@ -57,8 +57,8 @@ def launch_setup(context, *args, **kwargs):
         gazebo_spawn_robot = Node(
             package="gazebo_ros",
             executable="spawn_entity.py",
-            name="spawn_gantry",
-            arguments=["-entity", agv_number, "-topic", "/" + agv_number + "/robot_description"],
+            # name="spawn_"+agv_number,
+            arguments=["-entity", agv_number,"-robot_namespace", agv_number,  "-topic", "/" + agv_number + "/robot_description"],
             output="screen",
         )
 
@@ -72,7 +72,7 @@ def launch_setup(context, *args, **kwargs):
         nodes_to_start.append(robot_state_publisher_node)
         nodes_to_start.append(joint_state_broadcaster_spawner)
         nodes_to_start.append(position_controller_spawner)
-        nodes_to_start.append(gazebo_spawn_robot)
+        # nodes_to_start.append(gazebo_spawn_robot)
         # nodes_to_start.append(agv_mover)
 
     return nodes_to_start
