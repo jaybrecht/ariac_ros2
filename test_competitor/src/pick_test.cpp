@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
   floor_robot_commander->move_group_.setPoseTarget(pose);
   floor_robot_commander->move_group_.move();
 
-  pose.pose.position.z -= 0.164;
+  pose.pose.position.z -= 0.165;
 
   std::vector<geometry_msgs::msg::Pose> waypoints;
   waypoints.push_back(pose.pose);

@@ -193,29 +193,34 @@ bool VacuumGripperPrivate::CheckModelContact(ConstContactsPtr& msg){
 
     model_collision_ = boost::dynamic_pointer_cast<gazebo::physics::Collision>(model_->GetWorld()->EntityByName(part_in_contact));
 
-    return true;
+    
     
     // Check number of contacts
-    // bool in_contact = false;
-    // if (!msg->contact(i).position_size() > min_contacts){
-    //   in_contact = true;
-    // }
+    if (!msg->contact(i).position_size() > min_contacts){
+      continue;
+    }
 
     //Check normals
-    // 
-    // for (int j = 0; j < msg->contact(i).normal_size(); ++j){
-    //   ignition::math::Vector3d contact_normal = -1 * gazebo::msgs::ConvertIgn(msg->contact(i).normal(j));
-    //   ignition::math::Vector3d gripper_normal =  gripper_link->WorldPose().Rot().RotateVector(ignition::math::Vector3d(0, 0, 1));
+    std::vector<bool> aligned;
+    for (int j = 0; j < msg->contact(i).normal_size(); ++j){
+      ignition::math::Vector3d contact_normal = gazebo::msgs::ConvertIgn(msg->contact(i).normal(j));
+      ignition::math::Vector3d gripper_normal = gripper_link_->WorldPose().Rot().RotateVector(ignition::math::Vector3d(0, 0, 1));
 
-    //   double alignment = gripper_normal.Dot(contact_normal);
+      double alignment = gripper_normal.Dot(contact_normal);
 
-    //   if (alignment > 0.95) {
-    //     in_contact = true;
-    //   }
-    // }
+      // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Alignment: " << alignment);
 
-    // return in_contact;
+      if (std::abs(alignment) > 0.95) {
+        aligned.push_back(true);
+      }
+      else{
+        aligned.push_back(false);
+      }
+    }
     
+    if (std::all_of(aligned.begin(), aligned.end(), [](bool v) { return v; })){
+      return true;
+    }
   }
 
   return false;
