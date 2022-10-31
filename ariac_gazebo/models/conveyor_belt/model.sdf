@@ -6,22 +6,22 @@
         <static>true</static>
         <link name="link">
           <visual name="visual">
-                <geometry>
-                    <mesh>
-                      <scale>1 1 1</scale>
-                      <uri>model://conveyor_belt/meshes/conveyor.dae</uri>
-                    </mesh>
-                </geometry> 
-	  </visual>
+            <geometry>
+              <mesh>
+                <scale>1 1 1</scale>
+                <uri>model://conveyor_belt/meshes/conveyor.dae</uri>
+              </mesh>
+            </geometry> 
+	        </visual>
           <collision name="collision">
-                <geometry>
-                    <mesh>
-                      <scale>1 1 1</scale>
-                      <uri>model://conveyor_belt/meshes/conveyor_nobase.dae</uri>
-                    </mesh>
-                </geometry> 
-	  </collision>
-	</link>
+            <geometry>
+              <mesh>
+                <scale>1 1 1</scale>
+                <uri>model://conveyor_belt/meshes/conveyor_nobase.dae</uri>
+              </mesh>
+            </geometry> 
+	        </collision>
+	      </link>
       </model>
 
       <!-- Moving component that extends and resets a prismatic joint -->
@@ -29,6 +29,7 @@
         <allow_auto_disable>0</allow_auto_disable>
         <static>false</static>
         <pose>0 0 0.75 0 0 -1.57079</pose>
+        
         <link name="belt">
           <pose>-0.2 0 0 0 0 0</pose>
           <inertial>
@@ -42,16 +43,17 @@
             </inertia>
             <mass>100</mass>
           </inertial>
-          <!--Uncomment for debugging
 
+          <!-- Visual for debugging -->
+          <!--
           <visual name="belt_visual">
             <geometry>
               <box>
-                <size>14.62206 0.65461 0.18862</size>
+                <size>9 0.42 .25</size>
               </box>
             </geometry>
           </visual>
-        -->
+          -->
 
           <collision name="belt_collision">
             <geometry>
@@ -82,18 +84,17 @@
           <xyz>1 0 0</xyz>
           <limit>
             <lower>0</lower>
-            <upper>1.0</upper>
+            <upper>0.4</upper>
           </limit>
         </axis>
       </joint>
 
-      <!-- <plugin name="conveyor_belt_plugin" filename="libROSConveyorBeltPlugin.so">
-        <robot_namespace>/ariac</robot_namespace>
-        <enable_topic>/ariac/conveyor_enable</enable_topic>
-        <population_rate_modifier_topic>/ariac/population/rate_modifier</population_rate_modifier_topic>
-        <link>conveyor_belt::conveyor_belt_moving::belt</link>
-        <power>0</power>
-        <update_rate>10</update_rate>
-      </plugin> -->
+      <plugin filename="libconveyor_belt_plugin.so" name="conveyor_belt_plugin">
+        <ros>
+          <namespace>ariac</namespace>
+        </ros>
+        <max_velocity>0.2</max_velocity>
+        <publish_rate>10</publish_rate>
+      </plugin>
     </model>
 </sdf>
