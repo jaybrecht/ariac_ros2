@@ -84,7 +84,7 @@
           <xyz>1 0 0</xyz>
           <limit>
             <lower>0</lower>
-            <upper>1.0</upper>
+            <upper>0.4</upper>
           </limit>
         </axis>
       </joint>
@@ -93,15 +93,7 @@
         <ros>
           <namespace>ariac</namespace>
         </ros>
+        <max_velocity>0.2</max_velocity>
       </plugin>
-
-      <!-- <plugin name="conveyor_belt_plugin" filename="libROSConveyorBeltPlugin.so">
-        <robot_namespace>/ariac</robot_namespace>
-        <enable_topic>/ariac/conveyor_enable</enable_topic>
-        <population_rate_modifier_topic>/ariac/population/rate_modifier</population_rate_modifier_topic>
-        <link>conveyor_belt::conveyor_belt_moving::belt</link>
-        <power>0</power>
-        <update_rate>10</update_rate>
-      </plugin> -->
     </model>
 </sdf>

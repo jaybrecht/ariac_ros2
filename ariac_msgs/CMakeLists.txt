@@ -20,6 +20,7 @@ set(msg_files
 )
 
 set(srv_files
+  "srv/ConveyorBeltControl.srv"
   "srv/MoveAGV.srv"
   "srv/VacuumGripperControl.srv"
 )
