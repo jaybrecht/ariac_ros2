@@ -14,6 +14,7 @@ find_package(ariac_msgs REQUIRED)
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
+# Vacuum Gripper
 add_library(vacuum_gripper SHARED
   src/vacuum_gripper.cpp
 )
@@ -24,6 +25,17 @@ ament_target_dependencies(vacuum_gripper
 )
 ament_export_libraries(vacuum_gripper)
 
+# Conveyor Belt
+add_library(conveyor_belt_plugin SHARED
+  src/conveyor_belt_plugin.cpp
+)
+target_include_directories(conveyor_belt_plugin PUBLIC include)
+ament_target_dependencies(conveyor_belt_plugin
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(conveyor_belt_plugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -31,6 +43,7 @@ install(DIRECTORY include/
 
 install(TARGETS
     vacuum_gripper
+    conveyor_belt_plugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
