@@ -94,6 +94,7 @@
           <namespace>ariac</namespace>
         </ros>
         <max_velocity>0.2</max_velocity>
+        <publish_rate>10</publish_rate>
       </plugin>
     </model>
 </sdf>

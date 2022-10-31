@@ -15,6 +15,7 @@ find_package(rosidl_default_generators REQUIRED)
 set(msg_files
   "msg/Model.msg"
   "msg/BreakBeamStatus.msg"
+  "msg/ConveyorBeltState.msg"
   "msg/LogicalCameraImage.msg"
   "msg/VacuumGripperState.msg"
 )

@@ -25,8 +25,8 @@ def launch_setup(context, *args, **kwargs):
     # gazebo_models_path = os.path.join(pkg_share, 'models')
     # os.environ["GAZEBO_MODEL_PATH"] = gazebo_models_path
     
-    gazebo_plugin_path = os.path.join(pkg_share)
-    os.environ["GAZEBO_PLUGIN_PATH"] = gazebo_plugin_path
+    # gazebo_plugin_path = os.path.join(pkg_share)
+    # os.environ["GAZEBO_PLUGIN_PATH"] = gazebo_plugin_path
 
     # General arguments
     start_rviz = LaunchConfiguration("start_rviz")
@@ -37,7 +37,9 @@ def launch_setup(context, *args, **kwargs):
         PythonLaunchDescriptionSource(
             [FindPackageShare("gazebo_ros"), "/launch", "/gazebo.launch.py"]
         ),
-        launch_arguments={'world': world_path}.items()
+        launch_arguments={
+            'world': world_path,
+            }.items()
     )
 
     # Floor Robot Bringup

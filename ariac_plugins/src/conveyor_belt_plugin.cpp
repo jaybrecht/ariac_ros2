@@ -4,6 +4,7 @@
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <ariac_msgs/srv/conveyor_belt_control.hpp>
+#include <ariac_msgs/msg/conveyor_belt_state.hpp>
 
 #include <memory>
 
@@ -22,9 +23,9 @@ public:
   /// The joint that controls the movement of the belt.
   gazebo::physics::JointPtr belt_joint_;
 
-  /// Velocity of the belt joint
   double belt_velocity_;
   double max_velocity_;
+  double power_;
 
   /// Position limit of belt joint to reset 
   double limit_;
@@ -32,10 +33,20 @@ public:
   /// Service for enabling the vacuum gripper
   rclcpp::Service<ariac_msgs::srv::ConveyorBeltControl>::SharedPtr enable_service_;
 
+  /// Status Publisher
+  rclcpp::Publisher<ariac_msgs::msg::ConveyorBeltState>::SharedPtr status_pub_;
+  ariac_msgs::msg::ConveyorBeltState status_msg_;
+
+  rclcpp::Time last_publish_time_;
+  int update_ns_;
+
   /// Callback for enable service
   void SetConveyorPower(
     ariac_msgs::srv::ConveyorBeltControl::Request::SharedPtr,
     ariac_msgs::srv::ConveyorBeltControl::Response::SharedPtr);
+
+  /// Method to publish status
+  void PublishStatus();
 };
 
 ConveyorBeltPlugin::ConveyorBeltPlugin()
@@ -52,6 +63,11 @@ void ConveyorBeltPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
   // Create ROS node
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
 
+  // Create status publisher
+  impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::ConveyorBeltState>("conveyor_state", 10);
+  impl_->status_msg_.enabled = false;
+  impl_->status_msg_.power = 0;
+
   // Create belt joint
   impl_->belt_joint_ = model->GetJoint("belt_joint");
 
@@ -66,12 +82,19 @@ void ConveyorBeltPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
   // Set limit (m)
   impl_->limit_ = impl_->belt_joint_->UpperLimit();
 
-    // Register enable service
+  // Register enable service
   impl_->enable_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::ConveyorBeltControl>(
       "set_conveyor_power", 
       std::bind(
         &ConveyorBeltPluginPrivate::SetConveyorPower, impl_.get(),
         std::placeholders::_1, std::placeholders::_2));
+
+  double publish_rate = sdf->GetElement("publish_rate")->Get<double>();
+  RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), publish_rate);
+  impl_->update_ns_ = int((1/publish_rate) * 1e9);
+  RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), impl_->update_ns_);
+
+  impl_->last_publish_time_ = impl_->ros_node_->get_clock()->now();
 
   // Create a connection so the OnUpdate function is called at every simulation iteration. 
   impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -87,6 +110,14 @@ void ConveyorBeltPlugin::OnUpdate()
   if (belt_position >= impl_->limit_){
     impl_->belt_joint_->SetPosition(0, 0);
   }
+
+  // Publish status at rate
+  rclcpp::Time now = impl_->ros_node_->get_clock()->now();
+  if (now - impl_->last_publish_time_ >= rclcpp::Duration(0, impl_->update_ns_)) {
+    impl_->PublishStatus();
+    impl_->last_publish_time_ = now;
+  }
+    
 }
 
 void ConveyorBeltPluginPrivate::SetConveyorPower(
@@ -95,12 +126,22 @@ void ConveyorBeltPluginPrivate::SetConveyorPower(
 {
   res->success = false;
   if (req->power >= 0 && req->power <= 100) {
-    belt_velocity_ = max_velocity_ * (req->power / 100);
+    power_ = req->power;
+    belt_velocity_ = max_velocity_ * (power_ / 100);
     res->success = true;
   }
   else{
     RCLCPP_WARN(ros_node_->get_logger(), "Conveyor power must be between 0 and 100");
   }
+}
+
+void ConveyorBeltPluginPrivate::PublishStatus(){
+  status_msg_.power = power_;
+
+  if (power_ > 0)
+    status_msg_.enabled = true;
+
+  status_pub_->publish(status_msg_);
 }
 
 // Register this plugin with the simulator
