@@ -59,10 +59,32 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # AGV Bringup
-    agv_bringup = IncludeLaunchDescription(
+    agv1_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
         ),
+        launch_arguments={'agv_number': "agv1", 'y_position': "4.707484"}.items()
+    )
+
+    agv2_bringup = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
+        ),
+        launch_arguments={'agv_number': "agv2", 'y_position': "1.302086"}.items()
+    )
+
+    agv3_bringup = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
+        ),
+        launch_arguments={'agv_number': "agv3", 'y_position': "-1.295472"}.items()
+    )
+
+    agv4_bringup = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
+        ),
+        launch_arguments={'agv_number': "agv4", 'y_position': "-4.696062"}.items()
     )
 
     # Mobile Robot Bringup
@@ -110,12 +132,15 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         gazebo,
-        agv_bringup,
+        agv1_bringup,
+        agv2_bringup,
+        agv3_bringup,
+        agv4_bringup,
         # floor_robot_bringup,
         # ceiling_robot_bringup,
         # mobile_robot_bringup,
         # sensor_spawner,
-        robot_spawner,
+        # robot_spawner,
         # sensor_tf_broadcaster,
         # bins_tf_broadcaster,
         # spawn_robots_after_sensors
