@@ -44,36 +44,18 @@ def launch_setup(context, *args, **kwargs):
         joint_state_broadcaster_spawner = Node(
             package="controller_manager",
             executable="spawner",
-            arguments=["joint_state_broadcaster", "--controller-manager", "/" + agv_number + "/controller_manager"],
+            arguments=["joint_state_broadcaster", "-c", "/" + agv_number + "/controller_manager"],
         )
 
         position_controller_spawner= Node(
             package="controller_manager",
             executable="spawner",
-            arguments=["agv_controller", "-c", "/" + agv_number + "/controller_manager"],
+            arguments=["velocity_controller", "-c", "/" + agv_number + "/controller_manager"],
         )
-
-        # Spawn robot
-        gazebo_spawn_robot = Node(
-            package="gazebo_ros",
-            executable="spawn_entity.py",
-            # name="spawn_"+agv_number,
-            arguments=["-entity", agv_number,"-robot_namespace", agv_number,  "-topic", "/" + agv_number + "/robot_description"],
-            output="screen",
-        )
-
-        # AGV Move service node
-        # agv_mover = Node(
-        #     package="ariac_gazebo",
-        #     executable="AGV_mover.py",
-        #     name=agv_number + "_mover",
-        #     arguments=[agv_number])
 
         nodes_to_start.append(robot_state_publisher_node)
         nodes_to_start.append(joint_state_broadcaster_spawner)
         nodes_to_start.append(position_controller_spawner)
-        # nodes_to_start.append(gazebo_spawn_robot)
-        # nodes_to_start.append(agv_mover)
 
     return nodes_to_start
 

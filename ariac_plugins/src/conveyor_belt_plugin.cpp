@@ -90,9 +90,7 @@ void ConveyorBeltPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
         std::placeholders::_1, std::placeholders::_2));
 
   double publish_rate = sdf->GetElement("publish_rate")->Get<double>();
-  RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), publish_rate);
   impl_->update_ns_ = int((1/publish_rate) * 1e9);
-  RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), impl_->update_ns_);
 
   impl_->last_publish_time_ = impl_->ros_node_->get_clock()->now();
 

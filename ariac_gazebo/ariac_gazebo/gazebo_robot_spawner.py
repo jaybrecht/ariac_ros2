@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from curses.ascii import EM
 from ament_index_python.packages import get_package_share_directory
 
 import rclpy
@@ -10,18 +11,22 @@ from rclpy.qos import QoSProfile
 from ariac_gazebo.spawn_params import GazeboSpawnParams
 
 from std_msgs.msg import String
+from std_srvs.srv import Empty
 from gazebo_msgs.srv import SpawnEntity
 
 class GazeboRobotSpawner(Node):
     def __init__(self):
         super().__init__('gazebo_robot_spawner')
-        self.client = self.create_client(SpawnEntity, '/spawn_entity')
-        
-        while not self.client.wait_for_service(timeout_sec=1.0):
-            pass
-            # self.get_logger().info('spawn service not available, waiting again...')
+        self.spawn_client = self.create_client(SpawnEntity, '/spawn_entity')
+
+        self.pause_client = self.create_client(Empty, '/pause_physics')
+        self.unpause_client = self.create_client(Empty, '/unpause_physics')
 
     def spawn_from_params(self, params: GazeboSpawnParams) -> bool:
+        self.spawn_client.wait_for_service()
+
+        self.get_logger().info(f'Spawning: {params.name}')
+
         req = SpawnEntity.Request()
 
         req.name = params.name
@@ -37,7 +42,8 @@ class GazeboRobotSpawner(Node):
         if req.xml == '':
             return False
 
-        future = self.client.call_async(req)
+        future = self.spawn_client.call_async(req)
+
         rclpy.spin_until_future_complete(self, future)
         
         return future.result().success

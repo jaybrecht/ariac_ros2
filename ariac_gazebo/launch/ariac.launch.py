@@ -61,7 +61,7 @@ def launch_setup(context, *args, **kwargs):
     # AGV Bringup
     agv_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
         ),
     )
 
@@ -110,14 +110,15 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         gazebo,
-        # agv_bringup,
-        floor_robot_bringup,
+        agv_bringup,
+        # floor_robot_bringup,
         # ceiling_robot_bringup,
         # mobile_robot_bringup,
-        sensor_spawner,
-        sensor_tf_broadcaster,
-        bins_tf_broadcaster,
-        spawn_robots_after_sensors
+        # sensor_spawner,
+        robot_spawner,
+        # sensor_tf_broadcaster,
+        # bins_tf_broadcaster,
+        # spawn_robots_after_sensors
     ]
 
     return nodes_to_start
