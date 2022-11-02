@@ -62,6 +62,10 @@ public:
 
   std::vector<std::string> pickable_part_types;
 
+  rclcpp::Time last_publish_time_;
+  int update_ns_;
+
+
   bool CheckModelContact(ConstContactsPtr&);
   void AttachJoint();
   void DetachJoint();
@@ -91,9 +95,11 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   impl_->model_ = model;
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
 
+  std::string name = sdf->GetElement("robot_name")->Get<std::string>();
+
   const gazebo_ros::QoS & qos = impl_->ros_node_->get_qos();
   rclcpp::QoS pub_qos = qos.get_publisher_qos("~/out", rclcpp::SensorDataQoS().reliable());
-  impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::VacuumGripperState>("gripper_state", pub_qos);
+  impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::VacuumGripperState>("/ariac/" + name + "_gripper_state", pub_qos);
 
   gazebo::physics::WorldPtr world = impl_->model_->GetWorld();
   impl_->picked_part_joint_ = world->Physics()->CreateJoint("fixed", impl_->model_);
@@ -107,14 +113,18 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   std::string link_name = sdf->GetElement("gripper_link")->Get<std::string>();
   impl_->gripper_link_ = impl_->model_->GetLink(link_name);
   
-  std::string topic = "/gazebo/world/floor_robot/floor_gripper/bumper/contacts";
+  std::string topic = "/gazebo/world/" + name + "/" + link_name + "/bumper/contacts";
   impl_->contact_sub_ = impl_->gznode_->Subscribe(topic, &VacuumGripper::OnContact, this);
 
   impl_->pickable_part_types = {"battery", "regulator", "pump", "sensor"};
 
+  double publish_rate = 10;
+  impl_->update_ns_ = int((1/publish_rate) * 1e9);
+  impl_->last_publish_time_ = impl_->ros_node_->get_clock()->now();
+
   // Register enable service
   impl_->enable_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::VacuumGripperControl>(
-      "enable_gripper", 
+      "/ariac/" + name + "_enable_gripper", 
       std::bind(
       &VacuumGripperPrivate::EnableGripper, impl_.get(),
       std::placeholders::_1, std::placeholders::_2));
@@ -137,8 +147,12 @@ void VacuumGripper::OnUpdate()
     impl_->DetachJoint();
   }
 
-  // Publish gripper state
-  impl_->PublishState();
+  // Publish status at rate
+  rclcpp::Time now = impl_->ros_node_->get_clock()->now();
+  if (now - impl_->last_publish_time_ >= rclcpp::Duration(0, impl_->update_ns_)) {
+    impl_->PublishState();
+    impl_->last_publish_time_ = now;
+  }
 
 }
 

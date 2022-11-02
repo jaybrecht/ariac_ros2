@@ -99,7 +99,6 @@ install(PROGRAMS
   nodes/spawn_parts.py
   nodes/sensor_tf_broadcaster.py
   nodes/bins_tf_broadcaster.py
-  nodes/AGV_mover.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -91,7 +91,7 @@
 
       <plugin filename="libconveyor_belt_plugin.so" name="conveyor_belt_plugin">
         <ros>
-          <namespace>ariac</namespace>
+          <namespace></namespace>
         </ros>
         <max_velocity>0.2</max_velocity>
         <publish_rate>10</publish_rate>
