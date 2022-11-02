@@ -62,6 +62,10 @@ public:
 
   std::vector<std::string> pickable_part_types;
 
+  rclcpp::Time last_publish_time_;
+  int update_ns_;
+
+
   bool CheckModelContact(ConstContactsPtr&);
   void AttachJoint();
   void DetachJoint();
@@ -109,10 +113,14 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   std::string link_name = sdf->GetElement("gripper_link")->Get<std::string>();
   impl_->gripper_link_ = impl_->model_->GetLink(link_name);
   
-  std::string topic = "/gazebo/world/" + name + link_name + "/bumper/contacts";
+  std::string topic = "/gazebo/world/" + name + "/" + link_name + "/bumper/contacts";
   impl_->contact_sub_ = impl_->gznode_->Subscribe(topic, &VacuumGripper::OnContact, this);
 
   impl_->pickable_part_types = {"battery", "regulator", "pump", "sensor"};
+
+  double publish_rate = 10;
+  impl_->update_ns_ = int((1/publish_rate) * 1e9);
+  impl_->last_publish_time_ = impl_->ros_node_->get_clock()->now();
 
   // Register enable service
   impl_->enable_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::VacuumGripperControl>(
@@ -139,8 +147,12 @@ void VacuumGripper::OnUpdate()
     impl_->DetachJoint();
   }
 
-  // Publish gripper state
-  impl_->PublishState();
+  // Publish status at rate
+  rclcpp::Time now = impl_->ros_node_->get_clock()->now();
+  if (now - impl_->last_publish_time_ >= rclcpp::Duration(0, impl_->update_ns_)) {
+    impl_->PublishState();
+    impl_->last_publish_time_ = now;
+  }
 
 }
 

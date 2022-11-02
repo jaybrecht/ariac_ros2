@@ -1,9 +1,9 @@
 sensors:
-  # breakbeam_0:
-  #   type: break_beam
-  #   pose:
-  #     xyz: [-0.35, 3, 0.95]
-  #     rpy: [0, 0, pi]
+  breakbeam_0:
+    type: break_beam
+    pose:
+      xyz: [-0.35, 3, 0.95]
+      rpy: [0, 0, pi]
 
   # proximity_sensor_0:
   #   type: proximity_sensor
@@ -38,9 +38,9 @@ sensors:
       xyz: [-2.286, 2.96, 1.8]
       rpy: [pi, pi/2, 0]
 
-  # left_bins_logical_camera:
-  #   type: logical_camera
-  #   pose:
-  #     xyz: [-2.286, -2.96, 1.8]
-  #     rpy: [pi, pi/2, 0]
+  left_bins_logical_camera:
+    type: logical_camera
+    pose:
+      xyz: [-2.286, -2.96, 1.8]
+      rpy: [pi, pi/2, 0]
   

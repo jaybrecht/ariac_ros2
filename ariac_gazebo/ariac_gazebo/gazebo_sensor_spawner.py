@@ -12,6 +12,7 @@ from rclpy.node import Node
 from ariac_gazebo.spawn_params import GazeboSpawnParams
 
 from gazebo_msgs.srv import SpawnEntity
+from std_srvs.srv import Empty
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
 class GazeboSensorSpawner(Node):
@@ -51,9 +52,9 @@ class GazeboSensorSpawner(Node):
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
-            plugin.find('ros').find('namespace').text = "/ariac" 
-            plugin.find('status_topic').text = params.name + "_status"
-            plugin.find('change_topic').text = params.name + "_change"
+            plugin.find('ros').find('namespace').text = "/" 
+            plugin.find('status_topic').text = "/ariac/" + params.name + "_status"
+            plugin.find('change_topic').text = "/ariac/" + params.name + "_change"
             plugin.find('frame_name').text = params.name + "_frame"
 
         ray_sensors = ["proximity_sensor", "laser_profiler", "depth_camera"]
@@ -61,16 +62,16 @@ class GazeboSensorSpawner(Node):
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
-            plugin.find('ros').find('namespace').text = "/ariac" 
-            plugin.find('ros').find('remapping').text = "~/out:=" + params.name
+            plugin.find('ros').find('namespace').text = "/" 
+            plugin.find('ros').find('remapping').text = "~/out:=" + "/ariac/" + params.name
             plugin.find('frame_name').text = params.name + "_frame"
 
         if params.model_type == 'rgb_camera' or params.model_type == 'logical_camera':
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(params.name + "_ros_plugin"))
-            plugin.find('ros').find('namespace').text = "/ariac" 
-            plugin.find('camera_name').text = params.name
+            plugin.find('ros').find('namespace').text = "/" 
+            plugin.find('camera_name').text = "/ariac/" + params.name
             plugin.find('frame_name').text = params.name + "_frame"
 
         return ET.tostring(xml, encoding="unicode")
@@ -84,3 +85,18 @@ class GazeboSensorSpawner(Node):
             return ''
         
         return entity_xml
+
+    def pause_physics(self):
+        client = self.create_client(Empty, "/pause_physics")
+        client.wait_for_service()
+
+        request = Empty.Request()
+
+        client.call_async(request)
+    
+    def unpause_physics(self):
+        client = self.create_client(Empty, "/unpause_physics")
+
+        request = Empty.Request()
+
+        client.call_async(request)

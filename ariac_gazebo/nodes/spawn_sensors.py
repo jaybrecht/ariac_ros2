@@ -14,8 +14,10 @@ def main():
     rclpy.init()
 
     sensor_spawner = GazeboSensorSpawner()
-    sensor_params = []
 
+    sensor_spawner.pause_physics()
+
+    sensor_params = []
     config = os.path.join(get_package_share_directory('ariac_gazebo'), 'config', "sensors.yaml")
 
     with open(config, "r") as stream:
@@ -48,6 +50,8 @@ def main():
     for params in sensor_params:
         if not sensor_spawner.spawn_from_params(params):
             sensor_spawner.get_logger().error(f"Unable to spawn {params.name}")
+
+    sensor_spawner.unpause_physics()
 
     sensor_spawner.destroy_node()
 

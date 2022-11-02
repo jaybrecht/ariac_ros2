@@ -13,19 +13,17 @@ def main():
     rclpy.init()
 
     robot_spawner = GazeboRobotSpawner()
-    # robot_spawner.pause_simulation()
 
     robot_params = []
     robot_names = []
     
-    # Create spawn params for the mobile robot
-    model_path = os.path.join(get_package_share_directory('ariac_mobile_robot'), 'models', "mobile_robot", 'model.sdf')
-
+    ## Create spawn params for the mobile robot
+    # model_path = os.path.join(get_package_share_directory('ariac_mobile_robot'), 'models', "mobile_robot", 'model.sdf')
     # robot_params.append(GazeboSpawnParams('mobile_robot', file_path=model_path, xyz=[-4.0, 3.5, 0], rpy = [0, 0, 3.14]))
 
     # Create spawn params for the URDF robots
     robot_names.append('floor_robot')
-    # robot_names.append('ceiling_robot')
+    robot_names.append('ceiling_robot')
     robot_names.append('agv1')
     robot_names.append('agv2')
     robot_names.append('agv3')
@@ -40,8 +38,6 @@ def main():
     for params in robot_params:
         if not robot_spawner.spawn_from_params(params):
             robot_spawner.get_logger().error(f"Unable to spawn {params.name}")
-
-    # robot_spawner.unpause_simulation()
 
     robot_spawner.destroy_node()
     rclpy.shutdown()

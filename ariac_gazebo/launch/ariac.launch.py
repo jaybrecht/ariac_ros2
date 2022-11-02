@@ -21,13 +21,6 @@ def launch_setup(context, *args, **kwargs):
     world_file_name = 'ariac.world'
     world_path = os.path.join(pkg_share, 'worlds', world_file_name)
     
-    # Set the path to the SDF model files.
-    # gazebo_models_path = os.path.join(pkg_share, 'models')
-    # os.environ["GAZEBO_MODEL_PATH"] = gazebo_models_path
-    
-    # gazebo_plugin_path = os.path.join(pkg_share)
-    # os.environ["GAZEBO_PLUGIN_PATH"] = gazebo_plugin_path
-
     # General arguments
     start_rviz = LaunchConfiguration("start_rviz")
     start_moveit = LaunchConfiguration("start_moveit")
@@ -61,28 +54,28 @@ def launch_setup(context, *args, **kwargs):
     # AGV Bringup
     agv1_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
         launch_arguments={'agv_number': "agv1", 'y_position': "4.707484"}.items()
     )
 
     agv2_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
         launch_arguments={'agv_number': "agv2", 'y_position': "1.302086"}.items()
     )
 
     agv3_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
         launch_arguments={'agv_number': "agv3", 'y_position': "-1.295472"}.items()
     )
 
     agv4_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup2.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
         launch_arguments={'agv_number': "agv4", 'y_position': "-4.696062"}.items()
     )
@@ -126,24 +119,24 @@ def launch_setup(context, *args, **kwargs):
     spawn_robots_after_sensors = RegisterEventHandler(
         OnProcessExit(
             target_action=sensor_spawner,
-            on_exit=[robot_spawner]
+            on_exit=[
+                robot_spawner,
+                agv1_bringup,
+                agv2_bringup,
+                agv3_bringup,
+                agv4_bringup,
+                floor_robot_bringup,
+                ceiling_robot_bringup,
+                ]
         )
     )
 
     nodes_to_start = [
         gazebo,
-        agv1_bringup,
-        agv2_bringup,
-        agv3_bringup,
-        agv4_bringup,
-        floor_robot_bringup,
-        # ceiling_robot_bringup,
-        # mobile_robot_bringup,
-        # sensor_spawner,
-        robot_spawner,
-        # sensor_tf_broadcaster,
-        # bins_tf_broadcaster,
-        # spawn_robots_after_sensors
+        sensor_spawner,
+        sensor_tf_broadcaster,
+        bins_tf_broadcaster,
+        spawn_robots_after_sensors
     ]
 
     return nodes_to_start
