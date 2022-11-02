@@ -64,7 +64,7 @@ void ConveyorBeltPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
 
   // Create status publisher
-  impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::ConveyorBeltState>("conveyor_state", 10);
+  impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::ConveyorBeltState>("/ariac/conveyor_state", 10);
   impl_->status_msg_.enabled = false;
   impl_->status_msg_.power = 0;
 
@@ -84,7 +84,7 @@ void ConveyorBeltPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
 
   // Register enable service
   impl_->enable_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::ConveyorBeltControl>(
-      "set_conveyor_power", 
+      "/ariac/set_conveyor_power", 
       std::bind(
         &ConveyorBeltPluginPrivate::SetConveyorPower, impl_.get(),
         std::placeholders::_1, std::placeholders::_2));

@@ -64,7 +64,7 @@ def launch_setup(context, *args, **kwargs):
         robot_state_publisher,
         joint_state_spawner,
         velocity_controller_spawner,
-        gazebo_spawn_robot,
+        # gazebo_spawn_robot,
     ]
 
 def generate_launch_description(): 

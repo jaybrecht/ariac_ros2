@@ -136,11 +136,11 @@ def launch_setup(context, *args, **kwargs):
         agv2_bringup,
         agv3_bringup,
         agv4_bringup,
-        # floor_robot_bringup,
+        floor_robot_bringup,
         # ceiling_robot_bringup,
         # mobile_robot_bringup,
         # sensor_spawner,
-        # robot_spawner,
+        robot_spawner,
         # sensor_tf_broadcaster,
         # bins_tf_broadcaster,
         # spawn_robots_after_sensors

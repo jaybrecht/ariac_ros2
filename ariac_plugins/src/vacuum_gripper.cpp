@@ -91,9 +91,11 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   impl_->model_ = model;
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
 
+  std::string name = sdf->GetElement("robot_name")->Get<std::string>();
+
   const gazebo_ros::QoS & qos = impl_->ros_node_->get_qos();
   rclcpp::QoS pub_qos = qos.get_publisher_qos("~/out", rclcpp::SensorDataQoS().reliable());
-  impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::VacuumGripperState>("gripper_state", pub_qos);
+  impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::VacuumGripperState>("/ariac/" + name + "_gripper_state", pub_qos);
 
   gazebo::physics::WorldPtr world = impl_->model_->GetWorld();
   impl_->picked_part_joint_ = world->Physics()->CreateJoint("fixed", impl_->model_);
@@ -107,14 +109,14 @@ void VacuumGripper::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   std::string link_name = sdf->GetElement("gripper_link")->Get<std::string>();
   impl_->gripper_link_ = impl_->model_->GetLink(link_name);
   
-  std::string topic = "/gazebo/world/floor_robot/floor_gripper/bumper/contacts";
+  std::string topic = "/gazebo/world/" + name + link_name + "/bumper/contacts";
   impl_->contact_sub_ = impl_->gznode_->Subscribe(topic, &VacuumGripper::OnContact, this);
 
   impl_->pickable_part_types = {"battery", "regulator", "pump", "sensor"};
 
   // Register enable service
   impl_->enable_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::VacuumGripperControl>(
-      "enable_gripper", 
+      "/ariac/" + name + "_enable_gripper", 
       std::bind(
       &VacuumGripperPrivate::EnableGripper, impl_.get(),
       std::placeholders::_1, std::placeholders::_2));

@@ -11,6 +11,7 @@ find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(ariac_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
@@ -42,6 +43,7 @@ add_library(agv_plugin SHARED
 )
 target_include_directories(agv_plugin PUBLIC include)
 ament_target_dependencies(agv_plugin
+  "sensor_msgs"
   "gazebo_ros"
   "ariac_msgs"
 )

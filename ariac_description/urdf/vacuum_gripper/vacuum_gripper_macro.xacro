@@ -61,6 +61,7 @@
           <namespace>${prefix}_robot</namespace>
         </ros>
         <gripper_link>${prefix}_gripper</gripper_link>
+        <robot_name>${prefix}_robot</robot_name>
       </plugin>
     </gazebo>
 

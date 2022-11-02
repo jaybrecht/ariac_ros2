@@ -3,6 +3,10 @@
   <xacro:macro name="agv" params="
     agv_number
     y_position">
+
+    <material name="Grey">
+      <color rgba="${220/255} ${220/255} ${220/255} 1.0"/>
+    </material>
     
     <xacro:include filename="$(find ariac_description)/urdf/AGV/agv.ros2_control.xacro"/>
 
@@ -42,6 +46,7 @@
         <geometry>
           <mesh filename="file://$(find ariac_description)/meshes/AGV/kit_tray.stl" scale="1 1 1"/>
         </geometry>
+        <material name="Grey"/>
       </visual>
       
       <collision>
