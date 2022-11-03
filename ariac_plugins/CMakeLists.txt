@@ -26,7 +26,7 @@ ament_target_dependencies(vacuum_gripper
 )
 ament_export_libraries(vacuum_gripper)
 
-# Conveyor Belt
+# Conveyor Belt Plugin
 add_library(conveyor_belt_plugin SHARED
   src/conveyor_belt_plugin.cpp
 )
@@ -37,17 +37,27 @@ ament_target_dependencies(conveyor_belt_plugin
 )
 ament_export_libraries(conveyor_belt_plugin)
 
-# Conveyor Belt
+# AGV Plugin
 add_library(agv_plugin SHARED
   src/agv_plugin.cpp
 )
 target_include_directories(agv_plugin PUBLIC include)
 ament_target_dependencies(agv_plugin
-  "sensor_msgs"
   "gazebo_ros"
   "ariac_msgs"
 )
 ament_export_libraries(agv_plugin)
+
+# Gripper Change Plugin
+add_library(gripper_change_plugin SHARED
+  src/gripper_change_plugin.cpp
+)
+target_include_directories(gripper_change_plugin PUBLIC include)
+ament_target_dependencies(gripper_change_plugin
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(gripper_change_plugin)
 
 ament_package()
 
@@ -58,6 +68,7 @@ install(TARGETS
     vacuum_gripper
     conveyor_belt_plugin
     agv_plugin
+    gripper_change_plugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
