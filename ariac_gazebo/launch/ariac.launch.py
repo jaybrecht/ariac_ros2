@@ -8,6 +8,7 @@ from launch.actions import (
 from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -68,6 +69,13 @@ def launch_setup(context, *args, **kwargs):
             [FindPackageShare("ariac_mobile_robot"), "/launch", "/mobile_robot_bringup.launch.py"]
         ),
     )
+    
+    # ROSbridge
+    rosbridge = IncludeLaunchDescription(
+        XMLLaunchDescriptionSource(
+            [FindPackageShare("rosbridge_server"), "/launch", "/rosbridge_websocket_launch.xml"]
+        ),
+    )
 
     # Robot Spawner Node
     robot_spawner = Node(
@@ -82,7 +90,8 @@ def launch_setup(context, *args, **kwargs):
         floor_robot_bringup,
         ceiling_robot_bringup,
         mobile_robot_bringup,
-        robot_spawner
+        robot_spawner,
+        rosbridge
     ]
 
     return nodes_to_start
