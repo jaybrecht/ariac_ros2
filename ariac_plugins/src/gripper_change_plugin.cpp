@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include <gazebo/rendering/Visual.hh>
+#include <gazebo/msgs/MessageTypes.hh>
 #include <ariac_plugins/gripper_change_plugin.hpp>
+#include <ariac_msgs/srv/change_gripper_color.hpp>
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -30,6 +32,17 @@ public:
 
   /// Node for ROS communication.
   gazebo_ros::Node::SharedPtr ros_node_;
+
+  gazebo::rendering::VisualPtr visual_;
+
+  ignition::math::Color color_;
+
+  rclcpp::Service<ariac_msgs::srv::ChangeGripperColor>::SharedPtr color_change_service_;
+
+  void ChangeGripperColor(
+    ariac_msgs::srv::ChangeGripperColor::Request::SharedPtr,
+    ariac_msgs::srv::ChangeGripperColor::Response::SharedPtr);
+
 };
 
 GripperChangePlugin::GripperChangePlugin()
@@ -47,20 +60,65 @@ void GripperChangePlugin::Load(gazebo::rendering::VisualPtr visual, sdf::Element
   // Pass it SDF parameters so common options like namespace and remapping
   // can be handled.
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
+  std::string name = sdf->GetElement("robot_name")->Get<std::string>();
+
+  impl_->visual_ = visual;
+
+  impl_->color_change_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::ChangeGripperColor>(
+    "/ariac/" + name + "_change_gripper_color", 
+    std::bind(
+      &GripperChangePluginPrivate::ChangeGripperColor, impl_.get(),
+      std::placeholders::_1, std::placeholders::_2));
+
+//   gazebo::msgs::Visual vis;
+//   gazebo::msgs::Geometry geometry;
+//   geometry.
+//   vis.geometry()
+
+//   visual->Mesh
 
   // The model pointer gives you direct access to the physics object,
   // for example:
-//   RCLCPP_INFO(impl_->ros_node_->get_logger(), model->GetName().c_str());
+  RCLCPP_INFO(impl_->ros_node_->get_logger(), impl_->visual_->Name().c_str());
 
   // Create a connection so the OnUpdate function is called at every simulation
   // iteration. Remove this call, the connection and the callback if not needed.
-  impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-    std::bind(&GripperChangePlugin::OnUpdate, this));
+  // impl_->update_connection_ = gazebo::event::Events::ConnectPreRender(
+  //   std::bind(&GripperChangePlugin::OnUpdate, this));
 }
 
 void GripperChangePlugin::OnUpdate()
 {
   // Do something every simulation iteration
+}
+
+void GripperChangePluginPrivate::ChangeGripperColor(
+  ariac_msgs::srv::ChangeGripperColor::Request::SharedPtr req,
+  ariac_msgs::srv::ChangeGripperColor::Response::SharedPtr res) 
+{
+  res->success = false;
+
+  // Check that all the values are between 0 and 1
+  std::vector<bool> checks = {
+    0 <= req->r <=1, 
+    0 <= req->g <=1,
+    0 <= req->b <=1,
+    0 <= req->alpha <=1};
+
+  if (std::find(checks.begin(), checks.end(), false) == checks.end()) 
+  {
+    color_.R(req->r);
+    color_.G(req->g);
+    color_.B(req->b);
+    color_.A(req->alpha);
+
+    visual_->SetDiffuse(color_);
+    visual_->SetAmbient(color_);
+    visual_->SetTransparency(1 - req->alpha);
+
+    res->success = true;
+
+  }
 }
 
 // Register this plugin with the simulator
