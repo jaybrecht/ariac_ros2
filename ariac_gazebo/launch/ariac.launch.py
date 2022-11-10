@@ -125,7 +125,7 @@ def launch_setup(context, *args, **kwargs):
                 agv2_bringup,
                 agv3_bringup,
                 agv4_bringup,
-                floor_robot_bringup,
+                # floor_robot_bringup,
                 ceiling_robot_bringup,
                 ]
         )
@@ -133,10 +133,10 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         gazebo,
-        sensor_spawner,
-        sensor_tf_broadcaster,
-        bins_tf_broadcaster,
-        spawn_robots_after_sensors
+        # sensor_spawner,
+        # sensor_tf_broadcaster,
+        # bins_tf_broadcaster,
+        # spawn_robots_after_sensors
     ]
 
     return nodes_to_start
