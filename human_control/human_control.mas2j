@@ -5,7 +5,10 @@ MAS hello_ros {
 	environment: RosEnv
 
 	agents:
-		human;
+		human 
+			  [beliefs="indifferent"];
+//			  [beliefs="helpful"];
+//			  [beliefs="antagonistic"];
 
 	aslSourcePath:
 		"src/asl";
