@@ -62,12 +62,12 @@
         <contact>
           <collision>${prefix}_gripper_collision_collision</collision>
         </contact>
-        <plugin name="${prefix}_gripper_contact_sensor" filename="libgazebo_ros_bumper.so">
+        <!-- <plugin name="${prefix}_gripper_contact_sensor" filename="libgazebo_ros_bumper.so">
           <ros>
             <namespace>${prefix}_robot</namespace>
           </ros>
           <frame_name>${prefix}_gripper</frame_name>
-        </plugin>
+        </plugin> -->
       </sensor>
     </gazebo>
 
