@@ -59,6 +59,16 @@ ament_target_dependencies(gripper_change_plugin
 )
 ament_export_libraries(gripper_change_plugin)
 
+# Disable Shadows Plugin
+add_library(disable_shadows_plugin SHARED
+  src/disable_shadows_plugin.cpp
+)
+target_include_directories(disable_shadows_plugin PUBLIC include)
+ament_target_dependencies(disable_shadows_plugin
+  "gazebo_ros"
+)
+ament_export_libraries(disable_shadows_plugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -69,6 +79,7 @@ install(TARGETS
     conveyor_belt_plugin
     agv_plugin
     gripper_change_plugin
+    disable_shadows_plugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
