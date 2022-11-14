@@ -1,12 +1,13 @@
 /* Initial beliefs and rules */
 // The location belief contains the location and the X,Y,Z coordinates
 // Positions of the tables are with respect of the initial position of the screen when the simulation starts
-// tableBR = table bottom right, tableBL = table bottom left, tableTR = table top right, tableTL = table top left
+// station1 = table bottom right, station2 = table top right, station4 = table top left, station3 = table bottom left
 // safe zone TBD
-location(tableBR, X, Y, 0.0).
-location(tableBL, X, Y, 0.0).
-location(tableTR, X, Y, 0.0).
-location(tableTL, X, Y, 0.0).
+location(station1, -7.3, 3.0, 0.0).
+location(station2, -12.3, 3.0, 0.0).
+location(station4, -12.3, -3.0, 0.0).
+location(station3, -7.3, -3.0, 0.0).
+
 location(safe, X, Y, 0.0).
 
 // Beliefs that determine where is the next location to work (second parameter) based on the current one (first parameter)
