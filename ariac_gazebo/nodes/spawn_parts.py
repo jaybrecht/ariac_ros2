@@ -105,7 +105,9 @@ def main():
 
     sdf = get_package_share_directory("ariac_gazebo") + "/models/" + part_type + "/model.sdf"
 
-    part = PartSpawnParams(color + '_' + part_type, color=color, file_path=sdf, rf="world", xyz=[-1.9, 3.38, 0.73])
+    # part = PartSpawnParams(color + '_' + part_type, color=color, file_path=sdf, rf="world", xyz=[-1.9, 3.38, 0.73])
+
+    part = PartSpawnParams(color + '_' + part_type, color=color, file_path=sdf, rf="world", xyz=[-7.56, 3, 1.035], rpy=[0, 0, -1.571])
 
     if not part_spawner.spawn_from_params(part):
         part_spawner.get_logger().error("Unable to read xml")
