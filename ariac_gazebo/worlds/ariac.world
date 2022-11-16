@@ -203,104 +203,110 @@
     </include>-->
 
     <include>
-      <name>PartCollector</name>
-      <uri>model://trash_bin_blue</uri>
-      <pose>-2.186829 0 -0.054593 0 0 0</pose>
-    </include> 
-
-    <include>
-      <name>ConveyorCollector</name>
-      <uri>model://trash_bin_blue</uri>
-      <pose>-0.577 -4.719131 0 0 0 0</pose>
+      <name>part_disposal_bin</name>
+      <uri>model://disposal_bin</uri>
+      <pose>-2.2 0 0 0 0 0</pose>
     </include>
 
     <include>
-      <name>ConveyorCollector2</name>
-      <uri>model://trash_bin_blue</uri>
-      <pose>-0.577 4.719131 0 0 0 0</pose>
+      <name>conveyor_disposal_bin1</name>
+      <uri>model://disposal_bin</uri>
+      <pose>-0.75 -4.72 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>conveyor_disposal_bin2</name>
+      <uri>model://disposal_bin</uri>
+      <pose>-0.577 4.72 0 0 0 0</pose>
     </include>
 
     <include>
       <name>workcell_floor</name>
-      <uri>model://workcell_floor_2021</uri>
-      <pose>-3.6 -3.32 0 0 0 0</pose>
+      <uri>model://floor</uri>
+      <pose>0 0 0 0 0 0</pose>
     </include>
 
     <!-- Insert AGV paths -->
     <include>
       <name>agv_path_1</name>
       <uri>model://agv_path</uri>
-      <pose>-8.55 4.707484 0 0 0 0</pose>
+      <pose>-1.5 4.8 0 0 0 0</pose>
     </include>
     <include>
       <name>agv_path_2</name>
       <uri>model://agv_path</uri>
-      <pose>-8.55 1.302086 0 0 0 0</pose>
+      <pose>-1.5 1.2 0 0 0 0</pose>
     </include>
     <include>
       <name>agv_path_3</name>
       <uri>model://agv_path</uri>
-      <pose>-8.55 -1.295472 0 0 0 0</pose>
+      <pose>-1.5 -1.2 0 0 0 0</pose>
     </include>
     <include>
       <name>agv_path_4</name>
       <uri>model://agv_path</uri>
-      <pose>-8.55 -4.696062 0 0 0 0</pose>
+      <pose>-1.5 -4.8 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>warehouse</name>
+      <uri>model://warehouse</uri>
+      <pose>-19 0 0 0 0 0</pose>
     </include>
 
     <!-- Insert Bins -->
     <include>
       <name>bin1</name>
-      <uri>model://workcell_bin</uri>
-      <pose>-1.898993 3.379920 0 0 0 3.14159</pose>
+      <uri>model://parts_bin</uri>
+      <pose>-1.9 3.375 0 0 0 3.1416</pose>
     </include>
 
     <include>
       <name>bin2</name>
-      <uri>model://workcell_bin</uri>
-      <pose>-1.898993 2.565006 0 0 0 3.14159</pose>
+      <uri>model://parts_bin</uri>
+      <pose>-1.9 2.625 0 0 0 3.1416</pose>
     </include>
 
     <include>
       <name>bin3</name>
-      <uri>model://workcell_bin</uri>
-      <pose>-2.651690 2.565006 0 0 0 0 3.14159</pose>
+      <uri>model://parts_bin</uri>
+      <pose>-2.65 2.625 0 0 0 3.1416</pose>
     </include>
 
     <include>
       <name>bin4</name>
-      <uri>model://workcell_bin</uri>
-      <pose>-2.651690 3.379920 0 0 0 3.14159</pose>
+      <uri>model://parts_bin</uri>
+      <pose>-2.65 3.375 0 0 0 3.1416</pose>
     </include>
 
     <include>
       <name>bin5</name>
-      <uri>model://workcell_bin</uri>
-      <pose>-1.898993 -3.379920 0 0 0 3.14159</pose>
+      <uri>model://parts_bin</uri>
+      <pose>-1.9 -3.375 0 0 0 3.1416</pose>
     </include>
 
     <include>
       <name>bin6</name>
-      <uri>model://workcell_bin</uri>
-      <pose>-1.898993 -2.565006 0 0 0 3.14159</pose>
+      <uri>model://parts_bin</uri>
+      <pose>-1.9 -2.625 0 0 0 3.1416</pose>
     </include>
 
     <include>
       <name>bin7</name>
-      <uri>model://workcell_bin</uri>
-      <pose>-2.651690 -2.565006 0 0 0 3.14159</pose>
+      <uri>model://parts_bin</uri>
+      <pose>-2.65 -2.625 0 0 0 3.1416</pose>
     </include>
 
     <include>
       <name>bin8</name>
-      <uri>model://workcell_bin</uri>
-      <pose>-2.651690 -3.379920 0 0 0 3.14159</pose>
+      <uri>model://parts_bin</uri>
+      <pose>-2.65 -3.375 0 0 0 3.1416</pose>
     </include>
 
     <!-- Insert Conveyor Belt -->
     <include>
       <name>conveyor_belt</name>
-      <pose>-0.573076 0 0 0 0 0</pose>
+      <pose>-0.75 0 0 0 0</pose>
       <uri>model://conveyor_belt</uri>
     </include>
 

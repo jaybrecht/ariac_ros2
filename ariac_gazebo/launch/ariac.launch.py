@@ -56,28 +56,28 @@ def launch_setup(context, *args, **kwargs):
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
-        launch_arguments={'agv_number': "agv1", 'y_position': "4.707484"}.items()
+        launch_arguments={'agv_number': "agv1", 'y_position': "4.8"}.items()
     )
 
     agv2_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
-        launch_arguments={'agv_number': "agv2", 'y_position': "1.302086"}.items()
+        launch_arguments={'agv_number': "agv2", 'y_position': "1.2"}.items()
     )
 
     agv3_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
-        launch_arguments={'agv_number': "agv3", 'y_position': "-1.295472"}.items()
+        launch_arguments={'agv_number': "agv3", 'y_position': "-1.2"}.items()
     )
 
     agv4_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
-        launch_arguments={'agv_number': "agv4", 'y_position': "-4.696062"}.items()
+        launch_arguments={'agv_number': "agv4", 'y_position': "-4.8"}.items()
     )
 
     # Mobile Robot Bringup

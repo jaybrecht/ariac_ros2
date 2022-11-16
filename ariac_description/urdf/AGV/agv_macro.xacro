@@ -69,7 +69,7 @@
     <joint name="${agv_number}_world_to_track" type="fixed">
       <parent link="world"/>
       <child link="${agv_number}_track"/>
-      <origin xyz="-2.27 ${y_position} 0.0" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="-2.27 ${y_position} 0.01" rpy="0.0 0.0 ${pi/2}"/>
     </joint>
 
     <joint name="${agv_number}_joint" type="prismatic">
