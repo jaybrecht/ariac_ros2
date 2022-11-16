@@ -15,8 +15,8 @@
       <shadows>0</shadows>
       <grid>0</grid>
       <origin_visual>0</origin_visual>
-      <!-- <ambient>0.5 0.5 0.5 1</ambient>
-      <background>0.5 0.5 0.5 1</background> -->
+      <ambient>0.25 0.25 0.25 1</ambient>
+      <background>0.5 0.5 0.5 1</background>
     </scene>
 
     <!-- <light name='user_spot_light_0' type='spot'>
@@ -130,7 +130,7 @@
     </light>
 
     <!-- Models for aesthetics -->
-    <include>
+    <!-- <include>
       <name>CageFactory1</name>
       <uri>model://cage_factory</uri>
       <pose>-17.6 -0.5 0. 0 0 0</pose>
@@ -206,7 +206,7 @@
       <name>PartCollector</name>
       <uri>model://trash_bin_blue</uri>
       <pose>-2.186829 0 -0.054593 0 0 0</pose>
-    </include>
+    </include> -->
 
     <include>
       <name>ConveyorCollector</name>
