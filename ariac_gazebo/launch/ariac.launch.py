@@ -56,28 +56,28 @@ def launch_setup(context, *args, **kwargs):
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
-        launch_arguments={'agv_number': "agv1", 'y_position': "4.707484"}.items()
+        launch_arguments={'agv_number': "agv1", 'y_position': "4.8"}.items()
     )
 
     agv2_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
-        launch_arguments={'agv_number': "agv2", 'y_position': "1.302086"}.items()
+        launch_arguments={'agv_number': "agv2", 'y_position': "1.2"}.items()
     )
 
     agv3_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
-        launch_arguments={'agv_number': "agv3", 'y_position': "-1.295472"}.items()
+        launch_arguments={'agv_number': "agv3", 'y_position': "-1.2"}.items()
     )
 
     agv4_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
         ),
-        launch_arguments={'agv_number': "agv4", 'y_position': "-4.696062"}.items()
+        launch_arguments={'agv_number': "agv4", 'y_position': "-4.8"}.items()
     )
 
     # Mobile Robot Bringup
@@ -94,6 +94,13 @@ def launch_setup(context, *args, **kwargs):
         arguments=[]
     )
 
+    tray_spawner = Node(
+        package='ariac_gazebo',
+        executable='spawn_trays.py',
+        output='screen',
+        arguments=[]
+    )
+
     sensor_tf_broadcaster = Node(
         package='ariac_gazebo',
         executable='sensor_tf_broadcaster.py',
@@ -101,9 +108,9 @@ def launch_setup(context, *args, **kwargs):
         arguments=[]
     )
 
-    bins_tf_broadcaster = Node(
+    object_tf_broadcaster = Node(
         package='ariac_gazebo',
-        executable='bins_tf_broadcaster.py',
+        executable='object_tf_broadcaster.py',
         output='screen',
         arguments=[]
     )
@@ -127,15 +134,16 @@ def launch_setup(context, *args, **kwargs):
                 agv4_bringup,
                 floor_robot_bringup,
                 ceiling_robot_bringup,
-                ]
+            ]
         )
     )
 
     nodes_to_start = [
         gazebo,
+        tray_spawner,
         sensor_spawner,
         sensor_tf_broadcaster,
-        bins_tf_broadcaster,
+        object_tf_broadcaster,
         spawn_robots_after_sensors
     ]
 

@@ -22,6 +22,7 @@ set(msg_files
 )
 
 set(srv_files
+  "srv/ChangeGripperColor.srv"
   "srv/ConveyorBeltControl.srv"
   "srv/MoveAGV.srv"
   "srv/VacuumGripperControl.srv"

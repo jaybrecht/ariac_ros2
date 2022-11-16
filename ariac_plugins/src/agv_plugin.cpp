@@ -29,6 +29,7 @@ public:
   double kitting_location_ = 0.0;
   double front_assembly_station_ = 5.6;
   double back_assembly_station_ = 10.6;
+  double warehouse_location_ = 17;
   double max_velocity_ = 2.0;
   double goal_position_;
 
@@ -153,6 +154,15 @@ void AGVPluginPrivate::MoveAGV(
     res->success = true;
     return;
   }
+  else if (req->location == ariac_msgs::srv::MoveAGV::Request::WAREHOUSE){
+    RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Moving " << agv_number_ << " to back assembly station");
+
+    this->MoveToGoal(warehouse_location_);   
+
+    res->success = true;
+    return;
+  }
+
   else {
     RCLCPP_WARN(ros_node_->get_logger(), "Location not recognized");
   }

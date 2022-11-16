@@ -1,5 +1,6 @@
 sensors:
   breakbeam_0:
+    visualize_fov: false
     type: break_beam
     pose:
       xyz: [-0.35, 3, 0.95]
@@ -32,13 +33,14 @@ sensors:
   #     rpy: [pi, pi/2, 0]
 
   right_bins_logical_camera:
-    type: logical_camera
     visualize_fov: false
+    type: logical_camera
     pose:
       xyz: [-2.286, 2.96, 1.8]
       rpy: [pi, pi/2, 0]
 
   left_bins_logical_camera:
+    visualize_fov: false
     type: logical_camera
     pose:
       xyz: [-2.286, -2.96, 1.8]

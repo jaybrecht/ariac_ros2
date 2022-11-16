@@ -5,7 +5,7 @@
     prefix">
 
     <link name="${prefix}_gripper">
-      <visual>
+      <visual name="${prefix}_gripper_visual">
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/>
@@ -27,8 +27,24 @@
       </inertial>
     </link>
 
+
     <gazebo reference="${prefix}_gripper">
-      <material>Gazebo/Black</material>
+      <visual name="${prefix}_gripper_visual">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <!-- <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/> -->
+        </geometry>
+        <plugin filename="libgripper_change_plugin.so" name="${prefix}_gripper_change_plugin">
+          <ros>
+          </ros>
+          <robot_name>${prefix}_robot</robot_name>
+        </plugin>   
+      </visual>
+    </gazebo>
+
+
+    <gazebo reference="${prefix}_gripper">
+      <material>Gazebo/Black</material>      
     </gazebo>
 
     <joint name="${prefix}_gripper_joint" type="revolute">
@@ -46,12 +62,6 @@
         <contact>
           <collision>${prefix}_gripper_collision_collision</collision>
         </contact>
-        <plugin name="${prefix}_gripper_contact_sensor" filename="libgazebo_ros_bumper.so">
-          <ros>
-            <namespace>${prefix}_robot</namespace>
-          </ros>
-          <frame_name>${prefix}_gripper</frame_name>
-        </plugin>
       </sensor>
     </gazebo>
 
