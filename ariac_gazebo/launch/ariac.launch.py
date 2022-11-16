@@ -94,6 +94,13 @@ def launch_setup(context, *args, **kwargs):
         arguments=[]
     )
 
+    tray_spawner = Node(
+        package='ariac_gazebo',
+        executable='spawn_trays.py',
+        output='screen',
+        arguments=[]
+    )
+
     sensor_tf_broadcaster = Node(
         package='ariac_gazebo',
         executable='sensor_tf_broadcaster.py',
@@ -133,6 +140,7 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         gazebo,
+        tray_spawner,
         sensor_spawner,
         sensor_tf_broadcaster,
         object_tf_broadcaster,
