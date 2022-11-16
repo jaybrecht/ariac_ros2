@@ -77,7 +77,7 @@
       <origin xyz="0.0 0.0 0.0"/>
       <parent link="${agv_number}_track"/>
       <child link="${agv_number}_base"/>
-      <limit effort="1000.0" lower="0" upper="11" velocity="10"/>
+      <limit effort="1000.0" lower="0" upper="18" velocity="8"/>
       <dynamics damping="20.0" friction="500.0" />
     </joint>
 

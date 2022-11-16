@@ -211,13 +211,13 @@
     <include>
       <name>conveyor_disposal_bin1</name>
       <uri>model://disposal_bin</uri>
-      <pose>-0.75 -4.72 0 0 0 0</pose>
+      <pose>-0.6 -4.72 0 0 0 0</pose>
     </include>
 
     <include>
       <name>conveyor_disposal_bin2</name>
       <uri>model://disposal_bin</uri>
-      <pose>-0.577 4.72 0 0 0 0</pose>
+      <pose>-0.6 4.72 0 0 0 0</pose>
     </include>
 
     <include>
@@ -306,7 +306,7 @@
     <!-- Insert Conveyor Belt -->
     <include>
       <name>conveyor_belt</name>
-      <pose>-0.75 0 0 0 0</pose>
+      <pose>-0.6 0 0 0 0</pose>
       <uri>model://conveyor_belt</uri>
     </include>
 
