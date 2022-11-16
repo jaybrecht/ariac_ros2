@@ -23,11 +23,11 @@ def main():
 
     # Create spawn params for the URDF robots
     robot_names.append('floor_robot')
-    # robot_names.append('ceiling_robot')
-    # robot_names.append('agv1')
-    # robot_names.append('agv2')
-    # robot_names.append('agv3')
-    # robot_names.append('agv4')
+    robot_names.append('ceiling_robot')
+    robot_names.append('agv1')
+    robot_names.append('agv2')
+    robot_names.append('agv3')
+    robot_names.append('agv4')
     
     for name in robot_names:
         robot_params.append(GazeboSpawnParams(name))

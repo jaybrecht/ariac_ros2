@@ -101,9 +101,9 @@ def launch_setup(context, *args, **kwargs):
         arguments=[]
     )
 
-    bins_tf_broadcaster = Node(
+    object_tf_broadcaster = Node(
         package='ariac_gazebo',
-        executable='bins_tf_broadcaster.py',
+        executable='object_tf_broadcaster.py',
         output='screen',
         arguments=[]
     )
@@ -121,22 +121,22 @@ def launch_setup(context, *args, **kwargs):
             target_action=sensor_spawner,
             on_exit=[
                 robot_spawner,
-                # agv1_bringup,
-                # agv2_bringup,
-                # agv3_bringup,
-                # agv4_bringup,
+                agv1_bringup,
+                agv2_bringup,
+                agv3_bringup,
+                agv4_bringup,
                 floor_robot_bringup,
-                # ceiling_robot_bringup,
+                ceiling_robot_bringup,
             ]
         )
     )
 
     nodes_to_start = [
         gazebo,
-        # sensor_spawner,
-        # sensor_tf_broadcaster,
-        # bins_tf_broadcaster,
-        # spawn_robots_after_sensors
+        sensor_spawner,
+        sensor_tf_broadcaster,
+        object_tf_broadcaster,
+        spawn_robots_after_sensors
     ]
 
     return nodes_to_start
