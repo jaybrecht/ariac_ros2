@@ -2,13 +2,13 @@
 // The location belief contains the location and the X,Y,Z coordinates
 // Positions of the tables are with respect of the initial position of the screen when the simulation starts
 // station1 = table bottom right, station2 = table top right, station4 = table top left, station3 = table bottom left
-// safe zone TBD
 location(station1, -6.75, 3.0, 0.0).
 location(station2, -11.85, 3.0, 0.0).
 location(station4, -6.75, -3.0, 0.0).
 location(station3, -11.85, -3.0, 0.0).
 
-location(safe, X, Y, 0.0).
+// safe zone, not being used by the agent at the moment
+location(safe, -15.29, -10.04, 0.0).
 
 // Beliefs that determine where is the next location to work (second parameter) based on the current one (first parameter)
 next_location(station1,station2).
