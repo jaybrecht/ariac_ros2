@@ -3,18 +3,18 @@
 // Positions of the tables are with respect of the initial position of the screen when the simulation starts
 // station1 = table bottom right, station2 = table top right, station4 = table top left, station3 = table bottom left
 // safe zone TBD
-location(station1, -7.3, 3.0, 0.0).
-location(station2, -12.3, 3.0, 0.0).
-location(station4, -12.3, -3.0, 0.0).
-location(station3, -7.3, -3.0, 0.0).
+location(station1, -6.75, 3.0, 0.0).
+location(station2, -11.85, 3.0, 0.0).
+location(station4, -6.75, -3.0, 0.0).
+location(station3, -11.85, -3.0, 0.0).
 
 location(safe, X, Y, 0.0).
 
 // Beliefs that determine where is the next location to work (second parameter) based on the current one (first parameter)
-next_location(tableBR,tableTR).
-next_location(tableTR,tableTL).
-next_location(tableTL,tableBL).
-next_location(tableBL,tableBR).
+next_location(station1,station2).
+next_location(station2,station4).
+next_location(station4,station3).
+next_location(station3,station1).
 
 /* Initial goals */
 
@@ -22,9 +22,9 @@ next_location(tableBL,tableBR).
 
 /* Plans */
 
-+!start : indifferent <- .include("indifferent.asl"); !work(tableBR).
-+!start : helpful <- .include("helpful.asl"); !work(tableBR).
-+!start : antagonistic <- .include("antagonistic.asl"); !work(tableBR).
++!start : indifferent <- .include("indifferent.asl"); !work(station4).
++!start : helpful <- .include("helpful.asl"); !work(station4).
++!start : antagonistic <- .include("antagonistic.asl"); !work(station4).
 
 // Work pattern plans
 +!work(Location) : location(Location, X, Y, Z) 
