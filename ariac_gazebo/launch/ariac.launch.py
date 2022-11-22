@@ -13,79 +13,99 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-def launch_setup(context, *args, **kwargs):    
+
+def launch_setup(context, *args, **kwargs):
     # Set the path to this package.
     pkg_share = FindPackageShare(package='ariac_gazebo').find('ariac_gazebo')
-    
+
     # Set the path to the world file
     world_file_name = 'ariac.world'
     world_path = os.path.join(pkg_share, 'worlds', world_file_name)
-    
+
     # General arguments
     start_rviz = LaunchConfiguration("start_rviz")
     start_moveit = LaunchConfiguration("start_moveit")
-    
+    start_slam = LaunchConfiguration("start_slam", default="false")
+    start_navigation = LaunchConfiguration("start_navigation", default="false")
+
     # Gazebo node
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("gazebo_ros"), "/launch", "/gazebo.launch.py"]
         ),
-        launch_arguments={
-            'world': world_path,
-            }.items()
+        launch_arguments={'world': world_path}.items()
     )
 
     # Floor Robot Bringup
     floor_robot_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/floor_robot_bringup.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch",
+             "/floor_robot_bringup.launch.py"]
         ),
-        launch_arguments={'start_moveit': start_moveit, 'start_rviz': start_rviz}.items()
+        launch_arguments={'start_moveit': start_moveit,
+                          'start_rviz': start_rviz}.items()
     )
 
     # Ceiling Robot Bringup
     ceiling_robot_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/ceiling_robot_bringup.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch",
+             "/ceiling_robot_bringup.launch.py"]
         ),
-        launch_arguments={'start_moveit': start_moveit, 'start_rviz': start_rviz}.items()
+        launch_arguments={'start_moveit': start_moveit,
+                          'start_rviz': start_rviz}.items()
     )
 
     # AGV Bringup
     agv1_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch",
+             "/agv_bringup.launch.py"]
         ),
         launch_arguments={'agv_number': "agv1", 'y_position': "4.8"}.items()
     )
 
     agv2_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch",
+             "/agv_bringup.launch.py"]
         ),
         launch_arguments={'agv_number': "agv2", 'y_position': "1.2"}.items()
     )
 
     agv3_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch",
+             "/agv_bringup.launch.py"]
         ),
         launch_arguments={'agv_number': "agv3", 'y_position': "-1.2"}.items()
     )
 
     agv4_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
+            [FindPackageShare("ariac_description"), "/launch",
+             "/agv_bringup.launch.py"]
         ),
         launch_arguments={'agv_number': "agv4", 'y_position': "-4.8"}.items()
     )
 
     # Mobile Robot Bringup
-    mobile_robot_bringup = IncludeLaunchDescription(
+    navigation = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_mobile_robot"), "/launch", "/mobile_robot_bringup.launch.py"]
+            [FindPackageShare("ariac_human"), "/launch",
+             "/start_navigation.launch.py"]
         ),
+        condition=IfCondition(start_navigation),
     )
+    
+    slam = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ariac_human"), "/launch",
+             "/start_slam.launch.py"]
+        ),
+        condition=IfCondition(start_slam),
+    )
+
 
     sensor_spawner = Node(
         package='ariac_gazebo',
@@ -144,20 +164,42 @@ def launch_setup(context, *args, **kwargs):
         sensor_spawner,
         sensor_tf_broadcaster,
         object_tf_broadcaster,
-        spawn_robots_after_sensors
+        navigation,
+        slam,
+        spawn_robots_after_sensors,
+        
     ]
 
     return nodes_to_start
 
+
 def generate_launch_description():
     declared_arguments = []
-    
+
     declared_arguments.append(
-        DeclareLaunchArgument("start_rviz", default_value="false", description="Launch RViz?")
+        DeclareLaunchArgument("start_rviz",
+                              default_value="false",
+                              description="Launch RViz?")
     )
 
     declared_arguments.append(
-        DeclareLaunchArgument("start_moveit", default_value="false", description="Start moveit nodes for the robots?")
+        DeclareLaunchArgument("start_moveit",
+                              default_value="false",
+                              description="Start moveit nodes for the robots?")
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "start_slam",
+            default_value="false",
+            description="Start slam?")
+    )
+    
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "start_navigation",
+            default_value="false",
+            description="Start navigation?")
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

@@ -18,8 +18,8 @@ def main():
     robot_names = []
     
     ## Create spawn params for the mobile robot
-    # model_path = os.path.join(get_package_share_directory('ariac_mobile_robot'), 'models', "mobile_robot", 'model.sdf')
-    # robot_params.append(GazeboSpawnParams('mobile_robot', file_path=model_path, xyz=[-4.0, 3.5, 0], rpy = [0, 0, 3.14]))
+    # model_path = os.path.join(get_package_share_directory('ariac_human'), 'models', "human", 'model.sdf')
+    # robot_params.append(GazeboSpawnParams('human', file_path=model_path, xyz=[-15.0, -10, 0], rpy = [0, 0, 0]))
 
     # Create spawn params for the URDF robots
     robot_names.append('floor_robot')
