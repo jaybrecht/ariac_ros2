@@ -96,6 +96,10 @@ install(PROGRAMS
   scripts/py_node.py
   scripts/spawn_robots.py
   scripts/AGV_mover.py
+  scripts/clockNode.py
+  scripts/robot_listener.py
+  scripts/snapshot.py
+  scripts/human_listener.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

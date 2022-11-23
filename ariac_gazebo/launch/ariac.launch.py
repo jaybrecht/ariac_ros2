@@ -83,6 +83,36 @@ def launch_setup(context, *args, **kwargs):
         executable='spawn_robots.py',
         output='screen',
     )
+    
+    # Clock node
+    clockNode = Node(
+        package='ariac_gazebo',
+        executable='clockNode.py',
+        output='screen',
+        arguments=[]
+    )
+
+    # Human listener node
+#    human_listener = Node(
+#        package='ariac_gazebo',
+#        executable='human_listener.py',
+#        output='screen',
+#        arguments=[]
+#    )
+    
+    # Robot listener node
+#    robot_listener = Node(
+#        package='ariac_gazebo',
+#        executable='robot_listener.py',
+#        output='screen',
+#        arguments=[]
+#    )
+    
+    # Snapshot node
+#    snapshot = Node(
+#        package='ariac_gazebo',
+#        executable='snapshot.py'
+#    )
 
     nodes_to_start = [
         gazebo,
@@ -91,6 +121,10 @@ def launch_setup(context, *args, **kwargs):
         ceiling_robot_bringup,
         mobile_robot_bringup,
         robot_spawner,
+        clockNode,
+#        human_listener,
+#        robot_listener,
+#        snapshot,
         rosbridge
     ]
 

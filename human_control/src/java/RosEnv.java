@@ -1,5 +1,3 @@
-// Environment code for project hello_ros
-
 import jason.asSyntax.*;
 import jason.environment.*;
 import java.util.logging.*;
@@ -8,12 +6,15 @@ import ros.RosBridge;
 import ros.RosListenDelegate;
 import ros.SubscriptionRequestMsg;
 import ros.msgs.std_msgs.PrimitiveMsg;
+import ros.msgs.ariac_msgs.Snapshot;
 import ros.tools.MessageUnpacker;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class RosEnv extends Environment {
 
-    private Logger logger = Logger.getLogger("hello_ros."+RosEnv.class.getName());
+    private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
+    
+    final int danger_distance = 15;
     
     RosBridge bridge = new RosBridge();
 
@@ -24,19 +25,29 @@ public class RosEnv extends Environment {
 		bridge.connect("ws://localhost:9090", true);
 		logger.info("Environment started, connection with ROS established.");
 		
-		bridge.subscribe(SubscriptionRequestMsg.generate("/ros_to_java")
-				.setType("std_msgs/String")
+		bridge.subscribe(SubscriptionRequestMsg.generate("/snapshot")
+				.setType("ariac_msgs/Snapshot")
 				.setThrottleRate(1)
 				.setQueueLength(1),
 			new RosListenDelegate() {
 
 				public void receive(JsonNode data, String stringRep) {
-					MessageUnpacker<PrimitiveMsg<String>> unpacker = new MessageUnpacker<PrimitiveMsg<String>>(PrimitiveMsg.class);
-					PrimitiveMsg<String> msg = unpacker.unpackRosMessage(data);
-					logger.info(msg.data);
+					MessageUnpacker<Snapshot> unpacker = new MessageUnpacker<Snapshot>(Snapshot.class);
+					Snapshot msg = unpacker.unpackRosMessage(data);
+					if (msg.distance_robot_human_operator <= danger_distance) {
+						clearPercepts("human");
+						logger.info("I see the robot in less than 15 meters!");
+						addPercept("human",Literal.parseLiteral("gantry_detected"));
+						
+					}
+//					logger.info(msg.time+"");
+//					logger.info(msg.human_operator_speed+"");
+//					logger.info(msg.robot_speed+"");
+//					logger.info(msg.distance_robot_human_operator+"");
 				}
 			}
 	);
+	
     }
 
     @Override
