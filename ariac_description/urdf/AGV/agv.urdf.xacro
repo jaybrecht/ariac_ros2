@@ -26,7 +26,7 @@
 
   <xacro:arg name="controllers" default="$(find ariac_description)/config/$(arg agv_number)_controllers.yaml" />
 
-  <gazebo>
+  <!-- <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="$(arg agv_number)_gazebo_ros2_control">
       <ros>
         <namespace>$(arg agv_number)</namespace>
@@ -34,7 +34,7 @@
       <parameters>$(arg controllers)</parameters>
       <robot_param_node>/$(arg agv_number)/robot_state_publisher</robot_param_node>
     </plugin>
-  </gazebo>
+  </gazebo> -->
 
   <!-- Create ARIAC AGV plugin -->
   <gazebo>

@@ -1,0 +1,145 @@
+# Trial Name: sample.yaml
+# ARIAC2023
+# 2022-11-04 13:48:00
+
+# ENVIRONMENT SETUP
+
+time_limit: -1 # options: -1 (no time limit) or number of seconds (max 500)
+
+kitting_trays: # Which kitting trays will be spawn
+	tray_ids: [1, 3, 4, 6] 
+  slots: [2, 3, 5, 6]
+
+gripper_types: ['part', 'tray'] # Possible gripper types
+
+parts:
+	agvs:
+	  agv4:
+			tray_id: 0
+			parts:
+			  - type: 'sensor'
+					color: 'green'
+					quadrant: 3
+					rotation: 'pi'
+				- type: 'pump'
+					color: 'green'
+					quadrant: 1
+					rotation: 0
+	
+	bins: # bin params - 8 total bins each bin has nine total slots (0-8)
+	  bin1: 
+			- type: 'pump'
+				color: 'red'
+				slots: [1, 5, 9]
+				rotation: 'pi/6'
+				flipped: false
+			- type: 'regulator'
+				color: 'red'
+				slots: [2, 3]
+				rotation: 'pi/6'
+				flipped: false
+		bin6:
+			- type: 'battery'
+				color: 'blue'
+				slots: [1, 3]
+				rotation: 0
+				flipped: true
+			- type: 'battery'
+				color: 'green'
+				slots: [7, 9]
+				rotation: 0
+				flipped: true
+
+	conveyor_belt: # population params for conveyor belt
+		active: true
+	  spawn_rate: 2.0 # seconds between spawn
+	  order: 'random' # random or sequential
+	  parts_to_spawn:
+			- type: 'battery'
+				color: 'red'
+				number: 10
+				offset: 0.5 # between -1 and 1
+				rotation: 'pi/6'
+				# time_before_next_part: 2 # seconds 
+			- type: 'sensor'
+				color: 'green'
+				number: 5
+				offset: -0.25 # between -1 and 1
+				rotation: 'pi'
+				# time_before_next_part: 2 # seconds 
+
+# GLOBAL CHALLENGE
+
+global_challenges:
+	dropped_part:
+		robot: 'ceiling_robot'
+		type: 'battery'
+		color: 'green'
+		drop_after: 1 # third part the robot successfully picks
+		delay: 1 # seconds
+
+# ORDER SETUP
+
+orders:
+	- id: 'MMB30H56'
+		type: 'kitting'
+		announcement_time: 0
+		priority: false
+		challenges:
+			flipped_part:
+				quadrant: 1
+		kitting_task:
+			agv_number: 2
+			tray_id: 3
+			destination: 'warehouse'
+			products:
+				- type: 'battery'
+					color: 'blue'
+					quadrant: 1
+				- type: 'pump'
+					color: 'red'
+					quadrant: 3
+
+	- id: '1X7K29EV'
+		type: 'assembly'
+		announcement:
+			time_condition: 100
+			order_condition:
+				id: 'MMB30H56'
+				quadrant: 3
+		priority: true
+		challenges:
+		assembly_task:
+			agv_number: 4
+			station: 'as4'
+			products:
+				- type: 'sensor'
+					color: 'green'
+					assembled_pose: # relative to breifcase frame
+						xyz: [0.405, 0.164, 0.110]
+            rpy: ['pi/2', 0, 0]
+					assembly_direction: [-1, 0, 0] # unit vector in breifcase frame
+
+	- id: 'MMB30G34'
+		type: 'combined'
+		announcement_time: 0
+		priority: false
+		challenges:
+		kitting_task:
+			agv_number: 1
+			tray_id: 6
+			destination: 'as2'
+			products:
+				- type: 'pump'
+					color: 'red'
+					quadrant: 3
+		assembly_task:
+			agv_number: 1
+			station: 'as2'
+			products:
+				- type: 'pump'
+					color: 'red'
+					assembled_pose: # relative to breifcase frame
+						xyz: [0.032, -0.153, 0.076]
+            rpy: [0, 0, 0]
+					assembly_direction: [0, 0, -1] # unit vector in breifcase frame

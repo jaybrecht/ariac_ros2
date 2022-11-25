@@ -8,13 +8,12 @@ import rclpy
 from ament_index_python.packages import get_package_share_directory
 
 from ariac_gazebo.tf_broadcaster import TFBroadcaster
-from ariac_gazebo.spawn_params import GazeboSpawnParams
+from ariac_gazebo.utilities import pose_info
 
 def main():
     rclpy.init()
 
     sensor_tf_broadcaster = TFBroadcaster("sensor_tf_broadcaster")
-    sensor_params = []
 
     config = os.path.join(get_package_share_directory('ariac_gazebo'), 'config', "sensors.yaml")
 
@@ -30,19 +29,12 @@ def main():
         sensor_tf_broadcaster.get_logger().warn("No sensors found in config")
 
     for sensor_name in sensors:
-        type = sensors[sensor_name]['type']
         xyz = sensors[sensor_name]['pose']['xyz']
         rpy = sensors[sensor_name]['pose']['rpy']
-        if 'visualize_fov' in sensors[sensor_name].keys():
-            vis = sensors[sensor_name]['visualize_fov']
-        else:
-            vis = True
 
-        sensor_params.append(GazeboSpawnParams(sensor_name, type, xyz=xyz, rpy=rpy, visulize=vis))
+        pose = pose_info(xyz, rpy)
 
-    # Spawn the robots into gazebo
-    for params in sensor_params:
-        sensor_tf_broadcaster.generate_transform('world', params.name + "_frame", params.initial_pose)
+        sensor_tf_broadcaster.generate_transform('world', sensor_name + "_frame", pose)
 
     # Send tf transforms
     sensor_tf_broadcaster.send_transforms()

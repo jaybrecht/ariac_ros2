@@ -6,25 +6,10 @@ from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, 
 
 def launch_setup(context, *args, **kwargs):
     # Launch arguments
+    robot_description = {"robot_description": LaunchConfiguration("robot_description")}
     agv_number = LaunchConfiguration("agv_number")
-    y_position = LaunchConfiguration("y_position")
 
     num = agv_number.perform(context)
-
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/AGV", "agv.urdf.xacro"]), 
-            " ",
-            "agv_number:=",
-            agv_number,
-            " ",
-            "y_position:=",
-            y_position,
-            " ",
-        ]
-    )
 
     robot_state_publisher = Node(
         name="robot_state_publisher",
@@ -32,7 +17,7 @@ def launch_setup(context, *args, **kwargs):
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters=[
-            {'robot_description': robot_description_content},
+            robot_description,
             {"use_sim_time": True},
         ],
         arguments=[PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/AGV", "agv.urdf.xacro"])]
@@ -52,25 +37,19 @@ def launch_setup(context, *args, **kwargs):
         arguments=["velocity_controller", "-c", "/" + num + "/controller_manager"],
     )
 
-    gazebo_spawn_robot = Node(
-        name="spawn_" + num,
-        package="gazebo_ros",
-        executable="spawn_entity.py",
-        arguments=["-entity", num, "-topic", "/" + num + "/robot_description"],
-        output="screen",
-    )
-
     return [
-        robot_state_publisher,
+        # robot_state_publisher,
         joint_state_spawner,
         velocity_controller_spawner,
-        # gazebo_spawn_robot,
     ]
 
 def generate_launch_description(): 
     declared_arguments = []
 
     declared_arguments.append(DeclareLaunchArgument("agv_number", default_value="agv1", description="AGV number"))
-    declared_arguments.append(DeclareLaunchArgument("y_position", default_value="4.707484", description="y position for agv"))
+    
+    declared_arguments.append(
+        DeclareLaunchArgument("robot_description", default_value="", description="Robot description content")
+    )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

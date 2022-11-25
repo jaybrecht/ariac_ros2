@@ -94,10 +94,7 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  nodes/spawn_robots.py
-  nodes/spawn_sensors.py
-  nodes/spawn_parts.py
-  nodes/spawn_trays.py
+  nodes/environment_startup_node.py
   nodes/sensor_tf_broadcaster.py
   nodes/object_tf_broadcaster.py
   DESTINATION lib/${PROJECT_NAME}
