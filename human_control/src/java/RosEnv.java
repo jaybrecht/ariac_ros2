@@ -14,7 +14,7 @@ public class RosEnv extends Environment {
 
     private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
     
-    final int danger_distance = 15;
+    final int gantry_detection = 15;
     
     RosBridge bridge = new RosBridge();
 
@@ -34,9 +34,9 @@ public class RosEnv extends Environment {
 				public void receive(JsonNode data, String stringRep) {
 					MessageUnpacker<Snapshot> unpacker = new MessageUnpacker<Snapshot>(Snapshot.class);
 					Snapshot msg = unpacker.unpackRosMessage(data);
-					if (msg.distance_robot_human_operator <= danger_distance) {
+					if (msg.distance_robot_human_operator <= gantry_detection) {
 						clearPercepts("human");
-						logger.info("I see the robot in less than 15 meters!");
+//						logger.info("I see the robot in less than 15 meters!");
 						addPercept("human",Literal.parseLiteral("gantry_detected"));
 						
 					}
