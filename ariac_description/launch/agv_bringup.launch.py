@@ -27,14 +27,14 @@ def launch_setup(context, *args, **kwargs):
         name=num + "_joint_state_spawner",
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "-c", "/" + num + "/controller_manager"],
+        arguments=[num + "_joint_state_broadcaster"],
     )
 
     velocity_controller_spawner = Node(
         name=num + "_velocity_controller_spawner",
         package="controller_manager",
         executable="spawner",
-        arguments=["velocity_controller", "-c", "/" + num + "/controller_manager"],
+        arguments=[num + "_velocity_controller"],
     )
 
     return [

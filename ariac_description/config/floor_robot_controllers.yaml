@@ -1,16 +1,16 @@
-floor_robot/controller_manager:
+floor_robot_controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
 
-    joint_state_broadcaster:
+    floor_robot_joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    joint_trajectory_controller:
+    floor_robot_joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-    
+      
 
-floor_robot/joint_trajectory_controller:
+floor_robot_joint_trajectory_controller:
   ros__parameters:
     joints:
       - linear_actuator 
@@ -31,9 +31,11 @@ floor_robot/joint_trajectory_controller:
     constraints:
       stopped_velocity_tolerance: 0.2
       goal_time: 0.0
+      linear_actuator: {trajectory: 0.1, goal: 0.1}
       floor_shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
       floor_shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
       floor_elbow_joint: { trajectory: 0.2, goal: 0.1 }
       floor_wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
       floor_wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
       floor_wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
+      

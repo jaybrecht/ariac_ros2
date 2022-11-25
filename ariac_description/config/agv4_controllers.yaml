@@ -1,15 +1,15 @@
-agv4/controller_manager:
+controller_manager:
   ros__parameters:
 
     update_rate: 60 # Hz
 
-    joint_state_broadcaster:
+    agv4_joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    velocity_controller:
+    agv4_velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
     
-agv4/velocity_controller:
+velocity_controller:
   ros__parameters:
     joints:
       - agv4_joint

@@ -25,13 +25,15 @@ def launch_setup(context, *args, **kwargs):
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/floor_robot/controller_manager"],
+        # arguments=["joint_state_broadcaster", "--controller-manager", "/floor_robot/controller_manager"],
+        arguments=["floor_robot_joint_state_broadcaster", "-c", "floor_robot_controller_manager"],
     )
 
     joint_controller_spawner= Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_trajectory_controller", "-c", "/floor_robot/controller_manager"],
+        # arguments=["joint_trajectory_controller", "-c", "/floor_robot/controller_manager"],
+        arguments=["floor_robot_joint_trajectory_controller", "-c", "floor_robot_controller_manager"],
     )
     
     nodes_to_start = [

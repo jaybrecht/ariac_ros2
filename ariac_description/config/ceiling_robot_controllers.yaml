@@ -1,16 +1,16 @@
-ceiling_robot/controller_manager:
+ceiling_robot_controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
 
-    joint_state_broadcaster:
+    ceiling_robot_joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    joint_trajectory_controller:
+    ceiling_robot_joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-    
+      
 
-ceiling_robot/joint_trajectory_controller:
+ceiling_robot_joint_trajectory_controller:
   ros__parameters:
     joints:
       - small_long_joint
@@ -27,7 +27,7 @@ ceiling_robot/joint_trajectory_controller:
     state_interfaces:
       - position
       - velocity
-    state_publish_rate: 100.0
+    state_publish_rate: 1000.0
     action_monitor_rate: 20.0
     allow_partial_joints_goal: false
     constraints:

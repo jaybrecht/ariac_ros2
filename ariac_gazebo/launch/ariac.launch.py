@@ -198,8 +198,8 @@ def launch_setup(context, *args, **kwargs):
         OnProcessExit(
             target_action=environment_startup,
             on_exit=[
+                ceiling_robot_bringup,
                 floor_robot_bringup,
-                # ceiling_robot_bringup,
                 # agv1_bringup,
                 # agv2_bringup,
                 # agv3_bringup,

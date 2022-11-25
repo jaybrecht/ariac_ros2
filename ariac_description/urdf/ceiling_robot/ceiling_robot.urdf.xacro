@@ -58,15 +58,15 @@
   
   <xacro:arg name="controllers" default="$(find ariac_description)/config/ceiling_robot_controllers.yaml" />
 
-  <!-- <gazebo>
+  <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="ceiling_robot_gazebo_ros2_control">
       <ros>
-        <namespace>/ceiling_robot</namespace>
       </ros>
       <parameters>$(arg controllers)</parameters>
       <robot_param_node>/ceiling_robot/robot_state_publisher</robot_param_node>
+      <controller_manager_prefix>ceiling_robot</controller_manager_prefix>
     </plugin>
-  </gazebo> -->
+  </gazebo>
 
   
 
