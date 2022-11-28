@@ -7,9 +7,14 @@ import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor
 
+from ariac_gazebo.tf2_geometry_msgs import do_transform_pose
+from ariac_gazebo.utilities import quaternion_from_euler, euler_from_quaternion
+
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+
+from geometry_msgs.msg import Pose
 
 from gazebo_msgs.srv import SpawnEntity
 from std_srvs.srv import Empty
@@ -76,7 +81,77 @@ class EnvironmentStartup(Node):
             self.spawn_entity(params)
 
     def spawn_kit_trays(self):
-        pass
+        possible_slots = [1, 2, 3, 4, 5, 6]
+        possible_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        slot_info = {
+            1: {"table": "table_1", "offset": -0.43},
+            2: {"table": "table_1", "offset": 0.0},
+            3: {"table": "table_1", "offset": 0.43},
+            4: {"table": "table_2", "offset": -0.43},
+            5: {"table": "table_2", "offset": 0.0},
+            6: {"table": "table_2", "offset": 0.43},
+        }
+
+        # Check that input is valid
+        try:
+            ids = self.trial_config["kitting_trays"]["tray_ids"]
+            slots = self.trial_config["kitting_trays"]["slots"]
+        except KeyError:
+            self.get_logger().warn("No kitting trays found in configuration")
+            return
+
+        if len(ids) == 0 or len(slots) == 0:
+            self.get_logger().warn("No kitting trays found in configuration")
+            return
+
+        if not (len(ids) == len(slots)):
+            self.get_logger().warn("Number of trays does not equal number of slots")
+            return
+
+        for id, slot in zip(ids, slots):
+            if not type(id) == int or not type(slot) == int:
+                self.get_logger().warn("Tray ids and slots must be integers")
+                return
+            elif id not in possible_ids:
+                self.get_logger().warn("Tray id must be between 0 and 9")
+                return
+            elif slot not in possible_slots:
+                self.get_logger().warn("Tray slot must be between 1 and 6")
+                return
+
+        # Calculate location of tables using tf
+        transforms = {}
+        try:
+            transforms['table_1'] = self.tf_buffer.lookup_transform('world', "kts1_table_frame", rclpy.time.Time())
+        except TransformException as ex:
+            self.get_logger().info(f'Could not transform kts1_table_frame to world: {ex}')
+            return
+
+        try:
+            transforms['table_2'] = self.tf_buffer.lookup_transform('world', "kts2_table_frame", rclpy.time.Time())
+        except TransformException as ex:
+            self.get_logger().info(f'Could not transform kts1_table_frame to world: {ex}')
+            return
+
+        # Spawn trays 
+        num_trays = 0
+        for id, slot in zip(ids, slots):
+            rel_pose = Pose()
+            rel_pose.position.x = slot_info[slot]["offset"]
+
+            world_pose = do_transform_pose(rel_pose, transforms[slot_info[slot]["table"]])
+            
+            # Create unique name for each tray that includes the id
+            marker_id = str(id).zfill(2)
+            name = "kit_tray_" +  marker_id + "_" + str(num_trays)
+
+            xyz = [world_pose.position.x, world_pose.position.y, world_pose.position.z]
+            rpy = euler_from_quaternion(world_pose.orientation)
+
+            params = TraySpawnParams(name, marker_id, xyz=xyz, rpy=rpy)
+
+            self.spawn_entity(params)
 
     def spawn_bin_parts(self):
         pass
@@ -113,15 +188,6 @@ class EnvironmentStartup(Node):
         rclpy.spin_until_future_complete(self, future)
         
         return future.result().success
-        
-    def get_position_of_object(self, object_name):
-        try:
-            t = self.tf_buffer.lookup_transform('world', object_name + "_frame", rclpy.time.Time())
-        except TransformException:
-            self.get_logger().warn(f'Could not find {object_name} in tf_tree')
-            return [0, 0, 0]
-
-        return [t.transform.translation.x, t.transform.translation.y, t.transform.translation.z]
 
     def read_yaml(self, path):
         with open(path, "r") as stream:

@@ -122,6 +122,8 @@ class TraySpawnParams(SpawnParams):
         super().__init__(name=name, file_path=file_path, xyz=xyz, rpy=rpy)
 
         self.marker_id = marker_id
+
+        self.modify_xml()
     
     def modify_xml(self):
         xml = ET.fromstring(self.get_sdf(self.file_path))
