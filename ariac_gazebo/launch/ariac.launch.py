@@ -70,15 +70,15 @@ def launch_setup(context, *args, **kwargs):
     state_publishers = []
     for name in robot_descriptions.keys():
         state_pub = Node(
-            namespace=name,
+            # namespace=name,
             package="robot_state_publisher",
             executable="robot_state_publisher",
+            name=name + "_robot_state_publisher",
             output="screen",
             parameters=[
                 {'robot_description': robot_descriptions[name]},
                 {"use_sim_time": True},
             ],
-            arguments=['--ros-args', '--log-level', 'error']
         )
 
         state_publishers.append(state_pub)

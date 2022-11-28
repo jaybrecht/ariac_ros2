@@ -13,7 +13,12 @@ from tf2_ros.transform_listener import TransformListener
 
 from gazebo_msgs.srv import SpawnEntity
 from std_srvs.srv import Empty
-from ariac_gazebo.spawn_params import SpawnParams, RobotSpawnParams, SensorSpawnParams
+from ariac_gazebo.spawn_params import (
+    SpawnParams, 
+    RobotSpawnParams, 
+    SensorSpawnParams,
+    PartSpawnParams,
+    TraySpawnParams)
 
 class EnvironmentStartup(Node):
     def __init__(self):

@@ -63,7 +63,7 @@
       <ros>
       </ros>
       <parameters>$(arg controllers)</parameters>
-      <robot_param_node>/ceiling_robot/robot_state_publisher</robot_param_node>
+      <robot_param_node>/ceiling_robot_robot_state_publisher</robot_param_node>
       <controller_manager_prefix>ceiling_robot</controller_manager_prefix>
     </plugin>
   </gazebo>
