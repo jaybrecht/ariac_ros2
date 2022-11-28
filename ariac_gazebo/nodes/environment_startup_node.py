@@ -11,12 +11,16 @@ def main():
     startup_node = EnvironmentStartup()
 
     # Read trial configuration
-    # config_path = sys.argv[1]
-    # startup_node.read_config(config_path)
+    startup_node.trial_config = startup_node.read_yaml(sys.argv[1])
+
+    # Read user configuration
+    startup_node.user_config = startup_node.read_yaml(sys.argv[2])
 
     # Pause physics
-    startup_node.pause_physics()
-    # rclpy.spin(startup_node)
+    # startup_node.pause_physics()
+
+    # Spawn robots
+    startup_node.spawn_robots()
 
     # Spawn sensors
     startup_node.spawn_sensors()
@@ -27,14 +31,11 @@ def main():
     # Spawn kit trays
     startup_node.spawn_kit_trays()
 
-    # Spawn robots
-    startup_node.spawn_robots()
-
     # Spawn trays and parts on AGVs
     startup_node.spawn_parts_on_agvs()
 
     # Unpause physics
-    startup_node.unpause_physics()
+    # startup_node.unpause_physics()
 
     startup_node.destroy_node()
     rclpy.shutdown()

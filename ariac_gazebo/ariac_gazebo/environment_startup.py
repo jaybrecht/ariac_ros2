@@ -13,13 +13,14 @@ from tf2_ros.transform_listener import TransformListener
 
 from gazebo_msgs.srv import SpawnEntity
 from std_srvs.srv import Empty
-from ariac_gazebo.spawn_params import SpawnParams, RobotSpawnParams
+from ariac_gazebo.spawn_params import SpawnParams, RobotSpawnParams, SensorSpawnParams
 
 class EnvironmentStartup(Node):
     def __init__(self):
         super().__init__('environment_startup_node')
 
-        self.config = {}
+        self.trial_config = {}
+        self.user_config = {}
 
         self.declare_parameter('floor_robot_description', '', ParameterDescriptor(description='Floor robot description'))
         self.declare_parameter('ceiling_robot_description', '', ParameterDescriptor(description='Ceiling robot description'))
@@ -51,7 +52,23 @@ class EnvironmentStartup(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
     def spawn_sensors(self):
-        pass
+        try:
+            sensors = self.user_config['sensors']
+        except KeyError:
+            self.get_logger().warn("No sensors found in config")
+
+        for sensor_name in sensors:
+            sensor_type = sensors[sensor_name]['type']
+            xyz = sensors[sensor_name]['pose']['xyz']
+            rpy = sensors[sensor_name]['pose']['rpy']
+            
+            if 'visualize_fov' in sensors[sensor_name].keys():
+                vis = sensors[sensor_name]['visualize_fov']
+            else:
+                vis = False
+
+            params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz, rpy=rpy)
+            self.spawn_entity(params)
 
     def spawn_kit_trays(self):
         pass
@@ -101,12 +118,13 @@ class EnvironmentStartup(Node):
 
         return [t.transform.translation.x, t.transform.translation.y, t.transform.translation.z]
 
-    def read_config(self, path):
+    def read_yaml(self, path):
         with open(path, "r") as stream:
             try:
-                self.config = (yaml.safe_load(stream))
+                return yaml.safe_load(stream)
             except yaml.YAMLError:
                 self.get_logger().error("Unable to read configuration file")
+                return {}
 
     def pause_physics(self):
         self.pause_client.wait_for_service()

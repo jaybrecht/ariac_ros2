@@ -5,9 +5,6 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
 )
-from launch.conditions import IfCondition, UnlessCondition
-from launch.event_handlers import OnProcessExit
-from launch.actions import RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -23,8 +20,11 @@ def launch_setup(context, *args, **kwargs):
 
     robot_descriptions = generate_robot_descriptions()
 
-    config_name = LaunchConfiguration("config")
-    # trial_config_path = os.path.join(pkg_share, 'config', config_name)
+    trial_config_name = LaunchConfiguration("trial_config").perform(context)
+    trial_config_path = os.path.join(pkg_share, 'config', trial_config_name)
+
+    user_config_name = LaunchConfiguration("user_config").perform(context)
+    user_config_path = os.path.join(pkg_share, 'config', user_config_name)
 
     # Gazebo node
     gazebo = IncludeLaunchDescription(
@@ -64,6 +64,7 @@ def launch_setup(context, *args, **kwargs):
             {'agv3_description': robot_descriptions['agv3']},
             {'agv4_description': robot_descriptions['agv4']},
         ],
+        arguments=[trial_config_path, user_config_path]
     )
 
     state_publishers = []
@@ -178,7 +179,11 @@ def generate_launch_description():
     declared_arguments = []
 
     declared_arguments.append(
-        DeclareLaunchArgument("config", default_value="sample.yaml", description="trial_configuration")
+        DeclareLaunchArgument("trial_config", default_value="sample.yaml", description="trial_configuration")
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument("user_config", default_value="sensors.yaml", description="user_configuration")
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
