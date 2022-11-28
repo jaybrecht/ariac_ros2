@@ -8,7 +8,72 @@ ceiling_robot_controller_manager:
 
     ceiling_robot_joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-      
+
+
+
+floor_robot_controller_manager:
+  ros__parameters:
+
+    update_rate: 1000 # Hz
+
+    floor_robot_joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    floor_robot_joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+
+
+agv1_controller_manager:
+  ros__parameters:
+
+    update_rate: 1000 # Hz
+
+    agv1_joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    agv1_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+
+
+agv2_controller_manager:
+  ros__parameters:
+
+    update_rate: 1000 # Hz
+
+    agv2_joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    agv2_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+
+
+agv3_controller_manager:
+  ros__parameters:
+
+    update_rate: 1000 # Hz
+
+    agv3_joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    agv3_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+
+
+agv4_controller_manager:
+  ros__parameters:
+
+    update_rate: 1000 # Hz
+
+    agv4_joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    agv4_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
 
 
 ceiling_robot_joint_trajectory_controller:
@@ -45,18 +110,6 @@ ceiling_robot_joint_trajectory_controller:
       ceiling_wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
 
 
-floor_robot_controller_manager:
-  ros__parameters:
-
-    update_rate: 1000 # Hz
-
-    floor_robot_joint_state_broadcaster:
-      type: joint_state_broadcaster/JointStateBroadcaster
-
-    floor_robot_joint_trajectory_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
-      
-
 
 floor_robot_joint_trajectory_controller:
   ros__parameters:
@@ -86,3 +139,47 @@ floor_robot_joint_trajectory_controller:
       floor_wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
       floor_wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
       floor_wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
+
+
+
+agv1_velocity_controller:
+  ros__parameters:
+    joints:
+      - agv1_joint
+    command_interfaces:
+      - velocity
+    state_interfaces:
+      - position
+
+
+
+agv2_velocity_controller:
+  ros__parameters:
+    joints:
+      - agv2_joint
+    command_interfaces:
+      - velocity
+    state_interfaces:
+      - position
+
+
+
+agv3_velocity_controller:
+  ros__parameters:
+    joints:
+      - agv3_joint
+    command_interfaces:
+      - velocity
+    state_interfaces:
+      - position
+
+
+
+agv4_velocity_controller:
+  ros__parameters:
+    joints:
+      - agv4_joint
+    command_interfaces:
+      - velocity
+    state_interfaces:
+      - position

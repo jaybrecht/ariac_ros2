@@ -63,156 +63,38 @@ def launch_setup(context, *args, **kwargs):
             {'agv2_description': robot_descriptions['agv2']},
             {'agv3_description': robot_descriptions['agv3']},
             {'agv4_description': robot_descriptions['agv4']},
-            # {"use_sim_time": True},
         ],
     )
 
-    floor_robot_state_publisher = Node(
-        namespace="floor_robot",
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[
-            {'robot_description': robot_descriptions['floor_robot']},
-            {"use_sim_time": True},
-        ],
-    )
-
-    ceiling_robot_state_publisher = Node(
-        namespace="ceiling_robot",
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[
-            {'robot_description': robot_descriptions['ceiling_robot']},
-            {"use_sim_time": True},
-        ],
-    )
-
-    agv1_robot_state_publisher = Node(
-        namespace="agv1",
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[
-            {'robot_description': robot_descriptions['agv1']},
-            {"use_sim_time": True},
-        ],
-    )
-
-    agv2_robot_state_publisher = Node(
-        namespace="agv2",
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[
-            {'robot_description': robot_descriptions['agv2']},
-            {"use_sim_time": True},
-        ],
-    )
-
-    agv3_robot_state_publisher = Node(
-        namespace="agv3",
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[
-            {'robot_description': robot_descriptions['agv3']},
-            {"use_sim_time": True},
-        ],
-    )
-
-    agv4_robot_state_publisher = Node(
-        namespace="agv4",
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[
-            {'robot_description': robot_descriptions['agv4']},
-            {"use_sim_time": True},
-        ],
-    )
-    
-    floor_robot_bringup = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/floor_robot_bringup.launch.py"]
+    state_publishers = []
+    for name in robot_descriptions.keys():
+        state_pub = Node(
+            namespace=name,
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            output="screen",
+            parameters=[
+                {'robot_description': robot_descriptions[name]},
+                {"use_sim_time": True},
+            ],
+            arguments=['--ros-args', '--log-level', 'error']
         )
-    )
 
-    ceiling_robot_bringup = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/ceiling_robot_bringup.launch.py"]
-        )
-    )
-
-    agv1_bringup = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
-        ),
-        launch_arguments={
-            'robot_description': robot_descriptions['agv1'],
-            'agv_number': 'agv1',
-            }.items()
-    )
-
-    agv2_bringup = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
-        ),
-        launch_arguments={
-            'robot_description': robot_descriptions['agv2'],
-            'agv_number': 'agv2',
-            }.items()
-    )
+        state_publishers.append(state_pub)
     
-    agv3_bringup = IncludeLaunchDescription(
+    robot_controllers = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
-        ),
-        launch_arguments={
-            'robot_description': robot_descriptions['agv3'],
-            'agv_number': 'agv3',
-            }.items()
-    )
-    
-    agv4_bringup = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [FindPackageShare("ariac_description"), "/launch", "/agv_bringup.launch.py"]
-        ),
-        launch_arguments={
-            'robot_description': robot_descriptions['agv4'],
-            'agv_number': 'agv4',
-            }.items()
-    )
-    
-
-    # Robot Bringups
-    robot_bringups = RegisterEventHandler(
-        OnProcessExit(
-            target_action=environment_startup,
-            on_exit=[
-                ceiling_robot_bringup,
-                floor_robot_bringup,
-                # agv1_bringup,
-                # agv2_bringup,
-                # agv3_bringup,
-                # agv4_bringup
-            ]
+            [FindPackageShare("ariac_description"), "/launch", "/robot_controllers.launch.py"]
         )
     )
 
     nodes_to_start = [
         gazebo,
-        # sensor_tf_broadcaster,
-        # object_tf_broadcaster,
+        sensor_tf_broadcaster,
+        object_tf_broadcaster,
         environment_startup,
-        floor_robot_state_publisher,
-        ceiling_robot_state_publisher,
-        agv1_robot_state_publisher,
-        agv2_robot_state_publisher,
-        agv3_robot_state_publisher,
-        agv4_robot_state_publisher,
-        robot_bringups
+        *state_publishers,
+        robot_controllers,
     ]
 
     return nodes_to_start
