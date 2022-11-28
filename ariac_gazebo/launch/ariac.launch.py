@@ -133,23 +133,16 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
     
-
     floor_robot_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/floor_robot_bringup.launch.py"]
-        ),
-        launch_arguments={
-            'robot_description': robot_descriptions['floor_robot'],
-            }.items()
+        )
     )
 
     ceiling_robot_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [FindPackageShare("ariac_description"), "/launch", "/ceiling_robot_bringup.launch.py"]
-        ),
-        launch_arguments={
-            'robot_description': robot_descriptions['ceiling_robot'],
-            }.items()
+        )
     )
 
     agv1_bringup = IncludeLaunchDescription(

@@ -48,10 +48,10 @@
     reference="world">
   </gazebo>
   
-  <xacro:arg name="controllers" default="$(find ariac_description)/config/floor_robot_controllers.yaml" />
+  <xacro:arg name="controllers" default="$(find ariac_description)/config/robot_controllers.yaml" />
 
   <gazebo>
-    <plugin filename="libgazebo_ros2_control.so" name="floor_robot_gazebo_ros2_control">
+    <plugin filename="libariac_gazebo_ros2_control.so" name="floor_robot_gazebo_ros2_control">
       <ros>
       </ros>
       <parameters>$(arg controllers)</parameters>
