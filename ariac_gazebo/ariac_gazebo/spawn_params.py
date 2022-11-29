@@ -91,11 +91,11 @@ class PartSpawnParams(SpawnParams):
         'orange': (255, 140, 0)   
     }
 
-    def __init__(self, name, part_type, color, xyz=[0,0,0], rpy=[0,0,0]):
+    def __init__(self, name, part_type, color, xyz=[0,0,0], rpy=[0,0,0], rf=''):
         file_path = os.path.join(get_package_share_directory('ariac_gazebo'), 
             'models', part_type, 'model.sdf')
 
-        super().__init__(name=name, file_path=file_path, xyz=xyz, rpy=rpy)
+        super().__init__(name=name, file_path=file_path, xyz=xyz, rpy=rpy, rf=rf)
 
         self.part_type = part_type
         self.color = color
@@ -117,11 +117,11 @@ class PartSpawnParams(SpawnParams):
 
 
 class TraySpawnParams(SpawnParams):
-    def __init__(self, name, marker_id, xyz=[0,0,0], rpy=[0,0,0]):
+    def __init__(self, name, marker_id, xyz=[0,0,0], rpy=[0,0,0], rf=''):
         file_path = os.path.join(get_package_share_directory('ariac_gazebo'), 
             'models', 'kit_tray', 'model.sdf')
 
-        super().__init__(name=name, file_path=file_path, xyz=xyz, rpy=rpy)
+        super().__init__(name=name, file_path=file_path, xyz=xyz, rpy=rpy, rf=rf)
 
         self.marker_id = marker_id
 

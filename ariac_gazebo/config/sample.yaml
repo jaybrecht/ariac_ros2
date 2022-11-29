@@ -35,7 +35,7 @@ parts:
         flipped: false
     bin3:
       - type: 'regulator'
-        color: 'red'
+        color: 'purple'
         slots: [2, 3]
         rotation: 'pi/6'
         flipped: false
