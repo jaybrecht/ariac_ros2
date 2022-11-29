@@ -81,9 +81,11 @@
       <dynamics damping="20.0" friction="500.0" />
     </joint>
 
-    <joint name="${agv_number}_kit_tray_joint" type="fixed">
+    <joint name="${agv_number}_kit_tray_joint" type="revolute">
+      <axis xyz="0 0 1"/>
       <parent link="${agv_number}_base"/>
       <child link="${agv_number}_tray"/>
+      <limit lower="-.001" upper=".001" effort="0" velocity="0" />
       <origin xyz="0 -0.2 0.75" rpy="0.0 0.0 0.0"/>
     </joint>
 

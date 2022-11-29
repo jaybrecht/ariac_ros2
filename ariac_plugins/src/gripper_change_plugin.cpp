@@ -79,7 +79,7 @@ void GripperChangePlugin::Load(gazebo::rendering::VisualPtr visual, sdf::Element
 
   // The model pointer gives you direct access to the physics object,
   // for example:
-  RCLCPP_INFO(impl_->ros_node_->get_logger(), impl_->visual_->Name().c_str());
+  // RCLCPP_INFO(impl_->ros_node_->get_logger(), impl_->visual_->Name().c_str());
 
   // Create a connection so the OnUpdate function is called at every simulation
   // iteration. Remove this call, the connection and the callback if not needed.
