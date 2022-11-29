@@ -97,6 +97,7 @@ install(PROGRAMS
   nodes/environment_startup_node.py
   nodes/sensor_tf_broadcaster.py
   nodes/object_tf_broadcaster.py
+  nodes/part_spawner.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
