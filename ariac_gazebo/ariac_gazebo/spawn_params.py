@@ -81,6 +81,8 @@ class SensorSpawnParams(SpawnParams):
 
 
 class PartSpawnParams(SpawnParams):
+    part_types = ['battery', 'pump', 'sensor', 'regulator']
+
     colors = {
         'blue': (0, 0, 168),
         'green': (0, 100, 0),

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import math
 import yaml
 import xml.etree.ElementTree as ET
 
@@ -8,7 +9,7 @@ from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor
 
 from ariac_gazebo.tf2_geometry_msgs import do_transform_pose
-from ariac_gazebo.utilities import quaternion_from_euler, euler_from_quaternion
+from ariac_gazebo.utilities import quaternion_from_euler, euler_from_quaternion, convert_pi_string_to_float
 
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
@@ -139,12 +140,14 @@ class EnvironmentStartup(Node):
         for id, slot in zip(ids, slots):
             rel_pose = Pose()
             rel_pose.position.x = slot_info[slot]["offset"]
+            rel_pose.position.z = .01
 
             world_pose = do_transform_pose(rel_pose, transforms[slot_info[slot]["table"]])
             
             # Create unique name for each tray that includes the id
             marker_id = str(id).zfill(2)
             name = "kit_tray_" +  marker_id + "_" + str(num_trays)
+            num_trays += 1
 
             xyz = [world_pose.position.x, world_pose.position.y, world_pose.position.z]
             rpy = euler_from_quaternion(world_pose.orientation)
@@ -154,7 +157,132 @@ class EnvironmentStartup(Node):
             self.spawn_entity(params)
 
     def spawn_bin_parts(self):
-        pass
+        possible_slots = list(range(1,10))
+        possible_bins = ['bin1', 'bin2', 'bin3', 'bin4', 'bin5', 'bin6', 'bin7', 'bin8']
+
+        part_heights = {
+            'battery': 0.04,
+            'sensor': 0.07,
+            'pump': 0.12,
+            'regulator': 0.07,
+        }
+
+        slot_info = {
+            1: {"x_offset": -0.18, "y_offset": -0.18},
+            2: {"x_offset": -0.18, "y_offset": 0.0},
+            3: {"x_offset": -0.18, "y_offset": 0.18},
+            4: {"x_offset": 0.0, "y_offset": -0.18},
+            5: {"x_offset": 0.0, "y_offset": 0.0},
+            6: {"x_offset": 0.0, "y_offset": 0.18},
+            7: {"x_offset": 0.18, "y_offset": -0.18},
+            8: {"x_offset": 0.18, "y_offset": 0.0},
+            9: {"x_offset": 0.18, "y_offset": 0.18},
+        }
+
+        # Validate input
+        try:
+            bin_parts = self.trial_config["parts"]["bins"]
+        except KeyError:
+            self.get_logger().warn("No bin parts found in configuration")
+            return
+
+        part_count = 0
+        for bin_name in bin_parts.keys():
+            if not bin_name in possible_bins:
+                self.get_logger().warn(f"{bin_name} is not a valid bin name")
+                continue
+        
+            try:
+                bin_transform = self.tf_buffer.lookup_transform('world', bin_name + "_frame", rclpy.time.Time())
+            except TransformException as ex:
+                self.get_logger().info(f'Could not transform {bin_name}_frame to world: {ex}')
+                return
+
+            available_slots = list(range(1,10))
+            for part_info in bin_parts[bin_name]:
+                
+                try:
+                    part_type = part_info['type']
+                except KeyError:
+                    self.get_logger().warn("Part type is not specified")
+                    continue
+
+                try:
+                    part_color = part_info['color']
+                except KeyError:
+                    self.get_logger().warn("Part color is not specified")
+                    continue
+
+                try:
+                    slots = part_info['slots']
+                    if not type(slots) == list:
+                        self.get_logger().warn("slots parameter should be a list of integers")
+                        continue
+                except KeyError:
+                    self.get_logger().warn("Part slots are not specified")
+                    continue
+
+                try:
+                    yaw = convert_pi_string_to_float(str(part_info['rotation']))
+                except KeyError:
+                    yaw = 0
+
+                try:
+                    flipped = part_info['flipped']
+                    if not type(flipped) == bool:
+                        self.get_logger().warn("flipped parameter should be either true or false")
+                        flipped = False
+                except KeyError:
+                    flipped = False
+
+                if not part_type in PartSpawnParams.part_types:
+                    self.get_logger().warn(f"{part_info['type']} is not a valid part type")
+                    continue
+                
+                if  not part_color in PartSpawnParams.colors:
+                    self.get_logger().warn(f"{part_info['color']} is not a valid part color")
+                    continue
+
+                # Spawn parts into slots
+                for slot in slots:
+                    if not slot in possible_slots:
+                        self.get_logger().warn(f"Slot {slot} is not a valid option")
+                        continue
+                    elif not slot in available_slots:
+                        self.get_logger().warn(f"Slot {slot} is already occupied")
+                        continue
+                    
+                    available_slots.remove(slot)
+                    
+                    part_name = part_type + "_" + part_color + "_b" + str(part_count).zfill(2)
+                    part_count += 1
+
+                    if flipped:
+                        roll = math.pi
+                    else:
+                        roll = 0
+                    
+                    q = quaternion_from_euler(roll, 0, yaw)
+                    rel_pose = Pose()
+                    rel_pose.position.x = slot_info[slot]["x_offset"]
+                    rel_pose.position.y = slot_info[slot]["y_offset"]
+
+                    if flipped:
+                        rel_pose.position.z = part_heights[part_type]
+
+                    rel_pose.orientation.w = q[0]
+                    rel_pose.orientation.x = q[1]
+                    rel_pose.orientation.y = q[2]
+                    rel_pose.orientation.z = q[3]
+
+                    world_pose = do_transform_pose(rel_pose, bin_transform)
+
+                    xyz = [world_pose.position.x, world_pose.position.y, world_pose.position.z]
+                    rpy = euler_from_quaternion(world_pose.orientation)
+
+                    params = PartSpawnParams(part_name, part_type, part_color, xyz=xyz, rpy=rpy)
+
+                    self.spawn_entity(params)
 
     def spawn_robots(self):
         for name in self.robot_names:

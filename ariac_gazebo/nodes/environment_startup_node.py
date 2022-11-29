@@ -26,13 +26,13 @@ def main():
     startup_node.spawn_sensors()
 
     # Spawn parts in bins
-    startup_node.spawn_bin_parts()
+    startup_node.spawn_bin_parts() #TODO
 
     # Spawn kit trays
     startup_node.spawn_kit_trays()
 
     # Spawn trays and parts on AGVs
-    startup_node.spawn_parts_on_agvs()
+    startup_node.spawn_parts_on_agvs() #TODO
 
     # Unpause physics
     # startup_node.unpause_physics()
