@@ -31,7 +31,7 @@
       <ros>
       </ros>
       <parameters>$(arg controllers)</parameters>
-      <robot_param_node>/$(arg agv_number)_robot_state_publisher</robot_param_node>
+      <robot_param_node>/$(arg agv_number)/robot_state_publisher</robot_param_node>
       <controller_manager_prefix>$(arg agv_number)</controller_manager_prefix>
     </plugin>
   </gazebo>

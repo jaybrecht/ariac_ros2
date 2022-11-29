@@ -21,10 +21,10 @@ def launch_setup(context, *args, **kwargs):
     robot_descriptions = generate_robot_descriptions()
 
     trial_config_name = LaunchConfiguration("trial_config").perform(context)
-    trial_config_path = os.path.join(pkg_share, 'config', trial_config_name)
+    trial_config_path = os.path.join(pkg_share, 'config', 'trial_configuration', trial_config_name)
 
     user_config_name = LaunchConfiguration("user_config").perform(context)
-    user_config_path = os.path.join(pkg_share, 'config', user_config_name)
+    user_config_path = os.path.join(pkg_share, 'config', 'user_configuration', user_config_name)
 
     # Gazebo node
     gazebo = IncludeLaunchDescription(
@@ -41,6 +41,7 @@ def launch_setup(context, *args, **kwargs):
         package='ariac_gazebo',
         executable='sensor_tf_broadcaster.py',
         output='screen',
+        arguments=[user_config_path]
     )
 
     # Objects TF
@@ -70,15 +71,18 @@ def launch_setup(context, *args, **kwargs):
     state_publishers = []
     for name in robot_descriptions.keys():
         state_pub = Node(
-            # namespace=name,
+            namespace=name,
             package="robot_state_publisher",
             executable="robot_state_publisher",
-            name=name + "_robot_state_publisher",
+            # name=name + "_robot_state_publisher",
             output="screen",
             parameters=[
                 {'robot_description': robot_descriptions[name]},
                 {"use_sim_time": True},
             ],
+            remappings=[
+                ('joint_states', '/joint_states'),
+            ]
         )
 
         state_publishers.append(state_pub)
@@ -183,7 +187,7 @@ def generate_launch_description():
     )
 
     declared_arguments.append(
-        DeclareLaunchArgument("user_config", default_value="sensors.yaml", description="user_configuration")
+        DeclareLaunchArgument("user_config", default_value="sample.yaml", description="user_configuration")
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

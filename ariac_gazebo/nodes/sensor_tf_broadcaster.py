@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os
+import sys
 import yaml
 
 import rclpy
@@ -15,7 +15,7 @@ def main():
 
     sensor_tf_broadcaster = TFBroadcaster("sensor_tf_broadcaster")
 
-    config = os.path.join(get_package_share_directory('ariac_gazebo'), 'config', "sensors.yaml")
+    config = sys.argv[1]
 
     with open(config, "r") as stream:
         try:
