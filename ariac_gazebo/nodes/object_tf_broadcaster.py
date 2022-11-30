@@ -90,6 +90,26 @@ def main():
             tool_changer_trays_frame_name, 
             tool_changer_trays_pose)
 
+    # Generate conveyor belt transforms
+    try:
+        conveyor_belt_transforms = data['conveyor_belt']
+    except KeyError:
+        objects_tf_broadcaster.get_logger().warn("Conveyor belt not found in config")
+    
+    conveyor_belt_base_pose = pose_info(
+        conveyor_belt_transforms['base']['pose']['xyz'], 
+        conveyor_belt_transforms['base']['pose']['rpy'],)
+    
+    objects_tf_broadcaster.generate_transform("world", 
+        'conveyor_belt_base', conveyor_belt_base_pose)
+    
+    conveyor_belt_part_spawn_pose = pose_info(
+        conveyor_belt_transforms['part_spawn']['pose']['xyz'], 
+        conveyor_belt_transforms['part_spawn']['pose']['rpy'],)
+    
+    objects_tf_broadcaster.generate_transform('conveyor_belt_base', 
+        'conveyor_belt_part_spawn', conveyor_belt_part_spawn_pose)
+    
     # Send tf transforms
     objects_tf_broadcaster.send_transforms()
 
