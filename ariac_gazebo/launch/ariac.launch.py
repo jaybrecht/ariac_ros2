@@ -64,8 +64,9 @@ def launch_setup(context, *args, **kwargs):
             {'agv2_description': robot_descriptions['agv2']},
             {'agv3_description': robot_descriptions['agv3']},
             {'agv4_description': robot_descriptions['agv4']},
+            {'trial_config_path': trial_config_path},
+            {'user_config_path': user_config_path},
         ],
-        arguments=[trial_config_path, user_config_path]
     )
 
     conveyor_belt_populator = Node(

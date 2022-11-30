@@ -28,18 +28,31 @@ from ariac_gazebo.spawn_params import (
 
 
 class EnvironmentStartup(Node):
-    def __init__(self):
+    def __init__(self, trial_config_path, user_config_path):
         super().__init__('environment_startup_node')
 
-        self.trial_config = {}
-        self.user_config = {}
+        self.declare_parameter('floor_robot_description', '', 
+            ParameterDescriptor(description='Floor robot description'))
+        self.declare_parameter('ceiling_robot_description', '', 
+            ParameterDescriptor(description='Ceiling robot description'))
+        self.declare_parameter('agv1_description', '', 
+            ParameterDescriptor(description='AGV1 robot description'))
+        self.declare_parameter('agv2_description', '', 
+            ParameterDescriptor(description='AGV2 robot description'))
+        self.declare_parameter('agv3_description', '', 
+            ParameterDescriptor(description='AGV3 robot description'))
+        self.declare_parameter('agv4_description', '', 
+            ParameterDescriptor(description='AGV4 robot description'))
+        
+        self.declare_parameter('trial_config_path', '', 
+            ParameterDescriptor(description='Path of the current trial\'s configuration yaml file'))
+        self.declare_parameter('user_config_path', '', 
+            ParameterDescriptor(description='Path of the user\'s configuration yaml file'))
 
-        self.declare_parameter('floor_robot_description', '', ParameterDescriptor(description='Floor robot description'))
-        self.declare_parameter('ceiling_robot_description', '', ParameterDescriptor(description='Ceiling robot description'))
-        self.declare_parameter('agv1_description', '', ParameterDescriptor(description='AGV1 robot description'))
-        self.declare_parameter('agv2_description', '', ParameterDescriptor(description='AGV2 robot description'))
-        self.declare_parameter('agv3_description', '', ParameterDescriptor(description='AGV3 robot description'))
-        self.declare_parameter('agv4_description', '', ParameterDescriptor(description='AGV4 robot description'))
+        self.trial_config = self.read_yaml(
+            self.get_parameter('trial_config_path').get_parameter_value().string_value)
+        self.user_config = self.read_yaml(
+            self.get_parameter('user_config_path').get_parameter_value().string_value)
 
         self.robot_names = [
             'floor_robot', 
