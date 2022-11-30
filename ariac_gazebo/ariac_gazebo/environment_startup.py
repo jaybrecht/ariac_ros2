@@ -9,7 +9,7 @@ from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor
 
 from ariac_gazebo.tf2_geometry_msgs import do_transform_pose
-from ariac_gazebo.utilities import quaternion_from_euler, euler_from_quaternion, convert_pi_string_to_float
+from ariac_gazebo.utilities import quaternion_from_euler, euler_from_quaternion, convert_pi_string_to_float, Part
 
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
@@ -26,26 +26,33 @@ from ariac_gazebo.spawn_params import (
     PartSpawnParams,
     TraySpawnParams)
 
-class Part:
-    def __init__(self):
-        self.type = None
-        self.color = None
-        self.rotation = '0'
-        self.flipped = False
 
 class EnvironmentStartup(Node):
-    def __init__(self):
+    def __init__(self, trial_config_path, user_config_path):
         super().__init__('environment_startup_node')
 
-        self.trial_config = {}
-        self.user_config = {}
+        self.declare_parameter('floor_robot_description', '', 
+            ParameterDescriptor(description='Floor robot description'))
+        self.declare_parameter('ceiling_robot_description', '', 
+            ParameterDescriptor(description='Ceiling robot description'))
+        self.declare_parameter('agv1_description', '', 
+            ParameterDescriptor(description='AGV1 robot description'))
+        self.declare_parameter('agv2_description', '', 
+            ParameterDescriptor(description='AGV2 robot description'))
+        self.declare_parameter('agv3_description', '', 
+            ParameterDescriptor(description='AGV3 robot description'))
+        self.declare_parameter('agv4_description', '', 
+            ParameterDescriptor(description='AGV4 robot description'))
+        
+        self.declare_parameter('trial_config_path', '', 
+            ParameterDescriptor(description='Path of the current trial\'s configuration yaml file'))
+        self.declare_parameter('user_config_path', '', 
+            ParameterDescriptor(description='Path of the user\'s configuration yaml file'))
 
-        self.declare_parameter('floor_robot_description', '', ParameterDescriptor(description='Floor robot description'))
-        self.declare_parameter('ceiling_robot_description', '', ParameterDescriptor(description='Ceiling robot description'))
-        self.declare_parameter('agv1_description', '', ParameterDescriptor(description='AGV1 robot description'))
-        self.declare_parameter('agv2_description', '', ParameterDescriptor(description='AGV2 robot description'))
-        self.declare_parameter('agv3_description', '', ParameterDescriptor(description='AGV3 robot description'))
-        self.declare_parameter('agv4_description', '', ParameterDescriptor(description='AGV4 robot description'))
+        self.trial_config = self.read_yaml(
+            self.get_parameter('trial_config_path').get_parameter_value().string_value)
+        self.user_config = self.read_yaml(
+            self.get_parameter('user_config_path').get_parameter_value().string_value)
 
         self.robot_names = [
             'floor_robot', 
@@ -166,13 +173,6 @@ class EnvironmentStartup(Node):
     def spawn_bin_parts(self):
         possible_bins = ['bin1', 'bin2', 'bin3', 'bin4', 'bin5', 'bin6', 'bin7', 'bin8']
 
-        part_heights = {
-            'battery': 0.04,
-            'sensor': 0.07,
-            'pump': 0.12,
-            'regulator': 0.07,
-        }
-
         slot_info = {
             1: {"x_offset": -0.18, "y_offset": -0.18},
             2: {"x_offset": -0.18, "y_offset": 0.0},
@@ -246,7 +246,7 @@ class EnvironmentStartup(Node):
                     rel_pose.position.y = slot_info[slot]["y_offset"]
 
                     if part.flipped:
-                        rel_pose.position.z = part_heights[part.type]
+                        rel_pose.position.z = part.height
 
                     rel_pose.orientation.w = q[0]
                     rel_pose.orientation.x = q[1]
@@ -364,6 +364,7 @@ class EnvironmentStartup(Node):
         
         try:
             part.type = part_info['type']
+            part.height = Part.part_heights[part.type]
         except KeyError:
             self.get_logger().warn("Part type is not specified")
             return (False, part)
@@ -380,10 +381,10 @@ class EnvironmentStartup(Node):
             pass
 
         try:
-            flipped = part_info['flipped']
-            if not type(flipped) == bool:
+            part.flipped = part_info['flipped']
+            if not type(part.flipped) == bool:
                 self.get_logger().warn("flipped parameter should be either true or false")
-                flipped = False
+                part.flipped = False
         except KeyError:
             pass
 
