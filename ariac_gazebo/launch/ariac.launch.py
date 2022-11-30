@@ -68,6 +68,16 @@ def launch_setup(context, *args, **kwargs):
         arguments=[trial_config_path, user_config_path]
     )
 
+    conveyor_belt_populator = Node(
+        package='ariac_gazebo',
+        executable='populate_conveyor_belt.py',
+        output='screen',
+        parameters=[
+            {"use_sim_time": True},
+        ],
+        arguments=[trial_config_path],
+    )
+
     state_publishers = []
     for name in robot_descriptions.keys():
         state_pub = Node(
@@ -98,6 +108,7 @@ def launch_setup(context, *args, **kwargs):
         sensor_tf_broadcaster,
         object_tf_broadcaster,
         environment_startup,
+        conveyor_belt_populator,
         *state_publishers,
         robot_controllers,
     ]

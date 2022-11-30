@@ -101,9 +101,9 @@ kit_tray_stations:
 conveyor_belt:
   base:
     pose:
-      xyz: [-0.75, 0, 0]
+      xyz: [-0.6, 0, 0]
       rpy: [0, 0, 0]
   part_spawn:
     pose:
-      xyz: [0, 4.0, 0.862]
+      xyz: [0, 4.0, 0.875]
       rpy: [0, 0, '-pi/2']

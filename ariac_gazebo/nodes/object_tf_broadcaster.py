@@ -101,14 +101,14 @@ def main():
         conveyor_belt_transforms['base']['pose']['rpy'],)
     
     objects_tf_broadcaster.generate_transform("world", 
-        'conveyor_belt_base', conveyor_belt_base_pose)
+        'conveyor_belt_base_frame', conveyor_belt_base_pose)
     
     conveyor_belt_part_spawn_pose = pose_info(
         conveyor_belt_transforms['part_spawn']['pose']['xyz'], 
         conveyor_belt_transforms['part_spawn']['pose']['rpy'],)
     
-    objects_tf_broadcaster.generate_transform('conveyor_belt_base', 
-        'conveyor_belt_part_spawn', conveyor_belt_part_spawn_pose)
+    objects_tf_broadcaster.generate_transform('conveyor_belt_base_frame', 
+        'conveyor_belt_part_spawn_frame', conveyor_belt_part_spawn_pose)
     
     # Send tf transforms
     objects_tf_broadcaster.send_transforms()

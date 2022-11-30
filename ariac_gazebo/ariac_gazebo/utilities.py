@@ -4,6 +4,21 @@ import math
 import numpy as np
 from geometry_msgs.msg import Pose
 
+class Part:
+    part_heights = {
+        'battery': 0.04,
+        'sensor': 0.07,
+        'pump': 0.12,
+        'regulator': 0.07,
+    }
+
+    def __init__(self):
+        self.type = None
+        self.color = None
+        self.rotation = '0'
+        self.flipped = False
+        self.height = None
+
 def convert_pi_string_to_float(s: str) -> float:
     """Takes a string that contains pi and evaluates the expression. Returns a float
     Returns 0.0 if the expression cannot be evaluated"""

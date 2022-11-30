@@ -138,6 +138,9 @@ void ConveyorBeltPluginPrivate::PublishStatus(){
 
   if (power_ > 0)
     status_msg_.enabled = true;
+  else {
+    status_msg_.enabled = false;
+  }
 
   status_pub_->publish(status_msg_);
 }
