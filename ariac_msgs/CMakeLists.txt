@@ -19,6 +19,7 @@ set(msg_files
   "msg/ConveyorBeltState.msg"
   "msg/LogicalCameraImage.msg"
   "msg/VacuumGripperState.msg"
+  "msg/Part.msg"
   "msg/PartLot.msg"
   "msg/BinInfo.msg"
   "msg/BinParts.msg"

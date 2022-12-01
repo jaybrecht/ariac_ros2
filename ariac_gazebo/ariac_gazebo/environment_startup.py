@@ -19,6 +19,7 @@ from tf2_ros.transform_listener import TransformListener
 from geometry_msgs.msg import Pose
 
 from ariac_msgs.msg import (
+    Part,
     PartLot,
     BinInfo,
     BinParts,
@@ -35,7 +36,7 @@ from ariac_gazebo.spawn_params import (
     PartSpawnParams,
     TraySpawnParams)
 
-class Part:
+class PartInfo:
     part_heights = {
         'battery': 0.04,
         'sensor': 0.07,
@@ -236,13 +237,13 @@ class EnvironmentStartup(Node):
 
         # Validate input
         try:
-            bin_parts = self.trial_config["parts"]["bins"]
+            bin_parts_config = self.trial_config["parts"]["bins"]
         except KeyError:
             self.get_logger().warn("No bin parts found in configuration")
             return
 
         part_count = 0
-        for bin_name in bin_parts.keys():
+        for bin_name in bin_parts_config.keys():
             if not bin_name in possible_bins:
                 self.get_logger().warn(f"{bin_name} is not a valid bin name")
                 continue
@@ -258,7 +259,7 @@ class EnvironmentStartup(Node):
             bin_info.bin_number = int(bin_name[-1])
 
             available_slots = list(range(1,10))
-            for part_info in bin_parts[bin_name]:
+            for part_info in bin_parts_config[bin_name]:
                 ret, part = self.parse_part_info(part_info)
                 if not ret:
                     continue
@@ -322,25 +323,25 @@ class EnvironmentStartup(Node):
             
             self.bin_parts.bins.append(bin_info)
 
-    def fill_part_lot_msg(self, part: Part, quantity: int):
+    def fill_part_lot_msg(self, part: PartInfo, quantity: int):
         part_colors = {
-            'red': PartLot.RED,
-            'green': PartLot.GREEN,
-            'blue': PartLot.BLUE,
-            'orange': PartLot.ORANGE,
-            'purple': PartLot.PURPLE,
+            'red': Part.RED,
+            'green': Part.GREEN,
+            'blue': Part.BLUE,
+            'orange': Part.ORANGE,
+            'purple': Part.PURPLE,
         }
         
         part_types = {
-            'battery': PartLot.BATTERY,
-            'pump': PartLot.PUMP,
-            'sensor': PartLot.SENSOR,
-            'regulator': PartLot.REGULATOR,
+            'battery': Part.BATTERY,
+            'pump': Part.PUMP,
+            'sensor': Part.SENSOR,
+            'regulator': Part.REGULATOR,
         }
 
         lot = PartLot()
-        lot.part_type = part_types[part.type]
-        lot.part_color = part_colors[part.color]
+        lot.part.type = part_types[part.type]
+        lot.part.color = part_colors[part.color]
         lot.quantity = quantity
 
         return lot
@@ -567,11 +568,11 @@ class EnvironmentStartup(Node):
             return True
 
     def parse_part_info(self, part_info):
-        part = Part()
+        part = PartInfo()
         
         try:
             part.type = part_info['type']
-            part.height = Part.part_heights[part.type]
+            part.height = PartInfo.part_heights[part.type]
         except KeyError:
             self.get_logger().warn("Part type is not specified")
             return (False, part)
