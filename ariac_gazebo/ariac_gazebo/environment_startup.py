@@ -18,7 +18,13 @@ from tf2_ros.transform_listener import TransformListener
 
 from geometry_msgs.msg import Pose
 
-from ariac_msgs.msg import ConveyorBeltState
+from ariac_msgs.msg import (
+    PartLot,
+    BinInfo,
+    BinParts,
+    ConveyorParts,
+    ConveyorBeltState,
+)
 
 from gazebo_msgs.srv import SpawnEntity
 from std_srvs.srv import Empty
@@ -79,6 +85,8 @@ class EnvironmentStartup(Node):
             'agv3', 
             'agv4']
 
+
+
         # Conveyor 
         self.conveyor_spawn_rate = None
         self.conveyor_parts_to_spawn = []
@@ -90,7 +98,20 @@ class EnvironmentStartup(Node):
         self.conveyor_status_sub = self.create_subscription(ConveyorBeltState, 
             '/ariac/conveyor_state', self.conveyor_status, 10)
 
+        # Create publishers for bin and conveyor parts
+        self.bin_parts = BinParts()
+        self.bin_parts_publisher = self.create_publisher(BinParts, 
+            '/ariac/bin_parts', 10)
+
+        self.conveyor_parts = ConveyorParts()
+        self.conveyor_parts_publisher = self.create_publisher(ConveyorParts, 
+            '/ariac/conveyor_parts', 10)
+
+        self.bin_parts_pub_timer = self.create_timer(1.0, self.publish_bin_parts)
+        self.conveyor_parts_pub_timer = self.create_timer(1.0, self.publish_conveyor_parts)
+        
         # Read parameters for robot descriptions
+        self.robot_descriptions = {}
         self.get_robot_descriptions_from_parameters()
         
         # Create service client to spawn objects into gazebo
@@ -232,6 +253,10 @@ class EnvironmentStartup(Node):
                 self.get_logger().info(f'Could not transform {bin_name}_frame to world: {ex}')
                 return
 
+            # Fill bin info msg for each bin that has parts
+            bin_info = BinInfo()
+            bin_info.bin_number = int(bin_name[-1])
+
             available_slots = list(range(1,10))
             for part_info in bin_parts[bin_name]:
                 ret, part = self.parse_part_info(part_info)
@@ -248,6 +273,7 @@ class EnvironmentStartup(Node):
                     continue
                 
                 # Spawn parts into slots
+                num_parts_in_bin = 0
                 for slot in slots:
                     if not slot in slot_info.keys():
                         self.get_logger().warn(f"Slot {slot} is not a valid option")
@@ -255,6 +281,8 @@ class EnvironmentStartup(Node):
                     elif not slot in available_slots:
                         self.get_logger().warn(f"Slot {slot} is already occupied")
                         continue
+
+                    num_parts_in_bin += 1
                     
                     available_slots.remove(slot)
                     
@@ -289,7 +317,34 @@ class EnvironmentStartup(Node):
                     params = PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy)
 
                     self.spawn_entity(params, wait=False)
-    
+            
+                bin_info.parts.append(self.fill_part_lot_msg(part, num_parts_in_bin))
+            
+            self.bin_parts.bins.append(bin_info)
+
+    def fill_part_lot_msg(self, part: Part, quantity: int):
+        part_colors = {
+            'red': PartLot.RED,
+            'green': PartLot.GREEN,
+            'blue': PartLot.BLUE,
+            'orange': PartLot.ORANGE,
+            'purple': PartLot.PURPLE,
+        }
+        
+        part_types = {
+            'battery': PartLot.BATTERY,
+            'pump': PartLot.PUMP,
+            'sensor': PartLot.SENSOR,
+            'regulator': PartLot.REGULATOR,
+        }
+
+        lot = PartLot()
+        lot.part_type = part_types[part.type]
+        lot.part_color = part_colors[part.color]
+        lot.quantity = quantity
+
+        return lot
+        
     def spawn_conveyor_part(self):
         if self.conveyor_enabled:
             if self.conveyor_spawn_order == 'sequential':
@@ -444,6 +499,8 @@ class EnvironmentStartup(Node):
             except KeyError:
                 offset = 0
 
+            self.conveyor_parts.parts.append(self.fill_part_lot_msg(part, amount))
+
             for i in range(amount):
                 part_name = part.type + "_" + part.color + "_c" + str(part_count).zfill(2)
                 part_count += 1
@@ -485,8 +542,6 @@ class EnvironmentStartup(Node):
         self.conveyor_enabled = msg.enabled
 
     def get_robot_descriptions_from_parameters(self):
-        self.robot_descriptions = {}
-
         for name in self.robot_names:
             self.robot_descriptions[name] = self.get_parameter(name + '_description').value
 
@@ -571,3 +626,9 @@ class EnvironmentStartup(Node):
         request = Empty.Request()
 
         self.unpause_client.call_async(request)
+    
+    def publish_bin_parts(self):
+        self.bin_parts_publisher.publish(self.bin_parts)
+    
+    def publish_conveyor_parts(self):
+        self.conveyor_parts_publisher.publish(self.conveyor_parts)
