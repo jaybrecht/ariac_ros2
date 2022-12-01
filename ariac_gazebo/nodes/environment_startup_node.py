@@ -25,6 +25,9 @@ def main():
     # Spawn trays and parts on AGVs
     startup_node.spawn_parts_on_agvs()
 
+    # Read conveyor part config
+    startup_node.parse_conveyor_config()
+
     try:
         rclpy.spin(startup_node)
     except KeyboardInterrupt:

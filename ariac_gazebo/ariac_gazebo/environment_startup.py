@@ -3,19 +3,22 @@
 import math
 import yaml
 import xml.etree.ElementTree as ET
+from random import randint
 
 import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor
 
 from ariac_gazebo.tf2_geometry_msgs import do_transform_pose
-from ariac_gazebo.utilities import quaternion_from_euler, euler_from_quaternion, convert_pi_string_to_float, Part
+from ariac_gazebo.utilities import quaternion_from_euler, euler_from_quaternion, convert_pi_string_to_float
 
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
 from geometry_msgs.msg import Pose
+
+from ariac_msgs.msg import ConveyorBeltState
 
 from gazebo_msgs.srv import SpawnEntity
 from std_srvs.srv import Empty
@@ -26,6 +29,20 @@ from ariac_gazebo.spawn_params import (
     PartSpawnParams,
     TraySpawnParams)
 
+class Part:
+    part_heights = {
+        'battery': 0.04,
+        'sensor': 0.07,
+        'pump': 0.12,
+        'regulator': 0.07,
+    }
+
+    def __init__(self):
+        self.type = None
+        self.color = None
+        self.rotation = '0'
+        self.flipped = False
+        self.height = None
 
 class EnvironmentStartup(Node):
     def __init__(self, trial_config_path, user_config_path):
@@ -61,6 +78,17 @@ class EnvironmentStartup(Node):
             'agv2', 
             'agv3', 
             'agv4']
+
+        # Conveyor 
+        self.conveyor_spawn_rate = None
+        self.conveyor_parts_to_spawn = []
+        self.conveyor_transform = None
+        self.conveyor_enabled = False
+        self.conveyor_spawn_order_types = ['sequential', 'random']
+        self.conveyor_width = 0.28
+
+        self.conveyor_status_sub = self.create_subscription(ConveyorBeltState, 
+            '/ariac/conveyor_state', self.conveyor_status, 10)
 
         # Read parameters for robot descriptions
         self.get_robot_descriptions_from_parameters()
@@ -168,21 +196,21 @@ class EnvironmentStartup(Node):
 
             params = TraySpawnParams(name, marker_id, xyz=xyz, rpy=rpy)
 
-            self.spawn_entity(params)
+            self.spawn_entity(params, wait=False)
 
     def spawn_bin_parts(self):
         possible_bins = ['bin1', 'bin2', 'bin3', 'bin4', 'bin5', 'bin6', 'bin7', 'bin8']
 
         slot_info = {
-            1: {"x_offset": -0.18, "y_offset": -0.18},
-            2: {"x_offset": -0.18, "y_offset": 0.0},
-            3: {"x_offset": -0.18, "y_offset": 0.18},
-            4: {"x_offset": 0.0, "y_offset": -0.18},
+            1: {"x_offset": 0.18, "y_offset": 0.18},
+            2: {"x_offset": 0.18, "y_offset": 0.0},
+            3: {"x_offset": 0.18, "y_offset": -0.18},
+            4: {"x_offset": 0.0, "y_offset": 0.18},
             5: {"x_offset": 0.0, "y_offset": 0.0},
-            6: {"x_offset": 0.0, "y_offset": 0.18},
-            7: {"x_offset": 0.18, "y_offset": -0.18},
-            8: {"x_offset": 0.18, "y_offset": 0.0},
-            9: {"x_offset": 0.18, "y_offset": 0.18},
+            6: {"x_offset": 0.0, "y_offset": -0.18},
+            7: {"x_offset": -0.18, "y_offset": 0.18},
+            8: {"x_offset": -0.18, "y_offset": 0.0},
+            9: {"x_offset": -0.18, "y_offset": -0.18},
         }
 
         # Validate input
@@ -260,7 +288,19 @@ class EnvironmentStartup(Node):
 
                     params = PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy)
 
-                    self.spawn_entity(params)
+                    self.spawn_entity(params, wait=False)
+    
+    def spawn_conveyor_part(self):
+        if self.conveyor_enabled:
+            if self.conveyor_spawn_order == 'sequential':
+                part_params = self.conveyor_parts_to_spawn.pop(0)
+            elif self.conveyor_spawn_order == 'random':
+                part_params = self.conveyor_parts_to_spawn.pop(randint(0, len(self.conveyor_parts_to_spawn) - 1))
+            
+            self.spawn_entity(part_params, wait=False)
+
+        if not self.conveyor_parts_to_spawn:
+            self.conveyor_spawn_timer.cancel()
 
     def spawn_robots(self):
         for name in self.robot_names:
@@ -331,9 +371,118 @@ class EnvironmentStartup(Node):
 
                 params = PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy, rf=reference_frame)
 
-                self.spawn_entity(params)
+                self.spawn_entity(params, wait=False)
             
+    def parse_conveyor_config(self):
+        # Parse Conveyor Configuration
+        try: 
+            conveyor_config = self.trial_config['parts']['conveyor_belt']
+        except KeyError:
+            self.get_logger().error("Unable to find conveyor belt params in configuration file")
+            return False
 
+        try:
+            active = conveyor_config['active']
+            if not active:
+                return False
+        except KeyError:
+            self.get_logger().error("Active paramater not set in conveyor belt configuration")
+            return False
+
+        try:
+            spawn_rate = conveyor_config['spawn_rate']
+        except KeyError:
+            self.get_logger().error("Spawn rate paramater not set in conveyor belt configuration")
+            return False
+        
+        try:
+            self.spawn_rate = float(spawn_rate)
+        except ValueError:
+            self.get_logger().error("Spawn rate paramater must be a number")
+            return False
+
+        # Get conveyor transform
+        try:
+            conveyor_transform = self.tf_buffer.lookup_transform('world', 
+                "conveyor_belt_part_spawn_frame", rclpy.time.Time())
+        except TransformException:
+            return
+
+        try:
+            if conveyor_config['order'] in self.conveyor_spawn_order_types:
+                self.conveyor_spawn_order = conveyor_config['order']
+            else:
+                self.get_logger().error(f"Order paramater must be of type: {self.conveyor_spawn_order_types}")
+                return False
+        except ValueError:
+            self.get_logger().error("Spawn rate paramater must be a number")
+            return False
+
+        try:
+            parts = conveyor_config['parts_to_spawn']
+        except KeyError:
+            self.get_logger().error("Parts to spawn not found in configuration")
+            return False
+
+        part_count = 0
+        for part_info in parts:
+            ret, part = self.parse_part_info(part_info)
+
+            if not ret:
+                continue
+
+            try:
+                amount = part_info['number']
+            except KeyError:
+                continue
+
+            try:
+                offset = part_info['offset']
+                if not -1 <= offset <= 1:
+                    self.get_logger().error("Offset must be in range [-1, 1]")
+                    offset = 0
+            except KeyError:
+                offset = 0
+
+            for i in range(amount):
+                part_name = part.type + "_" + part.color + "_c" + str(part_count).zfill(2)
+                part_count += 1
+
+                if part.flipped:
+                    roll = math.pi
+                else:
+                    roll = 0
+
+                yaw = convert_pi_string_to_float(part.rotation)
+                q = quaternion_from_euler(roll, 0, yaw)
+                rel_pose = Pose()
+
+                rel_pose.position.y = offset * (self.conveyor_width/2)
+
+                if part.flipped:
+                    rel_pose.position.z = part.height
+
+                rel_pose.orientation.w = q[0]
+                rel_pose.orientation.x = q[1]
+                rel_pose.orientation.y = q[2]
+                rel_pose.orientation.z = q[3]
+            
+                world_pose = do_transform_pose(rel_pose, conveyor_transform)
+
+                xyz = [world_pose.position.x, world_pose.position.y, world_pose.position.z]
+                rpy = euler_from_quaternion(world_pose.orientation)
+
+                self.conveyor_parts_to_spawn.append(PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy))
+
+        if len(self.conveyor_parts_to_spawn) > 0:
+            # Create Spawn Timer
+            self.conveyor_spawn_timer = self.create_timer(self.spawn_rate, self.spawn_conveyor_part)
+            return True
+        
+        return False
+
+    def conveyor_status(self, msg: ConveyorBeltState):        
+        self.conveyor_enabled = msg.enabled
 
     def get_robot_descriptions_from_parameters(self):
         self.robot_descriptions = {}
@@ -341,10 +490,10 @@ class EnvironmentStartup(Node):
         for name in self.robot_names:
             self.robot_descriptions[name] = self.get_parameter(name + '_description').value
 
-    def spawn_entity(self, params: SpawnParams) -> bool:
+    def spawn_entity(self, params: SpawnParams, wait=True) -> bool:
         self.spawn_client.wait_for_service()
 
-        self.get_logger().info(f'Spawning: {params.name}')
+        # self.get_logger().info(f'Spawning: {params.name}')
 
         req = SpawnEntity.Request()
 
@@ -355,9 +504,12 @@ class EnvironmentStartup(Node):
         req.reference_frame = params.reference_frame
 
         future = self.spawn_client.call_async(req)
-        rclpy.spin_until_future_complete(self, future)
-        
-        return future.result().success
+
+        if wait: 
+            rclpy.spin_until_future_complete(self, future)
+            return future.result().success
+        else:
+            return True
 
     def parse_part_info(self, part_info):
         part = Part()
@@ -397,7 +549,6 @@ class EnvironmentStartup(Node):
             return (False, part)
         
         return (True, part)
-
 
     def read_yaml(self, path):
         with open(path, "r") as stream:
