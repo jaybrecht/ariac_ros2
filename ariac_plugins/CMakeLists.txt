@@ -69,6 +69,16 @@ ament_target_dependencies(disable_shadows_plugin
 )
 ament_export_libraries(disable_shadows_plugin)
 
+# Assembly Lock Plugin
+add_library(assembly_lock_plugin SHARED
+  src/assembly_lock_plugin.cpp
+)
+target_include_directories(assembly_lock_plugin PUBLIC include)
+ament_target_dependencies(assembly_lock_plugin
+  "gazebo_ros"
+)
+ament_export_libraries(assembly_lock_plugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -80,6 +90,7 @@ install(TARGETS
     agv_plugin
     gripper_change_plugin
     disable_shadows_plugin
+    assembly_lock_plugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
