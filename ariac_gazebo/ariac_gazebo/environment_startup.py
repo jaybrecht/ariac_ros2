@@ -78,21 +78,34 @@ class EnvironmentStartup(Node):
 
     def spawn_sensors(self):
         try:
-            sensors = self.user_config['sensors']
+            user_sensors = self.user_config['sensors']
         except KeyError:
             self.get_logger().warn("No sensors found in config")
+            user_sensors = []
 
-        for sensor_name in sensors:
-            sensor_type = sensors[sensor_name]['type']
-            xyz = sensors[sensor_name]['pose']['xyz']
-            rpy = sensors[sensor_name]['pose']['rpy']
+        # Spawn user sensors
+        for sensor_name in user_sensors:
+            sensor_type = user_sensors[sensor_name]['type']
+            xyz = user_sensors[sensor_name]['pose']['xyz']
+            rpy = user_sensors[sensor_name]['pose']['rpy']
             
-            if 'visualize_fov' in sensors[sensor_name].keys():
-                vis = sensors[sensor_name]['visualize_fov']
+            if 'visualize_fov' in user_sensors[sensor_name].keys():
+                vis = user_sensors[sensor_name]['visualize_fov']
             else:
                 vis = False
 
             params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz, rpy=rpy)
+            self.spawn_entity(params)
+        
+        # Spawn quality control sensors
+        for i in range(1, 5):
+            sensor_name = "quality_control_sensor" + str(i)
+            sensor_type = "quality_control"
+            xyz = [0, 0, 1]
+            vis = True
+
+            params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz)
+            params.reference_frame = "agv" + str(i) + "_tray"
             self.spawn_entity(params)
 
     def spawn_kit_trays(self):
@@ -190,6 +203,9 @@ class EnvironmentStartup(Node):
             bin_parts = self.trial_config["parts"]["bins"]
         except KeyError:
             self.get_logger().warn("No bin parts found in configuration")
+            return
+        
+        if not bin_parts:
             return
 
         part_count = 0
@@ -332,8 +348,6 @@ class EnvironmentStartup(Node):
                 params = PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy, rf=reference_frame)
 
                 self.spawn_entity(params)
-            
-
 
     def get_robot_descriptions_from_parameters(self):
         self.robot_descriptions = {}

@@ -46,6 +46,17 @@ ament_target_dependencies(logical_camera
 )
 ament_export_libraries(logical_camera)
 
+# Quality Control Plugin
+add_library(QualityControlPlugin SHARED
+  src/quality_control_plugin.cpp
+)
+target_include_directories(QualityControlPlugin PUBLIC include)
+ament_target_dependencies(QualityControlPlugin
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(QualityControlPlugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -54,6 +65,7 @@ install(DIRECTORY include/
 install(TARGETS
     break_beam_sensor
     logical_camera
+    QualityControlPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

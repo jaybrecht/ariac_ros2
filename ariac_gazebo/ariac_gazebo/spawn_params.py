@@ -77,6 +77,11 @@ class SensorSpawnParams(SpawnParams):
             plugin.find('camera_name').text = "/ariac/" + self.name
             plugin.find('frame_name').text = self.name + "_frame"
 
+        if self.sensor_type == 'quality_control':
+            plugin = xml.find('model').find('link').find('sensor').find('plugin')
+
+            plugin.set('name', str(self.name + "_ros_plugin"))
+
         self.xml = ET.tostring(xml, encoding="unicode")
 
 
