@@ -286,10 +286,10 @@ class EnvironmentStartup(Node):
 
     def spawn_parts_on_agvs(self):
         quadrant_info = {
-            1: {"x_offset": -0.0925, "y_offset": -0.1275},
-            2: {"x_offset": -0.0925, "y_offset": 0.1275},
-            3: {"x_offset": 0.0925, "y_offset": -0.1275},
-            4: {"x_offset": 0.0925, "y_offset": 0.1275},
+            1: {"x_offset": -0.0925, "y_offset": 0.1275},
+            2: {"x_offset": 0.0925, "y_offset": 0.1275},
+            3: {"x_offset": -0.0925, "y_offset": -0.1275},
+            4: {"x_offset": 0.0925, "y_offset": -0.1275},
         }
 
         possible_agvs = ['agv1', 'agv2', 'agv3', 'agv4']
@@ -338,12 +338,19 @@ class EnvironmentStartup(Node):
                     continue
 
                 available_quadrants.remove(quadrant)
+
+                if part.flipped:
+                    roll = math.pi
+                    z_height = part.height + 0.01
+                else:
+                    roll = 0
+                    z_height = 0.01
                 
                 part_name = part.type + "_" + part.color + "_a" + str(part_count).zfill(2)
                 part_count += 1
 
-                xyz = [quadrant_info[quadrant]["x_offset"], quadrant_info[quadrant]["y_offset"], 0.01]
-                rpy = [0, 0, part.rotation]
+                xyz = [quadrant_info[quadrant]["x_offset"], quadrant_info[quadrant]["y_offset"], z_height]
+                rpy = [roll, 0, part.rotation]
 
                 params = PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy, rf=reference_frame)
 
