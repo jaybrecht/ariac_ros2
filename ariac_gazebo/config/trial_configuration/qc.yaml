@@ -14,12 +14,13 @@ gripper_types: ['part', 'tray'] # Possible gripper types
 parts:
   agvs:
     agv4:
-      tray_id: 0
+      tray_id: 1
       parts:
         - type: 'sensor'
-          color: 'green'
+          color: 'blue'
           quadrant: 3
           rotation: 'pi'
+          flipped: true
         - type: 'pump'
           color: 'green'
           quadrant: 1

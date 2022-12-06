@@ -20,6 +20,7 @@ find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(orocos_kdl REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(ariac_msgs REQUIRED)
 
@@ -52,6 +53,7 @@ add_library(QualityControlPlugin SHARED
 )
 target_include_directories(QualityControlPlugin PUBLIC include)
 ament_target_dependencies(QualityControlPlugin
+  "orocos_kdl"
   "gazebo_ros"
   "ariac_msgs"
 )
