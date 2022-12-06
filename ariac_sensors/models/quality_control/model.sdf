@@ -14,7 +14,7 @@
 
       <sensor name="quality_control_sensor" type="logical_camera">
         <logical_camera>
-            <near>0</near>
+            <near>0.2</near>
             <far>1</far>
             <horizontal_fov>0.68</horizontal_fov>
             <aspect_ratio>1.4</aspect_ratio>
@@ -28,6 +28,7 @@
           <ros>
             <namespace></namespace>
           </ros>
+          <sensor_num>0</sensor_num>
         </plugin>
       </sensor>
     </link>

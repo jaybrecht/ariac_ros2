@@ -4,6 +4,6 @@ uint8 ASSEMBLY_BACK=2
 uint8 WAREHOUSE=3
 
 uint8 agv_number
-uint8 tray_id
+int8 tray_id
 uint8 destination
 ariac_msgs/KittingPart[] parts

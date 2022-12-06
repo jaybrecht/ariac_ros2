@@ -20,6 +20,8 @@ set(msg_files
   "msg/LogicalCameraImage.msg"
   "msg/VacuumGripperState.msg"
   "msg/Part.msg"
+  "msg/PartPose.msg"
+  "msg/KitTrayPose.msg"
   "msg/KittingPart.msg"
   "msg/KittingTask.msg"
   "msg/AssemblyPart.msg"

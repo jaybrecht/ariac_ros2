@@ -79,8 +79,8 @@ class SensorSpawnParams(SpawnParams):
 
         if self.sensor_type == 'quality_control':
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
-
             plugin.set('name', str(self.name + "_ros_plugin"))
+            plugin.find('sensor_num').text = self.name[-1]
 
         self.xml = ET.tostring(xml, encoding="unicode")
 
