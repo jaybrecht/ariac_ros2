@@ -9,6 +9,7 @@ from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.actions import RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -134,6 +135,13 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         arguments=[]
     )
+    
+    # ROSbridge
+    rosbridge = IncludeLaunchDescription(
+        XMLLaunchDescriptionSource(
+            [FindPackageShare("rosbridge_server"), "/launch", "/rosbridge_websocket_launch.xml"]
+        ),
+    )
 
     # Robot Spawner Node
     robot_spawner = Node(
@@ -157,6 +165,36 @@ def launch_setup(context, *args, **kwargs):
             ]
         )
     )
+    
+    # Clock node
+    clockNode = Node(
+        package='ariac_gazebo',
+        executable='clockNode.py',
+        output='screen',
+        arguments=[]
+    )
+
+    # Human listener node
+#    human_listener = Node(
+#        package='ariac_gazebo',
+#        executable='human_listener.py',
+#        output='screen',
+#        arguments=[]
+#    )
+    
+    # Robot listener node
+#    robot_listener = Node(
+#        package='ariac_gazebo',
+#        executable='robot_listener.py',
+#        output='screen',
+#        arguments=[]
+#    )
+    
+    # Snapshot node
+#    snapshot = Node(
+#        package='ariac_gazebo',
+#        executable='snapshot.py'
+#    )
 
     nodes_to_start = [
         gazebo,
@@ -167,7 +205,16 @@ def launch_setup(context, *args, **kwargs):
         navigation,
         slam,
         spawn_robots_after_sensors,
-        
+        agv_bringup,
+        floor_robot_bringup,
+        ceiling_robot_bringup,
+        mobile_robot_bringup,
+        robot_spawner,
+        clockNode,
+#        human_listener,
+#        robot_listener,
+#        snapshot,
+        rosbridge
     ]
 
     return nodes_to_start

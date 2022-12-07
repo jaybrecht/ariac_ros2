@@ -19,6 +19,9 @@ set(msg_files
   "msg/ConveyorBeltState.msg"
   "msg/LogicalCameraImage.msg"
   "msg/VacuumGripperState.msg"
+  "msg/TimedFloat.msg"
+  "msg/TimedPose.msg"
+  "msg/Snapshot.msg"
 )
 
 set(srv_files
@@ -26,6 +29,7 @@ set(srv_files
   "srv/ConveyorBeltControl.srv"
   "srv/MoveAGV.srv"
   "srv/VacuumGripperControl.srv"
+  "srv/MoveAGV.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
