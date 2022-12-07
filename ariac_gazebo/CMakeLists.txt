@@ -26,14 +26,13 @@ include_directories(
 )
 
 # Create Cpp executable
-add_executable(cpp_executable src/cpp_node.cpp)
-ament_target_dependencies(cpp_executable rclcpp)
+# add_executable(cpp_executable src/cpp_node.cpp)
+# ament_target_dependencies(cpp_executable rclcpp)
 
 # Install Cpp executables
-install(TARGETS
-  cpp_executable
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(TARGETS
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 # Install Cpp executables
 install(DIRECTORY
@@ -46,23 +45,22 @@ install(DIRECTORY
 
 # Plugins
 
+# add_library(SideContactPlugin SHARED src/SideContactPlugin.cc)
 
-add_library(SideContactPlugin SHARED src/SideContactPlugin.cc)
+# target_include_directories(SideContactPlugin PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
 
-target_include_directories(SideContactPlugin PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+# add_library(ObjectDisposalPlugin SHARED src/ObjectDisposalPlugin.cc)
 
-add_library(ObjectDisposalPlugin SHARED src/ObjectDisposalPlugin.cc)
+# target_include_directories(ObjectDisposalPlugin PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
 
-target_include_directories(ObjectDisposalPlugin PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-
-install(TARGETS
-  SideContactPlugin
-  ObjectDisposalPlugin
-  DESTINATION share/${PROJECT_NAME})
+# install(TARGETS
+#   SideContactPlugin
+#   ObjectDisposalPlugin
+#   DESTINATION share/${PROJECT_NAME})
 
 
 # set(side_contact_plugin_name SideContactPlugin)

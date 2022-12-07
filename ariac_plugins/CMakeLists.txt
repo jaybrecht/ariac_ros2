@@ -69,6 +69,16 @@ ament_target_dependencies(disable_shadows_plugin
 )
 ament_export_libraries(disable_shadows_plugin)
 
+# Object Disposal Plugin
+add_library(ObjectDisposalPlugin SHARED
+  src/object_disposal_plugin.cpp
+)
+target_include_directories(ObjectDisposalPlugin PUBLIC include)
+ament_target_dependencies(ObjectDisposalPlugin
+  "gazebo_ros"
+)
+ament_export_libraries(ObjectDisposalPlugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -80,6 +90,7 @@ install(TARGETS
     agv_plugin
     gripper_change_plugin
     disable_shadows_plugin
+    ObjectDisposalPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

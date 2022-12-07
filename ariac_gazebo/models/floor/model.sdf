@@ -3,7 +3,7 @@
   <model name='floor'>
     <static>true</static>
     
-    <link name="link">  
+    <link name="floor">  
       <visual name="visual">
         <geometry>
           <mesh>
@@ -16,13 +16,26 @@
         </plugin>
       </visual>
 
-      <collision name="visual">
+      <collision name="collision">
         <geometry>
           <mesh>
             <uri>model://floor/meshes/floor.dae</uri>
           </mesh>
         </geometry>
       </collision>
+
+      <sensor type="contact" name="bumper">
+        <update_rate>10</update_rate>
+        <contact>
+          <collision>collision</collision>
+        </contact>
+      </sensor> 
     </link>
+    
+    <plugin name="floor_part_disposal" filename="libObjectDisposalPlugin.so">
+      <ros>
+      </ros>
+      <link_name>floor</link_name>
+    </plugin>  
   </model>
 </sdf>
