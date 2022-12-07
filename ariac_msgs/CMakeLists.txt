@@ -7,41 +7,19 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(builtin_interfaces REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-set(msg_files
-  "msg/AGVStatus.msg"
-  "msg/Model.msg"
-  "msg/BreakBeamStatus.msg"
-  "msg/ConveyorBeltState.msg"
-  "msg/LogicalCameraImage.msg"
-  "msg/VacuumGripperState.msg"
+find_package(builtin_interfaces REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/MoveAGV.srv"
   "msg/TimedFloat.msg"
   "msg/TimedPose.msg"
   "msg/Snapshot.msg"
-)
-
-set(srv_files
-  "srv/ChangeGripperColor.srv"
-  "srv/ConveyorBeltControl.srv"
-  "srv/MoveAGV.srv"
-  "srv/VacuumGripperControl.srv"
-  "srv/MoveAGV.srv"
-)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg_files}
-  ${srv_files}
-
-  DEPENDENCIES
-  builtin_interfaces
-  std_msgs
-  geometry_msgs
-
-  ADD_LINTER_TESTS
+  DEPENDENCIES builtin_interfaces geometry_msgs std_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)
