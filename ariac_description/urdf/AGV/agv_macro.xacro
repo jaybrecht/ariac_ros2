@@ -3,6 +3,10 @@
   <xacro:macro name="agv" params="
     agv_number
     y_position">
+
+    <material name="Grey">
+      <color rgba="${220/255} ${220/255} ${220/255} 1.0"/>
+    </material>
     
     <xacro:include filename="$(find ariac_description)/urdf/AGV/agv.ros2_control.xacro"/>
 
@@ -42,6 +46,7 @@
         <geometry>
           <mesh filename="file://$(find ariac_description)/meshes/AGV/kit_tray.stl" scale="1 1 1"/>
         </geometry>
+        <material name="Grey"/>
       </visual>
       
       <collision>
@@ -61,22 +66,22 @@
       <material>Gazebo/Gray</material>
     </gazebo>
 
-    <joint name="world_to_track" type="fixed">
+    <joint name="${agv_number}_world_to_track" type="fixed">
       <parent link="world"/>
       <child link="${agv_number}_track"/>
-      <origin xyz="-2.27 ${y_position} 0.0" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="-2.27 ${y_position} 0.01" rpy="0.0 0.0 ${pi/2}"/>
     </joint>
 
-    <joint name="agv_joint" type="prismatic">
+    <joint name="${agv_number}_joint" type="prismatic">
       <axis xyz="0 1 0"/>
       <origin xyz="0.0 0.0 0.0"/>
       <parent link="${agv_number}_track"/>
       <child link="${agv_number}_base"/>
-      <limit effort="1000.0" lower="0" upper="11" velocity="10"/>
+      <limit effort="1000.0" lower="0" upper="18" velocity="8"/>
       <dynamics damping="20.0" friction="500.0" />
     </joint>
 
-    <joint name="kit_tray" type="fixed">
+    <joint name="${agv_number}_kit_tray_joint" type="fixed">
       <parent link="${agv_number}_base"/>
       <child link="${agv_number}_tray"/>
       <origin xyz="0 -0.2 0.75" rpy="0.0 0.0 0.0"/>
