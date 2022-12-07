@@ -37,7 +37,6 @@ install(TARGETS
 
 # Install Cpp executables
 install(DIRECTORY
-  config
   launch
   models
   worlds
@@ -94,18 +93,6 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  nodes/spawn_robots.py
-  nodes/spawn_sensors.py
-  nodes/spawn_parts.py
-  nodes/spawn_trays.py
-  nodes/spawn_human.py
-  nodes/sensor_tf_broadcaster.py
-  nodes/object_tf_broadcaster.py
-  nodes/navigation_frame_broadcaster.py
-  # nodes/map_odom_broadcaster.py
-  nodes/human_gazebo_spawner.py
-  nodes/waypoint_follower.py
-  nodes/nav_to_pose.py
   scripts/py_node.py
   scripts/spawn_robots.py
   scripts/AGV_mover.py

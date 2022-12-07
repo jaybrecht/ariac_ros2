@@ -44,7 +44,7 @@ Visualization Manager:
     - Acceleration_Scaling_Factor: 0.1
       Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
-      Move Group Namespace: "floor_robot"
+      Move Group Namespace: "floor"
       MoveIt_Allow_Approximate_IK: false
       MoveIt_Allow_External_Program: false
       MoveIt_Allow_Replanning: false
@@ -133,7 +133,7 @@ Visualization Manager:
         Show Trail: false
         State Display Time: 0.05 s
         Trail Step Size: 1
-        Trajectory Topic: floor_robot/display_planned_path
+        Trajectory Topic: floor/display_planned_path
       Planning Metrics:
         Payload: 1
         Show Joint Torques: false
@@ -153,7 +153,7 @@ Visualization Manager:
         Show Workspace: false
         Start State Alpha: 1
         Start State Color: 0; 255; 0
-      Planning Scene Topic: floor_robot/monitored_planning_scene
+      Planning Scene Topic: floor/monitored_planning_scene
       Robot Description: robot_description
       Scene Geometry:
         Scene Alpha: 0.8999999761581421

@@ -85,16 +85,3 @@ $ sudo apt install ros-galactic-turtlebot3-teleop
 $ export TURTLEBOT3_MODEL=waffle
 $ ros2 run turtlebot3_teleop teleop_keyboard --ros-args -r __ns:=/mobile_robot
 ```
-
-## Navigation
-
-Start navigation:
-
-```
-$ ros2 launch ariac_gazebo ariac.launch.py start_slam:=true
-```
-
-Everything related to navigation is located in the folder `ariac_human`
-
-
-Parameters used in navigation are located in the file `human_params`
