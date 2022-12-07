@@ -322,7 +322,7 @@ class EnvironmentStartup(Node):
             self.spawn_entity(params)
 
             # Spawn parts onto kit tray
-            available_quadrants = list(range(1,4))
+            available_quadrants = list(range(1,5))
             for part_info in agv_parts[agv]['parts']:
                 ret, part = self.parse_part_info(part_info)
                 if not ret:

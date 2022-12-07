@@ -42,20 +42,10 @@
 namespace ariac_sensors
 {
 
-// KDL::Frame PoseToFrame(const geometry_msgs::msg::Pose& msg)
-// {
-//   KDL::Frame out;
-
-//   out.p[0] = msg.position.x;
-//   out.p[1] = msg.position.y;
-//   out.p[2] = msg.position.z;
-
-//   std::cout << "Converting quaternion to rotation matrix" << std::endl;
-//   out.M = KDL::Rotation::Quaternion(msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w);
-
-//   return out;
-// }
-
+struct TrayParts{
+  std::map<int, ariac_msgs::msg::PartPose> parts;
+  std::map<int, std::string> part_names;
+};
 
 class QualityControlPluginPrivate
 {
@@ -73,11 +63,13 @@ public:
   std::map<std::string, int> part_colors_;
 
   /// Lists of parts and trays
-  std::vector<ariac_msgs::msg::PartPose> tray_parts_;
+  std::map<std::string, ariac_msgs::msg::PartPose> detected_parts_;
   ariac_msgs::msg::KitTrayPose kit_tray_;
 
   /// List of orders
   std::vector<ariac_msgs::msg::Order> orders_;
+  std::map<std::string, std::map<int, bool>> faulty_part_info_; 
+  std::map<std::string, std::map<int, std::string>> faulty_part_names_; 
 
   geometry_msgs::msg::Pose sensor_pose_;
 
@@ -94,7 +86,7 @@ public:
 
   void FillOrders();
 
-  std::map<int, ariac_msgs::msg::PartPose> LocatePartsOnTray();
+  TrayParts LocatePartsOnTray();
   
   bool CheckFlipped(
     ariac_msgs::msg::KitTrayPose tray_pose, 
@@ -145,7 +137,7 @@ void QualityControlPluginPrivate::OnUpdate()
   sensor_pose_ = gazebo_ros::Convert<geometry_msgs::msg::Pose>(
     gazebo::msgs::ConvertIgn(image.pose()));
 
-  tray_parts_.clear();
+  detected_parts_.clear();
 
   for (int i = 0; i < image.model_size(); i++) {
     const auto & lc_model = image.model(i);
@@ -175,7 +167,7 @@ void QualityControlPluginPrivate::OnUpdate()
             // Get pose 
             part_pose.pose = gazebo_ros::Convert<geometry_msgs::msg::Pose>(gazebo::msgs::ConvertIgn(lc_model.pose()));
 
-            tray_parts_.push_back(part_pose);
+            detected_parts_.insert({model_name, part_pose});
           }
         }
       }
@@ -220,8 +212,7 @@ void QualityControlPluginPrivate::PerformQualityCheck(
   }
 
   // Determine where each part on tray is located
-  std::map<int, ariac_msgs::msg::PartPose> parts_on_tray = LocatePartsOnTray();
-  // std::map<int, ariac_msgs::msg::PartPose> parts_on_tray;
+  TrayParts parts_on_tray = LocatePartsOnTray();
 
   response->all_passed = true;
   // Check each quadrant with a part for issue
@@ -229,8 +220,8 @@ void QualityControlPluginPrivate::PerformQualityCheck(
     ariac_msgs::msg::QualityIssue issue;
 
     //  see if a part is present in that quadrant
-    std::map<int, ariac_msgs::msg::PartPose>::iterator it = parts_on_tray.find(part.quadrant);
-    if (it == parts_on_tray.end()){
+    std::map<int, ariac_msgs::msg::PartPose>::iterator it = parts_on_tray.parts.find(part.quadrant);
+    if (it == parts_on_tray.parts.end()){
       issue.missing_part = true;
       response->all_passed = false; 
     }
@@ -254,6 +245,20 @@ void QualityControlPluginPrivate::PerformQualityCheck(
     }
 
     // TODO check order to see if the part should be reported faulty
+    if (faulty_part_info_[request->task_id][part.quadrant]) {
+      // Check if first check of faulty part
+      if (faulty_part_names_[request->task_id][part.quadrant] == "")
+      {
+        faulty_part_names_[request->task_id][part.quadrant] = parts_on_tray.part_names[part.quadrant];
+        issue.faulty_part = true;
+        response->all_passed = false;      
+      } else if (faulty_part_names_[request->task_id][part.quadrant] == parts_on_tray.part_names[part.quadrant]) {
+        // Same part is still there
+        issue.faulty_part = true;
+        response->all_passed = false;
+      }
+      
+    }
 
     if (part.quadrant == ariac_msgs::msg::KittingPart::QUADRANT1)
       response->quadrant1 = issue;
@@ -296,20 +301,33 @@ void QualityControlPluginPrivate::FillOrders()
   test_order.kitting_task = task;
 
   orders_.push_back(test_order);
+
+  // Enter faulty part info
+  std::map<int, bool> faulty_info;
+  faulty_info.insert({{ariac_msgs::msg::KittingPart::QUADRANT3}, true});
+  faulty_info.insert({{ariac_msgs::msg::KittingPart::QUADRANT1}, false});
+
+  std::map<int, std::string> faulty_names;
+  faulty_names.insert({{ariac_msgs::msg::KittingPart::QUADRANT3}, ""});
+  faulty_names.insert({{ariac_msgs::msg::KittingPart::QUADRANT1}, ""});
+
+  faulty_part_info_.insert({test_order.id, faulty_info});
+  faulty_part_names_.insert({test_order.id, faulty_names});
+
 }
 
-std::map<int, ariac_msgs::msg::PartPose> QualityControlPluginPrivate::LocatePartsOnTray()
-{  
-  std::map<int, ariac_msgs::msg::PartPose> parts_on_tray;
+TrayParts QualityControlPluginPrivate::LocatePartsOnTray()
+{ 
+  TrayParts parts_on_tray;
 
   // Convert tray pose to KDL frame
   KDL::Frame sensor_to_tray;
   tf2::fromMsg(kit_tray_.pose, sensor_to_tray);
 
-  for (const ariac_msgs::msg::PartPose part: tray_parts_) {
+  for (const auto tray_part: detected_parts_) {
     // Determine transform between tray and part
     KDL::Frame sensor_to_part;
-    tf2::fromMsg(part.pose, sensor_to_part);
+    tf2::fromMsg(tray_part.second.pose, sensor_to_part);
 
     KDL::Frame tray_to_part;
     tray_to_part = sensor_to_tray.Inverse() * sensor_to_part;
@@ -318,17 +336,22 @@ std::map<int, ariac_msgs::msg::PartPose> QualityControlPluginPrivate::LocatePart
   
     // Determine part's quadrant
     if (part_pose_on_tray.position.x < 0 && part_pose_on_tray.position.y > 0) {
-      parts_on_tray.insert({ariac_msgs::msg::KittingPart::QUADRANT1, part});
+      parts_on_tray.parts.insert({ariac_msgs::msg::KittingPart::QUADRANT1, tray_part.second});
+      parts_on_tray.part_names.insert({ariac_msgs::msg::KittingPart::QUADRANT1, tray_part.first});
+    
     } else if (part_pose_on_tray.position.x > 0 && part_pose_on_tray.position.y > 0) {
-      parts_on_tray.insert({ariac_msgs::msg::KittingPart::QUADRANT2, part});
+      parts_on_tray.parts.insert({ariac_msgs::msg::KittingPart::QUADRANT2, tray_part.second});
+      parts_on_tray.part_names.insert({ariac_msgs::msg::KittingPart::QUADRANT2, tray_part.first});
+    
     } else if (part_pose_on_tray.position.x < 0 && part_pose_on_tray.position.y < 0) {
-      parts_on_tray.insert({ariac_msgs::msg::KittingPart::QUADRANT3, part});
+      parts_on_tray.parts.insert({ariac_msgs::msg::KittingPart::QUADRANT3, tray_part.second});
+      parts_on_tray.part_names.insert({ariac_msgs::msg::KittingPart::QUADRANT3, tray_part.first});
+    
     } else {
-      parts_on_tray.insert({ariac_msgs::msg::KittingPart::QUADRANT4, part});
+      parts_on_tray.parts.insert({ariac_msgs::msg::KittingPart::QUADRANT4, tray_part.second});
+      parts_on_tray.part_names.insert({ariac_msgs::msg::KittingPart::QUADRANT4, tray_part.first});
     }
   }
-
-  
 
   return parts_on_tray;
 }
@@ -362,7 +385,6 @@ bool QualityControlPluginPrivate::CheckFlipped(
   // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "angle between vectors" << angle);
   // Return that the part is flipped if angle is greater than ~10deg
   if (angle > -0.2 && angle < 0.2){
-    RCLCPP_INFO(ros_node_->get_logger(), "Not flipped");
     return false;
   } else {
     return true;

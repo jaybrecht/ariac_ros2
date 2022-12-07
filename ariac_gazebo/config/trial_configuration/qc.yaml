@@ -21,6 +21,9 @@ parts:
           quadrant: 3
           rotation: 'pi'
           flipped: true
+        - type: 'sensor'
+          color: 'green'
+          quadrant: 4
         - type: 'pump'
           color: 'green'
           quadrant: 1
