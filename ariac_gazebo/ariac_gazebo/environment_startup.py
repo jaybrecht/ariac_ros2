@@ -164,10 +164,11 @@ class EnvironmentStartup(Node):
 
         # Spawn trays 
         num_trays = 0
+        kit_tray_thickness = 0.1
         for id, slot in zip(ids, slots):
             rel_pose = Pose()
             rel_pose.position.x = slot_info[slot]["offset"]
-            rel_pose.position.z = .015
+            rel_pose.position.z = kit_tray_thickness
 
             world_pose = do_transform_pose(rel_pose, transforms[slot_info[slot]["table"]])
             
