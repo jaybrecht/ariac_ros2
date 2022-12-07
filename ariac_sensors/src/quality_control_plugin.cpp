@@ -257,7 +257,6 @@ void QualityControlPluginPrivate::PerformQualityCheck(
         issue.faulty_part = true;
         response->all_passed = false;
       }
-      
     }
 
     if (part.quadrant == ariac_msgs::msg::KittingPart::QUADRANT1)
@@ -281,7 +280,7 @@ void QualityControlPluginPrivate::FillOrders()
   test_order.priority = false;
 
   ariac_msgs::msg::KittingTask task;
-  task.tray_id = 1;
+  task.tray_id = 3;
   task.agv_number = 4;
   task.destination = ariac_msgs::msg::KittingTask::WAREHOUSE;
 
@@ -382,7 +381,6 @@ bool QualityControlPluginPrivate::CheckFlipped(
   // Calculate the angle between the two vectors
   double angle = KDL::acos(KDL::dot(tray_z, part_z)/(tray_z.Norm()*part_z.Norm()));
 
-  // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "angle between vectors" << angle);
   // Return that the part is flipped if angle is greater than ~10deg
   if (angle > -0.2 && angle < 0.2){
     return false;

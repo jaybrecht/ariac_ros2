@@ -14,7 +14,7 @@ gripper_types: ['part', 'tray'] # Possible gripper types
 parts:
   agvs:
     agv4:
-      tray_id: 1
+      tray_id: 3
       parts:
         - type: 'sensor'
           color: 'blue'
@@ -62,21 +62,21 @@ global_challenges:
 # ORDER SETUP
 
 orders:
-  - id: 'MMB30H56'
+  - id: 'Kjri813s'
     type: 'kitting'
     announcement_time: 0
     priority: false
     challenges:
-      flipped_part:
-        quadrant: 1
+      faulty_part:
+        quadrant: 3
     kitting_task:
-      agv_number: 2
+      agv_number: 4
       tray_id: 3
       destination: 'warehouse'
       products:
-        - type: 'battery'
-          color: 'blue'
-          quadrant: 1
         - type: 'pump'
-          color: 'red'
+          color: 'green'
+          quadrant: 1
+        - type: 'sensor'
+          color: 'green'
           quadrant: 3
