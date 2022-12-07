@@ -167,7 +167,7 @@ class EnvironmentStartup(Node):
         for id, slot in zip(ids, slots):
             rel_pose = Pose()
             rel_pose.position.x = slot_info[slot]["offset"]
-            rel_pose.position.z = .01
+            rel_pose.position.z = .015
 
             world_pose = do_transform_pose(rel_pose, transforms[slot_info[slot]["table"]])
             
@@ -314,7 +314,7 @@ class EnvironmentStartup(Node):
                 tray_id = 0
             
             marker_id = str(tray_id).zfill(2)
-            name = "kit_tray_" +  marker_id + "_" + agv
+            name = "kit_tray_" +  marker_id + "_a" + agv[-1]
 
             xyz = [0, 0, 0.01]
             reference_frame = agv + "_tray"
