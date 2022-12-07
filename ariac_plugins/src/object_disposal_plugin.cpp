@@ -82,10 +82,10 @@ void ObjectDisposalPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
   impl_->gznode_->Init(impl_->model_->GetWorld()->Name());
 
   // Get contact topic
-  // std::string model_name = model->GetName();
-  // std::string link_name = sdf->GetElement("link_name")->Get<std::string>();
-  // std::string topic = "/gazebo/world/"+ model_name + "/" + link_name + "/bumper/contacts";
-  std::string topic = "/gazebo/world/workcell_floor/floor/bumper/contacts";
+  std::string model_name = model->GetName();
+  std::string link_name = sdf->GetElement("link_name")->Get<std::string>();
+  std::string topic = "/gazebo/world/"+ model_name + "/" + link_name + "/bumper/contacts";
+  // std::string topic = "/gazebo/world/workcell_floor/floor/bumper/contacts";
   RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), topic);
 
   // Register client
