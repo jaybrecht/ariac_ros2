@@ -175,18 +175,64 @@ void AGVPluginPrivate::MoveToGoal(double goal){
   {
     direction = -1;
   }
-    
+  
+  double velocity = 0;
+  double acceleration = 2;
+  double stop_distance = 0.9;
+  rclcpp::Time start = ros_node_->get_clock()->now();
   if (direction > 0){
-    this->PublishVelocity(max_velocity_);
+    while(agv_joint_->Position(0) < goal - stop_distance){
+      if (velocity >= max_velocity_){
+        velocity = max_velocity_;
+      } else {
+        rclcpp::Duration dur = ros_node_->get_clock()->now() - start;
+        double time = dur.nanoseconds() / 1e9;
+        velocity = time * acceleration;
+      }
+      this->PublishVelocity(velocity);
+    }
 
-    while(agv_joint_->Position(0) < goal){}
+    double maximum_velocity = velocity;
+
+    start = ros_node_->get_clock()->now();
+    while(agv_joint_->Position(0) < goal){
+      if (velocity <= 0){
+        break;
+      } else {
+        rclcpp::Duration dur = ros_node_->get_clock()->now() - start;
+        double time = dur.nanoseconds() / 1e9;
+        velocity = maximum_velocity - (time * acceleration);
+      }
+      this->PublishVelocity(velocity);
+    }
 
     this->PublishVelocity(0.0);
   }
   else {
-    this->PublishVelocity(-max_velocity_);
+    while(agv_joint_->Position(0) > goal + stop_distance){
+      if (std::abs(velocity) >= max_velocity_){
+        velocity = -max_velocity_;
+      } else {
+        rclcpp::Duration dur = ros_node_->get_clock()->now() - start;
+        double time = dur.nanoseconds() / 1e9;
+        velocity = time * -acceleration;
+      }
+      this->PublishVelocity(velocity);
+    }
 
-    while(agv_joint_->Position(0) > goal){}
+    double maximum_velocity = velocity;
+
+    start = ros_node_->get_clock()->now();
+    while(agv_joint_->Position(0) > goal){
+      if (velocity >= 0){
+        break;
+      } else {
+        rclcpp::Duration dur = ros_node_->get_clock()->now() - start;
+        double time = dur.nanoseconds() / 1e9;
+        velocity = maximum_velocity + (time * acceleration);
+      }
+      this->PublishVelocity(velocity);
+    }
 
     this->PublishVelocity(0.0);
   }
