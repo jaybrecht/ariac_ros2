@@ -193,9 +193,9 @@ def launch_setup(context, *args, **kwargs):
                 agv4_bringup,
                 floor_robot_bringup,
                 ceiling_robot_bringup,
-                #human_listener,
-        	#robot_listener,
-        	#snapshot
+                human_listener,
+        	robot_listener,
+        	snapshot
             ]
         )
     )
@@ -210,7 +210,8 @@ def launch_setup(context, *args, **kwargs):
         navigation,
         slam,
         spawn_robots_after_sensors,
-        clockNode
+        clockNode,
+        rosbridge
     ]
 
     return nodes_to_start

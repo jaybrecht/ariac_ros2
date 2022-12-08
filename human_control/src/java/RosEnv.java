@@ -21,16 +21,16 @@ public class RosEnv extends Environment {
     
     RosBridge bridge = new RosBridge();
 
+		// Publishers
+		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
+		Publisher cmd_vel = new Publisher("/cmd_vel", "geometry_msgs/Twist", bridge);
+		
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
     public void init(String[] args) {
         super.init(args);
 		bridge.connect("ws://localhost:9090", true);
 		logger.info("Environment started, connection with ROS established.");
-		
-		// Publishers
-		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
-		Publisher cmd_vel = new Publisher("/cmd_vel", "geometry_msgs/Twist", bridge);
 		
 		/* Subscriber for getting the distance between the Gantry and the human */
 		bridge.subscribe(SubscriptionRequestMsg.generate("/snapshot")
@@ -54,6 +54,7 @@ public class RosEnv extends Environment {
 				}
 			}
 	);
+	}
 	
 		/* Subscriber for getting the information that the Gantry has been disabled. Note that the topic is made up, it should be replaced with the correct one later */ 
 		/*
@@ -103,17 +104,18 @@ public class RosEnv extends Environment {
 			}
 	    );
 		*/
-    }
+    
 
     @Override
     public boolean executeAction(String agName, Structure action) {
-		if (actionname.getFunctor().equals("move")) {
-			move((NumberTerm) act.getTerm(0).solve(),(NumberTerm) act.getTerm(1).solve(),(NumberTerm) act.getTerm(2).solve());
+		if (action.getFunctor().equals("move")) {
+			//move((NumberTerm) action.getTerm(0).solve(),(NumberTerm) action.getTerm(1).solve(),(NumberTerm) action.getTerm(2).solve());
+			move(0.0, 0.0, 0.0);
 		}
-		else if (actionname.getFunctor().equals("stop_movement")) { 
+		else if (action.getFunctor().equals("stop_movement")) { 
 			stop_moving();
 		}
-		else if (actionname.getFunctor().equals("teleport_safe")) { 
+		else if (action.getFunctor().equals("teleport_safe")) { 
 			teleport();
 		}
 		else {
@@ -123,7 +125,7 @@ public class RosEnv extends Environment {
         return true; // the action was executed with success
     }
     
-	public void hello_ros() {
+	/*public void hello_ros() {
 		
 		for(int i = 0; i < 100; i++) {
 			pub.publish(new PrimitiveMsg<String>("hello from Jason " + i));
@@ -133,7 +135,7 @@ public class RosEnv extends Environment {
 				e.printStackTrace();
 			}
 		}
-	}
+	}*/
 	
 	public void move(double x, double y, double z) {
 		move_base.publish(new Vector3(x,y,z));
@@ -156,4 +158,4 @@ public class RosEnv extends Environment {
     public void stop() {
         super.stop();
     }
-}
+ }
