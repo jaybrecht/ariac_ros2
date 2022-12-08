@@ -150,6 +150,37 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         arguments=[]
     )
+    
+      # Clock node
+    clockNode = Node(
+        package='ariac_human',
+        executable='clockNode.py',
+        output='screen',
+        arguments=[]
+    )
+
+    # Human listener node
+    human_listener = Node(
+        package='ariac_human',
+        executable='human_listener.py',
+        output='screen',
+        arguments=[]
+    )
+    
+    # Robot listener node
+    robot_listener = Node(
+        package='ariac_human',
+        executable='robot_listener.py',
+        output='screen',
+        arguments=[]
+    )
+    
+    # Snapshot node
+    snapshot = Node(
+        package='ariac_human',
+        executable='snapshot.py'
+    )
+
 
     spawn_robots_after_sensors = RegisterEventHandler(
         OnProcessExit(
@@ -162,40 +193,14 @@ def launch_setup(context, *args, **kwargs):
                 agv4_bringup,
                 floor_robot_bringup,
                 ceiling_robot_bringup,
+                #human_listener,
+        	#robot_listener,
+        	#snapshot
             ]
         )
     )
     
-    # Clock node
-    clockNode = Node(
-        package='ariac_gazebo',
-        executable='clockNode.py',
-        output='screen',
-        arguments=[]
-    )
-
-    # Human listener node
-#    human_listener = Node(
-#        package='ariac_gazebo',
-#        executable='human_listener.py',
-#        output='screen',
-#        arguments=[]
-#    )
     
-    # Robot listener node
-#    robot_listener = Node(
-#        package='ariac_gazebo',
-#        executable='robot_listener.py',
-#        output='screen',
-#        arguments=[]
-#    )
-    
-    # Snapshot node
-#    snapshot = Node(
-#        package='ariac_gazebo',
-#        executable='snapshot.py'
-#    )
-
     nodes_to_start = [
         gazebo,
         tray_spawner,
@@ -205,16 +210,7 @@ def launch_setup(context, *args, **kwargs):
         navigation,
         slam,
         spawn_robots_after_sensors,
-        agv_bringup,
-        floor_robot_bringup,
-        ceiling_robot_bringup,
-        mobile_robot_bringup,
-        robot_spawner,
-        clockNode,
-#        human_listener,
-#        robot_listener,
-#        snapshot,
-        rosbridge
+        clockNode
     ]
 
     return nodes_to_start

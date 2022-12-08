@@ -22,4 +22,12 @@ include_directories(
 install(DIRECTORY launch models urdf config map rviz
   DESTINATION share/${PROJECT_NAME}/
 )
+
+install(PROGRAMS
+  launch/human_listener.py
+  launch/robot_listener.py
+  launch/snapshot.py
+  launch/clockNode.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 ament_package()

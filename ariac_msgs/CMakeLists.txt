@@ -29,7 +29,6 @@ set(srv_files
   "srv/ConveyorBeltControl.srv"
   "srv/MoveAGV.srv"
   "srv/VacuumGripperControl.srv"
-  "srv/MoveAGV.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
