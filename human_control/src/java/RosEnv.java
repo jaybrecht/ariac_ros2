@@ -1,6 +1,7 @@
 import jason.asSyntax.*;
 import jason.environment.*;
 import java.util.logging.*;
+//import ail.util.AILexception;
 import ros.Publisher;
 import ros.RosBridge;
 import ros.RosListenDelegate;
@@ -21,10 +22,6 @@ public class RosEnv extends Environment {
     
     RosBridge bridge = new RosBridge();
 
-		// Publishers
-		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
-		Publisher cmd_vel = new Publisher("/cmd_vel", "geometry_msgs/Twist", bridge);
-		
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
     public void init(String[] args) {
@@ -105,24 +102,31 @@ public class RosEnv extends Environment {
 	    );
 		*/
     
-
     @Override
-    public boolean executeAction(String agName, Structure action) {
-		if (action.getFunctor().equals("move")) {
-			//move((NumberTerm) action.getTerm(0).solve(),(NumberTerm) action.getTerm(1).solve(),(NumberTerm) action.getTerm(2).solve());
-			move(0.0, 0.0, 0.0);
+    public boolean executeAction(String agName, Structure act) {
+		if (act.getFunctor().equals("move")) {
+			NumberTerm lx = (NumberTerm) act.getTerm(0);
+			NumberTerm ly = (NumberTerm) act.getTerm(1);
+			NumberTerm lz = (NumberTerm) act.getTerm(2);
+			try{
+				move(lx.solve(),ly.solve(),lz.solve());
+				//move((NumberTerm) act.getTerm(0).solve(),(NumberTerm) act.getTerm(1).solve(),(NumberTerm) act.getTerm(2).solve());
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
-		else if (action.getFunctor().equals("stop_movement")) { 
+		else if (act.getFunctor().equals("stop_movement")) { 
 			stop_moving();
 		}
-		else if (action.getFunctor().equals("teleport_safe")) { 
+		else if (act.getFunctor().equals("teleport_safe")) { 
 			teleport();
 		}
 		else {
-			logger.info("executing: "+action+", but not implemented!");
+			logger.info("executing: "+act.getFunctor()+", but not implemented!");
 		}
         informAgsEnvironmentChanged();
-        return true; // the action was executed with success
+        //return true; // the action was executed with success
+	return super.executeAction(agName, act);
     }
     
 	/*public void hello_ros() {
@@ -138,11 +142,15 @@ public class RosEnv extends Environment {
 	}*/
 	
 	public void move(double x, double y, double z) {
+		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
+		
 		move_base.publish(new Vector3(x,y,z));
 	}
 	
 	// This method also needs to cancel any ongoing move base goals
 	public void stop_moving() {
+		Publisher cmd_vel = new Publisher("/cmd_vel", "geometry_msgs/Twist", bridge);
+
 		Vector3 linear = new Vector3(0.0,0.0,0.0);
 		Vector3 angular = new Vector3(0.0,0.0,0.0);
 		cmd_vel.publish(new Twist(linear, angular));

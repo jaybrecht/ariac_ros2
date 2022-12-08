@@ -31,6 +31,7 @@ next_location(station3,station1).
 	<- 
 		-working(_);
 		+working(Location);
+		.print("Now moving to: ", Location).
 		move(X, Y, Z).
 
 
