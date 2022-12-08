@@ -25,7 +25,7 @@
       </collision>
 
       <sensor type="contact" name="bumper">
-        <update_rate>10</update_rate>
+        <update_rate>1</update_rate>
         <contact>
           <collision>collision</collision>
         </contact>
@@ -36,6 +36,7 @@
       <ros>
       </ros>
       <link_name>floor</link_name>
+      <publish_penalty>true</publish_penalty>
     </plugin>  
   </model>
 </sdf>

@@ -29,6 +29,9 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <std_srvs/srv/trigger.hpp>
+#include <std_msgs/msg/string.hpp>
+
+#include <sdf/sdf.hh>
 
 #include <map>
 #include <memory>
@@ -52,6 +55,12 @@ public:
 
   gazebo::physics::ModelPtr model_;
 
+  std::vector<std::string> deleted_models_;
+
+  /// Penalty publisher
+  bool publish_penalty_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr penalty_pub_;
+
   /// Service to delete model
   rclcpp::Client<gazebo_msgs::srv::DeleteEntity>::SharedPtr delete_model_client_;
 };
@@ -71,26 +80,35 @@ void ObjectDisposalPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
   // Pass it SDF parameters so common options like namespace and remapping
   // can be handled.
   impl_->model_ = model;
+
+  // Put ros node into namespace based on model name to avoid collisions
+  std::string model_name = model->GetName();
+  sdf::ElementPtr ns(new sdf::Element);
+  sdf->SetParent(sdf->FindElement("ros"));
+  ns->SetName("namespace");
+  ns->AddValue("string", model_name, "1");
+  sdf->FindElement("ros")->InsertElement(ns);
+
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
 
   impl_->part_types_ = {"battery", "regulator", "pump", "sensor"};
-
-  gazebo::physics::WorldPtr world = impl_->model_->GetWorld();
 
   // Initialize a gazebo node and subscribe to the contacts for the vacuum gripper
   impl_->gznode_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
   impl_->gznode_->Init(impl_->model_->GetWorld()->Name());
 
   // Get contact topic
-  std::string model_name = model->GetName();
   std::string link_name = sdf->GetElement("link_name")->Get<std::string>();
+  impl_->publish_penalty_ = sdf->GetElement("publish_penalty")->Get<bool>();
+
   std::string topic = "/gazebo/world/"+ model_name + "/" + link_name + "/bumper/contacts";
-  // std::string topic = "/gazebo/world/workcell_floor/floor/bumper/contacts";
-  RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), topic);
 
   // Register client
   impl_->delete_model_client_ = impl_->ros_node_->create_client<gazebo_msgs::srv::DeleteEntity>(
       "/delete_entity");
+
+  // Create penatly publisher
+  impl_->penalty_pub_ = impl_->ros_node_->create_publisher<std_msgs::msg::String>("/ariac/penalty", 10);
 
   impl_->contact_sub_ = impl_->gznode_->Subscribe(topic, &ObjectDisposalPlugin::OnContact, this);
 }
@@ -98,7 +116,6 @@ void ObjectDisposalPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
 void ObjectDisposalPlugin::OnContact(ConstContactsPtr& _msg){
   std::string model_in_contact;
 
-  bool removed = false;
   for (int i = 0; i < _msg->contact_size(); ++i) {
     // Find out which contact is the agv
     if (_msg->contact(i).collision1().find(impl_->model_->GetName()) != std::string::npos) {
@@ -116,15 +133,20 @@ void ObjectDisposalPlugin::OnContact(ConstContactsPtr& _msg){
       if (model_in_contact.find(type) != std::string::npos){
         auto request = std::make_shared<gazebo_msgs::srv::DeleteEntity::Request>();
         request->name = model_in_contact.substr(0, model_in_contact.find("::"));
-        // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Removing: " << request->name);
-        impl_->delete_model_client_->async_send_request(request);
-        removed = true;
-        break;
-      }
-    }
 
-    if (removed){
-      break;
+        if (std::find(impl_->deleted_models_.begin(), impl_->deleted_models_.end(), request->name) == impl_->deleted_models_.end()) {
+          impl_->deleted_models_.push_back(request->name);
+
+          if (impl_->publish_penalty_) {
+            std_msgs::msg::String msg;
+            msg.data = request->name;
+            impl_->penalty_pub_->publish(msg);
+          }
+          
+          impl_->delete_model_client_->async_send_request(request);
+          break;
+        }
+      }
     }
   }
 }

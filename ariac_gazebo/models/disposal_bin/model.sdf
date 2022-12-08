@@ -2,7 +2,7 @@
 <sdf version="1.6">
   <model name="disposal_bin">
     <static>true</static>
-    <link name="link">
+    <link name="disposal_bin">
       <!-- <inertial>
         <pose>0 0 0.0 0 0 0</pose>
         <mass>0.5</mass>
@@ -42,6 +42,20 @@
           <diffuse>0.12 0.56 1.0 1.0</diffuse>
         </material>
        </visual>
+
+        <sensor type="contact" name="bumper">
+          <update_rate>1</update_rate>
+          <contact>
+            <collision>collision</collision>
+          </contact>
+      </sensor> 
     </link>
+
+    <plugin name="disposal_bin" filename="libObjectDisposalPlugin.so">
+      <ros>
+      </ros>
+      <link_name>disposal_bin</link_name>
+      <publish_penalty>false</publish_penalty>
+    </plugin>  
   </model>
 </sdf>
