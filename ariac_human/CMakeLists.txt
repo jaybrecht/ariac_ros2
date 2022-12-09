@@ -24,6 +24,7 @@ install(DIRECTORY launch models urdf config map rviz
 )
 
 install(PROGRAMS
+  launch/movebase_server.py
   launch/human_listener.py
   launch/robot_listener.py
   launch/snapshot.py

@@ -35,7 +35,7 @@ class human_listener(Node):
 		pub_speed = self.create_publisher(topic='/monitor/human/speed', msg_type=TimedFloat, qos_profile = 1000)
 		pub_position = self.create_publisher(topic = '/monitor/human/pose', msg_type = TimedPose, qos_profile = 1000)
 		self.create_subscription(topic='stream_clock', msg_type=Int64, callback=callbackClock, qos_profile = 1000)
-		self.create_subscription(topic='stream_clock', msg_type=Int64, callback=callbackMove, qos_profile = 1000) //LB, change msgs
+		self.create_subscription(topic='jason_to_move_base', msg_type=Int64, callback=callbackMove, qos_profile = 1000) //LB, change msgs
 
 transOld = None
 frame = 'base_footprint'
@@ -89,3 +89,56 @@ if __name__ == '__main__':
     node = human_listener()
     rclpy.spin(node)
     rclpy.shutdown()
+    #**************
+    
+    #! /usr/bin/env python
+from __future__ import print_function
+
+import rospy
+import actionlib
+
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from geometry_msgs.msg import Vector3
+
+def send_to_movebase(x,y,z):
+	rospy.loginfo("Goal received")
+	client = actionlib.SimpleActionClient('move_base',MoveBaseAction)
+	client.wait_for_server()
+	rospy.loginfo("After wait")
+	goal = MoveBaseGoal()
+	goal.target_pose.header.frame_id = "map"
+	goal.target_pose.header.stamp = rospy.Time.now()
+	goal.target_pose.pose.position.x = x
+	goal.target_pose.pose.position.y = y
+	goal.target_pose.pose.position.z = z
+	goal.target_pose.pose.orientation.w = 1.0
+
+	client.send_goal(goal)
+	wait = client.wait_for_result()
+	if not wait:
+		rospy.logerr("Action server not available!")
+		rospy.signal_shutdown("Action server not available!")
+	else:
+		return client.get_result()
+
+def goal_movebase(data):
+	
+    #rospy.loginfo(rospy.get_caller_id() + "I heard %f and %f and %f",data.x,data.y,data.z)
+    try:
+        result = send_to_movebase(data.x,data.y,data.z)
+        if result:
+            rospy.loginfo("Goal execution done!")
+    except rospy.ROSInterruptException:
+        rospy.loginfo("Navigation test finished.")    
+
+def movebase_client():
+	
+	rospy.init_node('movebase_server', anonymous=True)
+	
+	rospy.Subscriber("gwendolen_to_move_base", Vector3, goal_movebase)
+	
+	rospy.spin()
+
+if __name__ == '__main__':
+	movebase_client()
+

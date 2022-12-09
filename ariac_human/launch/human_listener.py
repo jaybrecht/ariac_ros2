@@ -37,7 +37,7 @@ class human_listener(Node):
 		self.create_subscription(topic='stream_clock', msg_type=Int64, callback=callbackClock, qos_profile = 1000)
 
 transOld = None
-frame = 'base_footprint'
+frame = 'base_link'
 
 def callbackClock(data):
     global transOld
@@ -45,7 +45,7 @@ def callbackClock(data):
     try:
         transTime = rclpy.time.Time()
         #node.get_clock().now()
-        trans = tfBuffer.lookup_transform('world', frame, transTime, rclpy.duration.Duration(seconds=1.0))
+        trans = tfBuffer.lookup_transform('world', frame, transTime) #, rclpy.duration.Duration(seconds=1.0))
     except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
         print(e)
         return

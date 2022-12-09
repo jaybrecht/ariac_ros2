@@ -23,15 +23,15 @@ next_location(station3,station1).
 /* Plans */
 
 +!start : indifferent <- .include("indifferent.asl"); !work(station4).
-+!start : helpful <- .include("helpful.asl"); !work(station4).
-+!start : antagonistic <- .include("antagonistic.asl"); !work(station4).
+//+!start : helpful <- .include("helpful.asl"); !work(station4).
+//+!start : antagonistic <- .include("antagonistic.asl"); !work(station4).
 
 // Work pattern plans
 +!work(Location) : location(Location, X, Y, Z) 
 	<- 
 		-working(_);
 		+working(Location);
-		.print("Now moving to: ", Location).
+		.print("Now moving to: ", Location);
 		move(X, Y, Z).
 
 

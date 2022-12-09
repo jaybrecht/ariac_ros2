@@ -18,7 +18,7 @@ public class RosEnv extends Environment {
 
     private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
     
-    final int gantry_detection = 15;
+    final int gantry_detection = 10;
     
     RosBridge bridge = new RosBridge();
 
@@ -41,7 +41,7 @@ public class RosEnv extends Environment {
 					Snapshot msg = unpacker.unpackRosMessage(data);
 					if (msg.distance_robot_human_operator <= gantry_detection) {
 						clearPercepts("human");
-//						logger.info("I see the Gantry robot in less than 15 meters!");
+						logger.info("I see the Gantry robot in less than 15 meters!");
 						addPercept("human",Literal.parseLiteral("gantry_detected"));
 					}
 //					logger.info(msg.time+"");
@@ -109,8 +109,8 @@ public class RosEnv extends Environment {
 			NumberTerm ly = (NumberTerm) act.getTerm(1);
 			NumberTerm lz = (NumberTerm) act.getTerm(2);
 			try{
+				logger.info("Move requested by agent, will now send topic");
 				move(lx.solve(),ly.solve(),lz.solve());
-				//move((NumberTerm) act.getTerm(0).solve(),(NumberTerm) act.getTerm(1).solve(),(NumberTerm) act.getTerm(2).solve());
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
@@ -125,8 +125,8 @@ public class RosEnv extends Environment {
 			logger.info("executing: "+act.getFunctor()+", but not implemented!");
 		}
         informAgsEnvironmentChanged();
-        //return true; // the action was executed with success
-	return super.executeAction(agName, act);
+        return true; // the action was executed with success
+	//return super.executeAction(agName, act);
     }
     
 	/*public void hello_ros() {
