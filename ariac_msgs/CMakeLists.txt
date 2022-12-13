@@ -20,6 +20,10 @@ set(msg_files
   "msg/LogicalCameraImage.msg"
   "msg/VacuumGripperState.msg"
   "msg/Part.msg"
+  "msg/PartLot.msg"
+  "msg/BinInfo.msg"
+  "msg/BinParts.msg"
+  "msg/ConveyorParts.msg"
   "msg/PartPose.msg"
   "msg/KitTrayPose.msg"
   "msg/KittingPart.msg"
@@ -28,6 +32,7 @@ set(msg_files
   "msg/AssemblyTask.msg"
   "msg/Order.msg"
   "msg/QualityIssue.msg"
+
 )
 
 set(srv_files

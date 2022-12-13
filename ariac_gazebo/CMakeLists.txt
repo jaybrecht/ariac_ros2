@@ -98,7 +98,6 @@ install(PROGRAMS
   nodes/sensor_tf_broadcaster.py
   nodes/object_tf_broadcaster.py
   nodes/part_spawner.py
-  nodes/populate_conveyor_belt.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
