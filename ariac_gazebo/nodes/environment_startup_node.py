@@ -10,6 +10,8 @@ def main():
 
     startup_node = EnvironmentStartup(sys.argv[1], sys.argv[2])
 
+    startup_node.pause_physics()
+
     # Spawn robots
     startup_node.spawn_robots()
 
@@ -24,6 +26,11 @@ def main():
 
     # Spawn trays and parts on AGVs
     startup_node.spawn_parts_on_agvs()
+
+    # Read conveyor part config
+    startup_node.parse_conveyor_config()
+
+    startup_node.unpause_physics()
 
     try:
         rclpy.spin(startup_node)

@@ -44,14 +44,20 @@
     <link name="${agv_number}_tray">
       <visual>
         <geometry>
-          <mesh filename="file://$(find ariac_description)/meshes/AGV/kit_tray.stl" scale="1 1 1"/>
+          <mesh filename="file://$(find ariac_description)/meshes/AGV/tray.stl" scale="1 1 1"/>
         </geometry>
         <material name="Grey"/>
       </visual>
       
-      <collision>
+      <collision name="${agv_number}_tray_collision">
         <geometry>
-          <mesh filename="file://$(find ariac_description)/meshes/AGV/kit_tray.stl" scale="1 1 1"/>
+          <mesh filename="file://$(find ariac_description)/meshes/AGV/tray.stl" scale="1 1 1"/>
+        </geometry>
+      </collision>
+
+      <collision name="${agv_number}_tray_collision1">
+        <geometry>
+          <mesh filename="file://$(find ariac_description)/meshes/AGV/contact_sensor.stl" scale="1 1 1"/>
         </geometry>
       </collision>
       
@@ -61,6 +67,25 @@
         <inertia ixx="0.0408" ixy="0.0" ixz="0.0" iyy="0.02084" iyz="0.0" izz="0.0616"/>
       </inertial>
     </link>
+
+    <gazebo reference="${agv_number}_tray">
+      <sensor type="contact" name="bumper">
+        <update_rate>10</update_rate>
+        <contact>
+          <collision>${agv_number}_tray_collision1_collision_1</collision>
+        </contact>
+      </sensor>
+    </gazebo>
+
+    <gazebo>
+      <plugin filename="libAGVTrayPlugin.so" name="${agv_number}_tray_plugin">
+        <ros>
+          <namespace></namespace>
+        </ros>
+        <agv_tray_link>${agv_number}_tray</agv_tray_link>
+        <agv_number>${agv_number}</agv_number>
+      </plugin>
+    </gazebo>
 
     <gazebo reference="${agv_number}_tray">
       <material>Gazebo/Gray</material>
@@ -81,12 +106,12 @@
       <dynamics damping="20.0" friction="500.0" />
     </joint>
 
-    <joint name="${agv_number}_kit_tray_joint" type="revolute">
+    <joint name="${agv_number}_tray_joint" type="revolute">
       <axis xyz="0 0 1"/>
       <parent link="${agv_number}_base"/>
       <child link="${agv_number}_tray"/>
       <limit lower="-.001" upper=".001" effort="0" velocity="0" />
-      <origin xyz="0 -0.2 0.75" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0 -0.2 .75" rpy="0.0 0.0 0.0"/>
     </joint>
 
   </xacro:macro>
