@@ -13,3 +13,4 @@ uint8 REGULATOR=13
 
 uint8 color
 uint8 type
+

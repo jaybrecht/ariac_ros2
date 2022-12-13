@@ -69,6 +69,16 @@ ament_target_dependencies(disable_shadows_plugin
 )
 ament_export_libraries(disable_shadows_plugin)
 
+# Vacuum Gripper
+add_library(AGVTrayPlugin SHARED
+  src/agv_tray_plugin.cpp
+)
+target_include_directories(AGVTrayPlugin PUBLIC include)
+ament_target_dependencies(AGVTrayPlugin
+  "gazebo_ros"
+)
+ament_export_libraries(AGVTrayPlugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -80,6 +90,7 @@ install(TARGETS
     agv_plugin
     gripper_change_plugin
     disable_shadows_plugin
+    AGVTrayPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

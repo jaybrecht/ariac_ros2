@@ -24,6 +24,15 @@ set(msg_files
   "msg/BinInfo.msg"
   "msg/BinParts.msg"
   "msg/ConveyorParts.msg"
+  "msg/PartPose.msg"
+  "msg/KitTrayPose.msg"
+  "msg/KittingPart.msg"
+  "msg/KittingTask.msg"
+  "msg/AssemblyPart.msg"
+  "msg/AssemblyTask.msg"
+  "msg/Order.msg"
+  "msg/QualityIssue.msg"
+
 )
 
 set(srv_files
@@ -31,6 +40,7 @@ set(srv_files
   "srv/ConveyorBeltControl.srv"
   "srv/MoveAGV.srv"
   "srv/VacuumGripperControl.srv"
+  "srv/PerformQualityCheck.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
