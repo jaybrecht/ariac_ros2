@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <world name="world">
+    <gravity>0 0 -9.8</gravity>
     <!-- Set the initial camera pose to be looking at the workspace. -->
     <gui fullscreen='0'>
       <camera name='user_camera'>
