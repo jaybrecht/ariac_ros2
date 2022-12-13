@@ -78,21 +78,34 @@ class EnvironmentStartup(Node):
 
     def spawn_sensors(self):
         try:
-            sensors = self.user_config['sensors']
+            user_sensors = self.user_config['sensors']
         except KeyError:
             self.get_logger().warn("No sensors found in config")
+            user_sensors = []
 
-        for sensor_name in sensors:
-            sensor_type = sensors[sensor_name]['type']
-            xyz = sensors[sensor_name]['pose']['xyz']
-            rpy = sensors[sensor_name]['pose']['rpy']
+        # Spawn user sensors
+        for sensor_name in user_sensors:
+            sensor_type = user_sensors[sensor_name]['type']
+            xyz = user_sensors[sensor_name]['pose']['xyz']
+            rpy = user_sensors[sensor_name]['pose']['rpy']
             
-            if 'visualize_fov' in sensors[sensor_name].keys():
-                vis = sensors[sensor_name]['visualize_fov']
+            if 'visualize_fov' in user_sensors[sensor_name].keys():
+                vis = user_sensors[sensor_name]['visualize_fov']
             else:
                 vis = False
 
             params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz, rpy=rpy)
+            self.spawn_entity(params)
+        
+        # Spawn quality control sensors
+        for i in range(1, 5):
+            sensor_name = "quality_control_sensor" + str(i)
+            sensor_type = "quality_control"
+            xyz = [0, 0, 1]
+            vis = True
+
+            params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz)
+            params.reference_frame = "agv" + str(i) + "_tray"
             self.spawn_entity(params)
 
     def spawn_kit_trays(self):
@@ -151,10 +164,11 @@ class EnvironmentStartup(Node):
 
         # Spawn trays 
         num_trays = 0
+        kit_tray_thickness = 0.01
         for id, slot in zip(ids, slots):
             rel_pose = Pose()
             rel_pose.position.x = slot_info[slot]["offset"]
-            rel_pose.position.z = .01
+            rel_pose.position.z = kit_tray_thickness
 
             world_pose = do_transform_pose(rel_pose, transforms[slot_info[slot]["table"]])
             
@@ -190,6 +204,9 @@ class EnvironmentStartup(Node):
             bin_parts = self.trial_config["parts"]["bins"]
         except KeyError:
             self.get_logger().warn("No bin parts found in configuration")
+            return
+        
+        if not bin_parts:
             return
 
         part_count = 0
@@ -270,10 +287,10 @@ class EnvironmentStartup(Node):
 
     def spawn_parts_on_agvs(self):
         quadrant_info = {
-            1: {"x_offset": -0.0925, "y_offset": -0.1275},
-            2: {"x_offset": -0.0925, "y_offset": 0.1275},
-            3: {"x_offset": 0.0925, "y_offset": -0.1275},
-            4: {"x_offset": 0.0925, "y_offset": 0.1275},
+            1: {"x_offset": -0.0925, "y_offset": 0.1275},
+            2: {"x_offset": 0.0925, "y_offset": 0.1275},
+            3: {"x_offset": -0.0925, "y_offset": -0.1275},
+            4: {"x_offset": 0.0925, "y_offset": -0.1275},
         }
 
         possible_agvs = ['agv1', 'agv2', 'agv3', 'agv4']
@@ -298,7 +315,7 @@ class EnvironmentStartup(Node):
                 tray_id = 0
             
             marker_id = str(tray_id).zfill(2)
-            name = "kit_tray_" +  marker_id + "_" + agv
+            name = "kit_tray_" +  marker_id + "_a" + agv[-1]
 
             xyz = [0, 0, 0.01]
             reference_frame = agv + "_tray"
@@ -306,7 +323,7 @@ class EnvironmentStartup(Node):
             self.spawn_entity(params)
 
             # Spawn parts onto kit tray
-            available_quadrants = list(range(1,4))
+            available_quadrants = list(range(1,5))
             for part_info in agv_parts[agv]['parts']:
                 ret, part = self.parse_part_info(part_info)
                 if not ret:
@@ -322,18 +339,23 @@ class EnvironmentStartup(Node):
                     continue
 
                 available_quadrants.remove(quadrant)
+
+                if part.flipped:
+                    roll = math.pi
+                    z_height = part.height + 0.01
+                else:
+                    roll = 0
+                    z_height = 0.01
                 
                 part_name = part.type + "_" + part.color + "_a" + str(part_count).zfill(2)
                 part_count += 1
 
-                xyz = [quadrant_info[quadrant]["x_offset"], quadrant_info[quadrant]["y_offset"], 0.01]
-                rpy = [0, 0, part.rotation]
+                xyz = [quadrant_info[quadrant]["x_offset"], quadrant_info[quadrant]["y_offset"], z_height]
+                rpy = [roll, 0, part.rotation]
 
                 params = PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy, rf=reference_frame)
 
                 self.spawn_entity(params)
-            
-
 
     def get_robot_descriptions_from_parameters(self):
         self.robot_descriptions = {}

@@ -20,6 +20,7 @@ find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(orocos_kdl REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(ariac_msgs REQUIRED)
 
@@ -46,6 +47,18 @@ ament_target_dependencies(logical_camera
 )
 ament_export_libraries(logical_camera)
 
+# Quality Control Plugin
+add_library(QualityControlPlugin SHARED
+  src/quality_control_plugin.cpp
+)
+target_include_directories(QualityControlPlugin PUBLIC include)
+ament_target_dependencies(QualityControlPlugin
+  "orocos_kdl"
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(QualityControlPlugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -54,6 +67,7 @@ install(DIRECTORY include/
 install(TARGETS
     break_beam_sensor
     logical_camera
+    QualityControlPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
