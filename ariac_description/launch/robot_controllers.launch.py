@@ -13,6 +13,9 @@ def generate_launch_description():
             executable="spawner",
             name=name + "_joint_state_broadcaster_spawner",
             arguments=[name + "_joint_state_broadcaster", "-c", name + "_controller_manager"],
+            parameters=[
+                {"use_sim_time": True},
+            ],
         )
 
         if name.count('agv') == 0:
@@ -25,6 +28,9 @@ def generate_launch_description():
             executable="spawner",
             name=name + "_controller_spawner",
             arguments=[name + controller_type, "-c", name + "_controller_manager"],
+            parameters=[
+                {"use_sim_time": True},
+            ],
         )
       
         nodes_to_start.append(joint_state_broadcaster_spawner)

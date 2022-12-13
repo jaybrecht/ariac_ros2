@@ -79,6 +79,26 @@ ament_target_dependencies(assembly_lock_plugin
 )
 ament_export_libraries(assembly_lock_plugin)
 
+# Object Disposal Plugin
+add_library(ObjectDisposalPlugin SHARED
+  src/object_disposal_plugin.cpp
+)
+target_include_directories(ObjectDisposalPlugin PUBLIC include)
+ament_target_dependencies(ObjectDisposalPlugin
+  "gazebo_ros"
+)
+ament_export_libraries(ObjectDisposalPlugin)
+
+# Vacuum Gripper
+add_library(AGVTrayPlugin SHARED
+  src/agv_tray_plugin.cpp
+)
+target_include_directories(AGVTrayPlugin PUBLIC include)
+ament_target_dependencies(AGVTrayPlugin
+  "gazebo_ros"
+)
+ament_export_libraries(AGVTrayPlugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -91,6 +111,8 @@ install(TARGETS
     gripper_change_plugin
     disable_shadows_plugin
     assembly_lock_plugin
+    ObjectDisposalPlugin
+    AGVTrayPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
