@@ -35,7 +35,7 @@ next_location(station3,station1).
 		move(X, Y, Z).
 
 
-+work_completed : working(Location) & next_location(Location,Next)
++work_completed(_) : working(Location) & next_location(Location,Next)
 	<-
 		.print("Work completed at ", Location);
 		!work(Next).

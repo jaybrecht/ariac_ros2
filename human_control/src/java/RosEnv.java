@@ -1,5 +1,7 @@
 import jason.asSyntax.*;
 import jason.environment.*;
+//import jason.asSyntax.Literal;
+//import jason.asSyntax.LiteralImpl;
 import java.util.logging.*;
 import ros.Publisher;
 import ros.RosBridge;
@@ -18,6 +20,8 @@ public class RosEnv extends Environment {
     private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
     
     final int gantry_detection = 2;
+    
+    int cont = 0;
     
     RosBridge bridge = new RosBridge();
 
@@ -92,11 +96,12 @@ public class RosEnv extends Environment {
 //					System.out.println("Text: "+msg.status.text);
 //					System.out.println();
 //					Literal movebase_result = new Literal("work_completed"); //movebase_result");
+					Literal movebase_result = new LiteralImpl("work_completed"); //movebase_result");
 					logger.info("Human reached waypoint	!");
-//					movebase_result.addTerm(new NumberTermImpl(msg.header.seq));
+					movebase_result.addTerm(new NumberTermImpl(cont++));
 //					movebase_result.addTerm(new NumberTermImpl(msg.status.status));
-//					addPercept(movebase_result);
-					addPercept("human",Literal.parseLiteral("work_completed"));
+					addPercept("human", movebase_result);
+//					addPercept("human",Literal.parseLiteral("work_completed"));
 				}
 			}
 	    );
