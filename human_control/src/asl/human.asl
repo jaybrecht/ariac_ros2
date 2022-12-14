@@ -2,10 +2,10 @@
 // The location belief contains the location and the X,Y,Z coordinates
 // Positions of the tables are with respect of the initial position of the screen when the simulation starts
 // station1 = table bottom right, station2 = table top right, station4 = table top left, station3 = table bottom left
-location(station1, -6.75, 3.0, 0.0).
-location(station2, -11.85, 3.0, 0.0).
-location(station4, -11.85, -3.0, 0.0).
-location(station3, -6.75, -3.0, 0.0).
+location(station1, -5.75, 4.5, 0.0).   //   -5.75,  3.0, 0.0
+location(station2, -10.85, 4.5, 0.0).  //  -11.85, -3.0, 0.0
+location(station4, -10.85, -4.5, 0.0). //  -11.85, -3.0, 0.0
+location(station3, -5.75, -4.5, 0.0).
 
 // safe zone, not being used by the agent at the moment
 location(safe, -15.29, -10.04, 0.0).
@@ -37,6 +37,7 @@ next_location(station3,station1).
 
 +work_completed : working(Location) & next_location(Location,Next)
 	<-
+		.print("Work completed at ", Location);
 		!work(Next).
 
 

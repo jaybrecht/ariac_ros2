@@ -23,18 +23,20 @@ from geometry_msgs.msg import PoseStamped, Vector3
 # import tf2_geometry_msgs  # import support for transforming geometry_msgs stamped msgs
 import numpy as np
 from rclpy.node import Node
-from std_msgs.msg import *
+#from std_msgs.msg import *
+from std_msgs.msg import Bool
 from ariac_msgs.msg import *
 # from nist_gear.msg import *
 #from monitor.msg import *
 
 class movebase_server(Node):
 	def __init__(self):
-		global pub_speed, pub_position, tfBuffer, listener
+		#global pub_eom, tfBuffer, listener
 		self.name='movebase_server'
 		super().__init__(self.name)
-		tfBuffer = tf2_ros.Buffer()
-		listener = tf2_ros.TransformListener(tfBuffer,node=self)
+		self.pub_eom = self.create_publisher(topic='/move_base_result', msg_type=Bool, qos_profile = 1000)
+		self.tfBuffer = tf2_ros.Buffer()
+		self.listener = tf2_ros.TransformListener(self.tfBuffer,node=self)
 		self.create_subscription(topic='jason_to_move_base', msg_type=Vector3, callback=self.goal_movebase, qos_profile = 1000)
 
 		self._navigator = BasicNavigator()
@@ -56,13 +58,16 @@ class movebase_server(Node):
 		#self._navigator.lifecycleStartup()
 
 	#LB: callback function to support moving
-	def goal_movebase(self, data):
-		
+	def goal_movebase(self, data):		
 		#rospy.loginfo(rospy.get_caller_id() + "I heard %f and %f and %f",data.x,data.y,data.z)
+		msg = Bool()
+		msg.data = True
 		try:
 			result = self.send_to_movebase(data.x,data.y,data.z)
 			if result:
 				self.get_logger().info("Movebase Goal execution done!")
+				self.pub_eom.publish(msg)
+
 		except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
 			print(e)
 			return
@@ -106,9 +111,9 @@ class movebase_server(Node):
 					self._navigator.cancelTask()
 
 				# Some navigation request change to demo preemption
-				if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
-					goal_pose.pose.position.x = -3.0
-					self._navigator.goToPose(goal_pose)
+				#if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
+				#	goal_pose.pose.position.x = -3.0
+				#	self._navigator.goToPose(goal_pose)
 
 		# Do something depending on the return code
 		result = self._navigator.getResult()
@@ -122,28 +127,6 @@ class movebase_server(Node):
 			print('Goal has an invalid return status!')
 
 		return result
-
-		#rospy.loginfo("")
-		#return True
-	#	rospy.loginfo("Goal received")
-	#	client = actionlib.SimpleActionClient('move_base',MoveBaseAction)
-	#	client.wait_for_server()
-	#	rospy.loginfo("After wait")
-	#	goal = MoveBaseGoal()
-	#	goal.target_pose.header.frame_id = "map"
-	#	goal.target_pose.header.stamp = rospy.Time.now()
-	#	goal.target_pose.pose.position.x = x
-	#	goal.target_pose.pose.position.y = y
-	#	goal.target_pose.pose.position.z = z
-	#	goal.target_pose.pose.orientation.w = 1.0
-
-	#	client.send_goal(goal)
-	#	wait = client.wait_for_result()
-	#	if not wait:
-	#		rospy.logerr("Action server not available!")
-	#		rospy.signal_shutdown("Action server not available!")
-	#	else:
-	#		return client.get_result()
 
 
 if __name__ == '__main__':

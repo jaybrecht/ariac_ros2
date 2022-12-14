@@ -1,7 +1,6 @@
 import jason.asSyntax.*;
 import jason.environment.*;
 import java.util.logging.*;
-//import ail.util.AILexception;
 import ros.Publisher;
 import ros.RosBridge;
 import ros.RosListenDelegate;
@@ -18,7 +17,7 @@ public class RosEnv extends Environment {
 
     private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
     
-    final int gantry_detection = 10;
+    final int gantry_detection = 2;
     
     RosBridge bridge = new RosBridge();
 
@@ -41,7 +40,7 @@ public class RosEnv extends Environment {
 					Snapshot msg = unpacker.unpackRosMessage(data);
 					if (msg.distance_robot_human_operator <= gantry_detection) {
 						clearPercepts("human");
-						logger.info("I see the Gantry robot in less than 15 meters!");
+						logger.info("I see the Gantry robot in less than " + msg.distance_robot_human_operator +" meters!");
 						addPercept("human",Literal.parseLiteral("gantry_detected"));
 					}
 //					logger.info(msg.time+"");
@@ -51,40 +50,39 @@ public class RosEnv extends Environment {
 				}
 			}
 	);
-	}
+	
 	
 		/* Subscriber for getting the information that the Gantry has been disabled. Note that the topic is made up, it should be replaced with the correct one later */ 
-		/*
+		
 		bridge.subscribe(SubscriptionRequestMsg.generate("/gantry_disabled")
 				.setType("std_msgs/Bool")
 				.setThrottleRate(1)
 				.setQueueLength(1),
 			new RosListenDelegate() {
-
 				public void receive(JsonNode data, String stringRep) {
-					MessageUnpacker<PrimitiveMsg<boolean>> unpacker = new MessageUnpacker<PrimitiveMsg<boolean>>(PrimitiveMsg.class);
-					PrimitiveMsg<boolean> msg = unpacker.unpackRosMessage(data);
-					if (msg.data) {
+					MessageUnpacker<PrimitiveMsg<Boolean>> unpacker = new MessageUnpacker<PrimitiveMsg<Boolean>>(PrimitiveMsg.class);
+					PrimitiveMsg<Boolean> msg = unpacker.unpackRosMessage(data);
+					if (msg.data){
 						clearPercepts("human");
-//						logger.info("Gantry has been disabled!");
+						logger.info("Gantry has been disabled!");
 						addPercept("human",Literal.parseLiteral("gantry_disabled"));
 					}
 				}
 			}
 	);
-	*/
+	
 	
 		/* Subscriber for move_base result. Note that this will change in ROS2, needs experimentation */
-		/*
-		bridge.subscribe(SubscriptionRequestMsg.generate("/move_base/result")
-				.setType("move_base_msgs/MoveBaseActionResult"),
-//				.setThrottleRate(1)
-//				.setQueueLength(1),
+		
+		bridge.subscribe(SubscriptionRequestMsg.generate("/move_base_result")
+				.setType("std_msgs/Bool")
+				.setThrottleRate(1)
+				.setQueueLength(1),
 			new RosListenDelegate() {
 				public void receive(JsonNode data, String stringRep) {
-					MessageUnpacker<MoveBaseActionResult> unpacker = new MessageUnpacker<MoveBaseActionResult>(MoveBaseActionResult.class);
-					MoveBaseActionResult msg = unpacker.unpackRosMessage(data);
-					clearPercepts();
+					MessageUnpacker<PrimitiveMsg<Boolean>> unpacker = new MessageUnpacker<PrimitiveMsg<Boolean>>(PrimitiveMsg.class);
+					PrimitiveMsg<Boolean> msg = unpacker.unpackRosMessage(data);
+					clearPercepts("human");
 //					System.out.println("Frame id: "+msg.header.frame_id);
 //					System.out.println("Stamp sec: "+msg.header.stamp.secs);
 //					System.out.println("Seq: "+msg.header.seq);
@@ -93,15 +91,17 @@ public class RosEnv extends Environment {
 //					System.out.println("Status: "+msg.status.status);
 //					System.out.println("Text: "+msg.status.text);
 //					System.out.println();
-					Literal movebase_result = new Literal("movebase_result");
-					movebase_result.addTerm(new NumberTermImpl(msg.header.seq));
-					movebase_result.addTerm(new NumberTermImpl(msg.status.status));
-					addPercept(movebase_result);
+//					Literal movebase_result = new Literal("work_completed"); //movebase_result");
+					logger.info("Human reached waypoint	!");
+//					movebase_result.addTerm(new NumberTermImpl(msg.header.seq));
+//					movebase_result.addTerm(new NumberTermImpl(msg.status.status));
+//					addPercept(movebase_result);
+					addPercept("human",Literal.parseLiteral("work_completed"));
 				}
 			}
 	    );
-		*/
-    
+		
+    }
     @Override
     public boolean executeAction(String agName, Structure act) {
 		if (act.getFunctor().equals("move")) {
@@ -119,6 +119,9 @@ public class RosEnv extends Environment {
 			stop_moving();
 		}
 		else if (act.getFunctor().equals("teleport_safe")) { 
+			teleport();
+		}
+		else if (act.getFunctor().equals("move_to_gantry")) { 
 			teleport();
 		}
 		else {
@@ -156,8 +159,18 @@ public class RosEnv extends Environment {
 		cmd_vel.publish(new Twist(linear, angular));
 	}
 	
-	// Should call a service by sending a message to a topic and having a Python script reading it to send the service request
+	// 2 do: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
 	public void teleport() {
+		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
+		
+		move_base.publish(new Vector3(-15.0, -10.0, 0.0));		
+	}
+
+	// 2 do: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
+	public void move_to_gantry() {
+		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
+		
+		move_base.publish(new Vector3(-15.0, 10.0, 0.0));
 		
 	}
 

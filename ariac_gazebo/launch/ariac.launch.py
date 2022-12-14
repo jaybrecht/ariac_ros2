@@ -182,6 +182,13 @@ def launch_setup(context, *args, **kwargs):
     )
 
 
+    # movebase_server node
+    movebase_server = Node(
+        package='ariac_human',
+        executable='movebase_server.py'
+    )
+
+
     spawn_robots_after_sensors = RegisterEventHandler(
         OnProcessExit(
             target_action=sensor_spawner,
@@ -195,7 +202,8 @@ def launch_setup(context, *args, **kwargs):
                 ceiling_robot_bringup,
                 human_listener,
         	robot_listener,
-        	snapshot
+        	snapshot,
+        	movebase_server
             ]
         )
     )
