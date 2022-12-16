@@ -20,6 +20,7 @@ set(msg_files
   "msg/LogicalCameraImage.msg"
   "msg/VacuumGripperState.msg"
   "msg/Part.msg"
+  "msg/Parts.msg"
   "msg/PartLot.msg"
   "msg/BinInfo.msg"
   "msg/BinParts.msg"

@@ -54,7 +54,7 @@ void DisableShadowsPlugin::Load(gazebo::rendering::VisualPtr visual, sdf::Elemen
   // Create a GazeboRos node instead of a common ROS node.
   // Pass it SDF parameters so common options like namespace and remapping
   // can be handled.
-  impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
+  // impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
 
   impl_->visual_ = visual;
 

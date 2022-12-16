@@ -1,16 +1,17 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
   <model name="quality_control_sensor">
-    <static>true</static>
+    <static>false</static>
     <pose>0 0 0 0 1.5708 0</pose>
     <link name="sensor_base">
-      <visual name="sensor_visual">
+      <!-- Visual for debugging -->
+      <!-- <visual name="sensor_visual">
         <geometry>
           <box>
             <size>0.05 0.05 0.05</size>
           </box>
         </geometry>
-      </visual>
+      </visual> -->
 
       <sensor name="quality_control_sensor" type="logical_camera">
         <logical_camera>
@@ -20,9 +21,9 @@
             <aspect_ratio>1.4</aspect_ratio>
         </logical_camera>
 
-        <visualize>true</visualize>
+        <visualize>false</visualize>
         <always_on>true</always_on>
-        <update_rate>10</update_rate>
+        <update_rate>1</update_rate>
 
         <plugin name="quality_control" filename="libQualityControlPlugin.so">
           <ros>

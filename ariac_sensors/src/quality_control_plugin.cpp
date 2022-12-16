@@ -31,6 +31,7 @@
 #include <ariac_msgs/msg/order.hpp>
 #include <ariac_msgs/msg/kitting_task.hpp>
 #include <ariac_msgs/msg/kitting_part.hpp>
+#include <ariac_msgs/msg/parts.hpp>
 
 #include <tf2_kdl/tf2_kdl.h>
 #include <tf2/convert.h>
@@ -74,6 +75,9 @@ public:
   geometry_msgs::msg::Pose sensor_pose_;
 
   rclcpp::Service<ariac_msgs::srv::PerformQualityCheck>::SharedPtr quality_check_service_;
+
+  rclcpp::Publisher<ariac_msgs::msg::Parts>::SharedPtr tray_contents_pub_;
+  ariac_msgs::msg::Parts tray_contents_msg_;
 
   /// Publish latest logical camera data to ROS
   void OnUpdate();
@@ -126,6 +130,10 @@ void QualityControlPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::Element
     &QualityControlPluginPrivate::PerformQualityCheck, this->impl_.get(),
     std::placeholders::_1, std::placeholders::_2));
 
+  // Register publisher
+  std::string tray_contents_topic = "/ariac/agv" + impl_->sensor_num_ + "_tray_contents";
+  impl_->tray_contents_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Parts>(tray_contents_topic, 10);
+
   impl_->sensor_update_event_ = impl_->sensor_->ConnectUpdated(
     std::bind(&QualityControlPluginPrivate::OnUpdate, this->impl_.get()));
 }
@@ -138,6 +146,7 @@ void QualityControlPluginPrivate::OnUpdate()
     gazebo::msgs::ConvertIgn(image.pose()));
 
   detected_parts_.clear();
+  tray_contents_msg_.parts.clear();
 
   for (int i = 0; i < image.model_size(); i++) {
     const auto & lc_model = image.model(i);
@@ -168,11 +177,14 @@ void QualityControlPluginPrivate::OnUpdate()
             part_pose.pose = gazebo_ros::Convert<geometry_msgs::msg::Pose>(gazebo::msgs::ConvertIgn(lc_model.pose()));
 
             detected_parts_.insert({model_name, part_pose});
+            tray_contents_msg_.parts.push_back(part_pose.part);
           }
         }
       }
     }
   }
+
+  tray_contents_pub_->publish(tray_contents_msg_);
 }
 
 void QualityControlPluginPrivate::PerformQualityCheck(

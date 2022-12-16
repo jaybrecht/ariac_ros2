@@ -86,6 +86,7 @@ add_library(AGVTrayPlugin SHARED
 target_include_directories(AGVTrayPlugin PUBLIC include)
 ament_target_dependencies(AGVTrayPlugin
   "gazebo_ros"
+  "ariac_msgs"
 )
 ament_export_libraries(AGVTrayPlugin)
 

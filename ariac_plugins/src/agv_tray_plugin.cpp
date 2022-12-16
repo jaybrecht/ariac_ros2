@@ -45,18 +45,22 @@ public:
 
   bool locked_;
   bool tray_attached_;
+  bool sensor_attached_;
   bool in_contact_;
+  std::string agv_number_;
   gazebo::physics::LinkPtr agv_tray_link_;
 
   gazebo::transport::SubscriberPtr contact_sub_;
   gazebo::transport::NodePtr gznode_;
 
-  /// Service for enabling the vacuum gripper
+
+
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr lock_tray_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr unlock_tray_service_;
 
   gazebo::physics::ModelPtr model_;
   gazebo::physics::JointPtr kit_tray_joint_;
+  gazebo::physics::JointPtr sensor_joint_;
   gazebo::physics::CollisionPtr model_collision_;
   std::map<std::string, gazebo::physics::CollisionPtr> collisions_;
 
@@ -92,14 +96,19 @@ void AGVTrayPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   impl_->model_ = model;
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
 
-  std::string agv_number = sdf->GetElement("agv_number")->Get<std::string>();
+  impl_->agv_number_ = sdf->GetElement("agv_number")->Get<std::string>();
+
+  impl_->sensor_attached_ = false;
 
   const gazebo_ros::QoS & qos = impl_->ros_node_->get_qos();
   rclcpp::QoS pub_qos = qos.get_publisher_qos("~/out", rclcpp::SensorDataQoS().reliable());
 
   gazebo::physics::WorldPtr world = impl_->model_->GetWorld();
   impl_->kit_tray_joint_ = world->Physics()->CreateJoint("fixed", impl_->model_);
-  impl_->kit_tray_joint_->SetName(agv_number + "_kit_tray_joint");
+  impl_->kit_tray_joint_->SetName(impl_->agv_number_ + "_kit_tray_joint");
+
+  impl_->sensor_joint_ = world->Physics()->CreateJoint("fixed", impl_->model_);
+  impl_->sensor_joint_->SetName(impl_->agv_number_ + "_sensor_joint");
 
   // Initialize a gazebo node and subscribe to the contacts for the vacuum gripper
   impl_->gznode_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
@@ -109,21 +118,23 @@ void AGVTrayPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   std::string link_name = sdf->GetElement("agv_tray_link")->Get<std::string>();
   impl_->agv_tray_link_ = impl_->model_->GetLink(link_name);
   
-  std::string topic = "/gazebo/world/" + agv_number + "/" + link_name + "/bumper/contacts";
+  std::string topic = "/gazebo/world/" + impl_->agv_number_ + "/" + link_name + "/bumper/contacts";
   impl_->contact_sub_ = impl_->gznode_->Subscribe(topic, &AGVTrayPlugin::OnContact, this);
 
   // Register services
   impl_->lock_tray_service_ = impl_->ros_node_->create_service<std_srvs::srv::Trigger>(
-      "/ariac/" + agv_number + "_lock_tray", 
+      "/ariac/" + impl_->agv_number_ + "_lock_tray", 
       std::bind(
       &AGVTrayPluginPrivate::LockTray, impl_.get(),
       std::placeholders::_1, std::placeholders::_2));
 
   impl_->unlock_tray_service_ = impl_->ros_node_->create_service<std_srvs::srv::Trigger>(
-    "/ariac/" + agv_number + "_unlock_tray", 
+    "/ariac/" + impl_->agv_number_ + "_unlock_tray", 
     std::bind(
     &AGVTrayPluginPrivate::UnlockTray, impl_.get(),
     std::placeholders::_1, std::placeholders::_2));
+
+
 
   // Create a connection so the OnUpdate function is called at every simulation
   // iteration. Remove this call, the connection and the callback if not needed.
@@ -142,6 +153,23 @@ void AGVTrayPlugin::OnUpdate()
   if (impl_->tray_attached_ && !impl_->locked_){
     impl_->DetachJoint();
   }
+
+  if (!impl_->sensor_attached_) {
+    std::string num(1, impl_->agv_number_.back());
+    std::string sensor_name = "quality_control_sensor" + num;
+    gazebo::physics::ModelPtr sensor;
+    sensor = impl_->model_->GetWorld()->ModelByName(sensor_name);
+    // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Sensor name: " << sensor_name);
+    if (sensor != NULL){
+      RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Attaching sensor to agv");
+
+      impl_->sensor_joint_->Load(impl_->agv_tray_link_, sensor->GetLink(), ignition::math::Pose3d());
+      impl_->sensor_joint_->Init();
+
+      impl_->sensor_attached_ = true;
+    }
+  }
+
 }
 
 void AGVTrayPlugin::OnContact(ConstContactsPtr& _msg){

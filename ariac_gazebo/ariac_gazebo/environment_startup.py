@@ -152,7 +152,7 @@ class EnvironmentStartup(Node):
             sensor_name = "quality_control_sensor" + str(i)
             sensor_type = "quality_control"
             xyz = [0, 0, 1]
-            vis = True
+            vis = False
 
             params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz)
             params.reference_frame = "agv" + str(i) + "_tray"
@@ -256,7 +256,7 @@ class EnvironmentStartup(Node):
             self.get_logger().warn("No bin parts found in configuration")
             return
         
-        if not bin_parts:
+        if not bin_parts_config:
             return
 
         part_count = 0
