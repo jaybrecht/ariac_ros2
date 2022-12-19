@@ -25,6 +25,7 @@ set(msg_files
 )
 
 set(srv_files
+  "srv/TeleportHuman.srv"
   "srv/ChangeGripperColor.srv"
   "srv/ConveyorBeltControl.srv"
   "srv/MoveAGV.srv"

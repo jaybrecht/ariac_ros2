@@ -59,6 +59,17 @@ ament_target_dependencies(gripper_change_plugin
 )
 ament_export_libraries(gripper_change_plugin)
 
+# Human Teleport Plugin
+add_library(human_teleport_plugin SHARED
+  src/human_teleport_plugin.cpp
+)
+target_include_directories(human_teleport_plugin PUBLIC include)
+ament_target_dependencies(human_teleport_plugin
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(human_teleport_plugin)
+
 # Disable Shadows Plugin
 add_library(disable_shadows_plugin SHARED
   src/disable_shadows_plugin.cpp
@@ -77,8 +88,9 @@ install(DIRECTORY include/
 install(TARGETS
     vacuum_gripper
     conveyor_belt_plugin
-    agv_plugin
+    agv_plugin 
     gripper_change_plugin
+    human_teleport_plugin
     disable_shadows_plugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
