@@ -7,6 +7,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(camera_info_manager REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -59,6 +60,19 @@ ament_target_dependencies(QualityControlPlugin
 )
 ament_export_libraries(QualityControlPlugin)
 
+# Ariac Camera Plugin
+add_library(AriacCameraPlugin SHARED
+  src/ariac_camera_plugin.cpp
+)
+target_include_directories(AriacCameraPlugin PUBLIC include)
+ament_target_dependencies(AriacCameraPlugin
+  "gazebo_ros"
+  "sensor_msgs"
+  "camera_info_manager"
+  "image_transport"
+)
+ament_export_libraries(AriacCameraPlugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -68,6 +82,7 @@ install(TARGETS
     break_beam_sensor
     logical_camera
     QualityControlPlugin
+    AriacCameraPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

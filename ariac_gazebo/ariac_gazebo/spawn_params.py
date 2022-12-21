@@ -65,16 +65,16 @@ class SensorSpawnParams(SpawnParams):
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(self.name + "_ros_plugin"))
-            plugin.find('ros').find('namespace').text = "/" 
+            plugin.find('ros').find('namespace').text = "/ariac/sensors" 
             plugin.find('ros').find('remapping').text = "~/out:=" + "/ariac/" + self.name
             plugin.find('frame_name').text = self.name + "_frame"
-
-        if self.sensor_type == 'rgb_camera' or self.sensor_type == 'logical_camera':
+        
+        cameras = ['rgb_camera', 'rgbd_camera']
+        if self.sensor_type in cameras:
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(self.name + "_ros_plugin"))
-            plugin.find('ros').find('namespace').text = "/" 
-            plugin.find('camera_name').text = "/ariac/" + self.name
+            plugin.find('camera_name').text = self.name
             plugin.find('frame_name').text = self.name + "_frame"
 
         if self.sensor_type == 'quality_control':
