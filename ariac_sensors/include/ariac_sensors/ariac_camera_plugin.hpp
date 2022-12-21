@@ -2,6 +2,7 @@
 #define ARIAC_CAMERA_PLUGIN_HPP_
 
 #include <gazebo/common/Plugin.hh>
+#include <ariac_msgs/msg/sensors.hpp>
 
 
 #include <memory>
@@ -31,6 +32,8 @@ public:
   void OnNewDepthFrame(const float *_image,
                 unsigned int _width, unsigned int _height,
                 unsigned int _depth, const std::string &_format);
+
+  void SensorHealthCallback(const ariac_msgs::msg::Sensors::SharedPtr msg);
 
 private:
   std::unique_ptr<AriacCameraPluginPrivate> impl_;

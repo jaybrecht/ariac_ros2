@@ -68,6 +68,7 @@ target_include_directories(AriacCameraPlugin PUBLIC include)
 ament_target_dependencies(AriacCameraPlugin
   "gazebo_ros"
   "sensor_msgs"
+  "ariac_msgs"
   "camera_info_manager"
   "image_transport"
 )

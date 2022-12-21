@@ -63,14 +63,15 @@ public:
 
   rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_pub_;
 
+  rclcpp::Subscription<ariac_msgs::msg::Sensors>::SharedPtr sensor_health_sub_;
+
   std::shared_ptr<camera_info_manager::CameraInfoManager> camera_info_manager_;
 
   sensor_msgs::msg::CameraInfo camera_info_msg_;
 
-  /// Step sizes for fillImage
-
-
   std::mutex image_mutex_;
+
+  bool publish_sensor_data_;
 
   void FillCameraInfoMsg();
 
@@ -97,6 +98,9 @@ void AriacCameraPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr
   impl_->camera_name_ = _sdf->Get<std::string>("camera_name", _sensor->Name()).first;
 
   impl_->frame_name_ = gazebo_ros::SensorFrameID(*_sensor, *_sdf);
+
+  impl_->sensor_health_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Sensors>("/ariac/sensor_health", 10, 
+    std::bind(&AriacCameraPlugin::SensorHealthCallback, this, std::placeholders::_1));
 
   const std::string camera_topic = impl_->camera_name_ + "/rgb_image";
 
@@ -207,7 +211,9 @@ void AriacCameraPlugin::OnNewImageFrame(
     impl_->image_msg_, img_encoding_, _height, _width,
     img_step_ * _width, reinterpret_cast<const void *>(_image));
 
-  impl_->image_pub_.publish(impl_->image_msg_);
+  if (impl_->publish_sensor_data_) {
+    impl_->image_pub_.publish(impl_->image_msg_);
+  }
 }
 
 void AriacCameraPlugin::OnNewDepthFrame(
@@ -250,9 +256,15 @@ void AriacCameraPlugin::OnNewDepthFrame(
       }
     }
   }
+  
+  if (impl_->publish_sensor_data_) {
+    impl_->depth_image_pub_.publish(image_msg);
+  }
+  
+}
 
-  impl_->depth_image_pub_.publish(image_msg);
-
+void AriacCameraPlugin::SensorHealthCallback(const ariac_msgs::msg::Sensors::SharedPtr msg){
+  impl_->publish_sensor_data_ = msg->camera;
 }
 
 void AriacCameraPluginPrivate::FillCameraInfoMsg(){

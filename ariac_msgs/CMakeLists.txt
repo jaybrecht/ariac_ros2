@@ -33,6 +33,7 @@ set(msg_files
   "msg/AssemblyTask.msg"
   "msg/Order.msg"
   "msg/QualityIssue.msg"
+  "msg/Sensors.msg"
 
 )
 
