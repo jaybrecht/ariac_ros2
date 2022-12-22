@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
-  <model name="proximity_sensor">
+  <model name="lidar">
     <static>true</static>
     <pose>0 0 0 0 0 0</pose>
 
@@ -9,7 +9,7 @@
         <pose>-0.03 0 -0.032 0 0</pose>
           <geometry>
           <mesh>
-              <uri>model://depth_camera/meshes/SR4000.stl</uri>
+              <uri>model://lidar/meshes/SR4000.stl</uri>
           </mesh>
           </geometry>
           <material>
@@ -20,17 +20,17 @@
           </material>
       </visual>
 
-      <sensor type="ray" name="laser_profiler">
+      <sensor type="ray" name="lidar">
         <ray>
           <scan>
             <horizontal>
-              <samples>100</samples>
+              <samples>50</samples>
               <resolution>1</resolution>
               <min_angle>-0.75</min_angle>
               <max_angle>0.75</max_angle>
             </horizontal>
             <vertical>
-              <samples>100</samples>
+              <samples>50</samples>
               <resolution>1</resolution>
               <min_angle>-0.55</min_angle>
               <max_angle>0.55</max_angle>
@@ -52,13 +52,13 @@
         <update_rate>5</update_rate>
         <visualize>true</visualize>
 
-        <plugin name="depth_camera_ros_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <plugin name="lidar_plugin" filename="libAriacRayPlugin.so">
           <ros>
-            <namespace></namespace>
-            <remapping>~/out:=depth_camera</remapping>
+            <namespace>ariac/sensors</namespace>
           </ros>
-          <output_type>sensor_msgs/PointCloud2</output_type>
-          <frame_name>depth_camera_frame</frame_name>
+          <sensor_type>lidar</sensor_type>
+          <sensor_name>lidar</sensor_name>
+          <frame_name>lidar_frame</frame_name>
         </plugin>
       </sensor>
     </link>

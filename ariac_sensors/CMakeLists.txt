@@ -27,16 +27,16 @@ find_package(ariac_msgs REQUIRED)
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
-add_library(break_beam_sensor SHARED
-  src/break_beam_sensor.cpp
+add_library(AriacRayPlugin SHARED
+  src/ariac_ray_plugin.cpp
 )
-target_include_directories(break_beam_sensor PUBLIC include)
-ament_target_dependencies(break_beam_sensor
+target_include_directories(AriacRayPlugin PUBLIC include)
+ament_target_dependencies(AriacRayPlugin
   "gazebo_ros"
   "sensor_msgs"
   "ariac_msgs"
 )
-ament_export_libraries(break_beam_sensor)
+ament_export_libraries(AriacRayPlugin)
 
 add_library(logical_camera SHARED
   src/logical_camera.cpp
@@ -80,7 +80,7 @@ install(DIRECTORY include/
         DESTINATION include)
 
 install(TARGETS
-    break_beam_sensor
+    AriacRayPlugin
     logical_camera
     QualityControlPlugin
     AriacCameraPlugin

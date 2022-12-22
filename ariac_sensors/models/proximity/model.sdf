@@ -45,14 +45,13 @@
         <update_rate>10</update_rate>
         <visualize>true</visualize>
 
-        <plugin name="proximity_sensor_ros_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <plugin name="proximity_sensor_plugin" filename="libAriacRayPlugin.so">
           <ros>
-            <namespace></namespace>
-            <remapping>~/out:=proximity_sensor</remapping>
+            <namespace>ariac/sensors</namespace>
           </ros>
-          <output_type>sensor_msgs/LaserScan</output_type>
+          <sensor_type>proximity</sensor_type>
+          <sensor_name>proximity_sensor</sensor_name>
           <frame_name>proximity_sensor_frame</frame_name>
-          <radiation>ultrasound</radiation>
         </plugin>
       </sensor>
     </link>

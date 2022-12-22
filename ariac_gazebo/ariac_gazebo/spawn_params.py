@@ -51,22 +51,12 @@ class SensorSpawnParams(SpawnParams):
 
         xml.find('model').find('link').find('sensor').find("visualize").text = str(self.visualize)
 
-        if self.sensor_type == "break_beam":
-            plugin = xml.find('model').find('link').find('sensor').find('plugin')
-
-            plugin.set('name', str(self.name + "_ros_plugin"))
-            plugin.find('ros').find('namespace').text = "/" 
-            plugin.find('status_topic').text = "/ariac/" + self.name + "_status"
-            plugin.find('change_topic').text = "/ariac/" + self.name + "_change"
-            plugin.find('frame_name').text = self.name + "_frame"
-
-        ray_sensors = ["proximity_sensor", "laser_profiler", "depth_camera"]
+        ray_sensors = ["break_beam", "proximity", "laser_profiler", "lidar"]
         if self.sensor_type in ray_sensors:
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
             plugin.set('name', str(self.name + "_ros_plugin"))
-            plugin.find('ros').find('namespace').text = "/ariac/sensors" 
-            plugin.find('ros').find('remapping').text = "~/out:=" + "/ariac/" + self.name
+            plugin.find('sensor_name').text = self.name
             plugin.find('frame_name').text = self.name + "_frame"
         
         cameras = ['rgb_camera', 'rgbd_camera']

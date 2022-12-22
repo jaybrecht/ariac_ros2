@@ -44,14 +44,13 @@
         <update_rate>30</update_rate>
         <visualize>true</visualize>
 
-        <plugin name="laser_profiler_ros_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <plugin name="laser_profiler_plugin" filename="libAriacRayPlugin.so">
           <ros>
-            <namespace></namespace>
-            <remapping>~/out:=laser_profiler</remapping>
+            <namespace>ariac/sensors</namespace>
           </ros>
-          <output_type>sensor_msgs/LaserScan</output_type>
+          <sensor_type>laser_profiler</sensor_type>
+          <sensor_name>laser_profiler</sensor_name>
           <frame_name>laser_profiler_frame</frame_name>
-          <radiation>ultrasound</radiation>
         </plugin>
       </sensor>
     </link>
