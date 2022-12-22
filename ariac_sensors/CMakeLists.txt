@@ -27,6 +27,7 @@ find_package(ariac_msgs REQUIRED)
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
+# Ariac Ray Plugin
 add_library(AriacRayPlugin SHARED
   src/ariac_ray_plugin.cpp
 )
@@ -37,28 +38,6 @@ ament_target_dependencies(AriacRayPlugin
   "ariac_msgs"
 )
 ament_export_libraries(AriacRayPlugin)
-
-add_library(logical_camera SHARED
-  src/logical_camera.cpp
-)
-target_include_directories(logical_camera PUBLIC include)
-ament_target_dependencies(logical_camera
-  "gazebo_ros"
-  "ariac_msgs"
-)
-ament_export_libraries(logical_camera)
-
-# Quality Control Plugin
-add_library(QualityControlPlugin SHARED
-  src/quality_control_plugin.cpp
-)
-target_include_directories(QualityControlPlugin PUBLIC include)
-ament_target_dependencies(QualityControlPlugin
-  "orocos_kdl"
-  "gazebo_ros"
-  "ariac_msgs"
-)
-ament_export_libraries(QualityControlPlugin)
 
 # Ariac Camera Plugin
 add_library(AriacCameraPlugin SHARED
@@ -74,6 +53,31 @@ ament_target_dependencies(AriacCameraPlugin
 )
 ament_export_libraries(AriacCameraPlugin)
 
+# Ariac Logical Camera Plugin
+add_library(AriacLogicalCameraPlugin SHARED
+  src/ariac_logical_camera_plugin.cpp
+)
+target_include_directories(AriacLogicalCameraPlugin PUBLIC include)
+ament_target_dependencies(AriacLogicalCameraPlugin
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(AriacLogicalCameraPlugin)
+
+# Quality Control Plugin
+add_library(QualityControlPlugin SHARED
+  src/quality_control_plugin.cpp
+)
+target_include_directories(QualityControlPlugin PUBLIC include)
+ament_target_dependencies(QualityControlPlugin
+  "orocos_kdl"
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(QualityControlPlugin)
+
+
+
 ament_package()
 
 install(DIRECTORY include/
@@ -81,9 +85,9 @@ install(DIRECTORY include/
 
 install(TARGETS
     AriacRayPlugin
-    logical_camera
-    QualityControlPlugin
     AriacCameraPlugin
+    AriacLogicalCameraPlugin
+    QualityControlPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

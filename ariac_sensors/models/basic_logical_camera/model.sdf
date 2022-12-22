@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
-  <model name="post">
+  <model name="basic_logical_camera">
     <static>true</static>
-    <link name="logical_camera">
+    <link name="basic_logical_camera">
       <visual name="visual">
         <pose>-0.02 0 -0.02 0 0 -1.5708</pose>
         <geometry>
           <mesh>
-            <uri>model://logical_camera/meshes/camera.dae</uri>
+            <uri>model://basic_logical_camera/meshes/camera.dae</uri>
           </mesh>
         </geometry>
       </visual>
 
-      <sensor name="logical_camera" type="logical_camera">
+      <sensor name="basic_logical_camera" type="logical_camera">
         <logical_camera>
             <near>0.2</near>
             <far>1.1</far>
@@ -24,12 +24,13 @@
         <always_on>true</always_on>
         <update_rate>10</update_rate>
 
-        <plugin name="ros_logical_camera" filename="liblogical_camera.so">
+        <plugin name="basic_logical_camera_plugin" filename="libAriacLogicalCameraPlugin.so">
           <ros>
-            <namespace></namespace>
+            <namespace>/ariac/sensors</namespace>
           </ros>
-          <frame_name>logical_camera_frame</frame_name>
-          <camera_name>custom_camera</camera_name>
+          <sensor_type>basic</sensor_type>
+          <camera_name>basic_logical_camera</camera_name>
+          <frame_name>basic_logical_camera_frame</frame_name>
         </plugin>
       </sensor>
     </link>

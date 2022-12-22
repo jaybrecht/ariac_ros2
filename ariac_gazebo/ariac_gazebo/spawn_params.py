@@ -59,7 +59,7 @@ class SensorSpawnParams(SpawnParams):
             plugin.find('sensor_name').text = self.name
             plugin.find('frame_name').text = self.name + "_frame"
         
-        cameras = ['rgb_camera', 'rgbd_camera']
+        cameras = ['rgb_camera', 'rgbd_camera', 'basic_logical_camera', 'advanced_logical_camera']
         if self.sensor_type in cameras:
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
 
