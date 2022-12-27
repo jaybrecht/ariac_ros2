@@ -44,13 +44,13 @@
         <update_rate>30</update_rate>
         <visualize>true</visualize>
 
-        <plugin name="break_beam_ros_plugin" filename="libbreak_beam_sensor.so">
+        <plugin name="break_beam_sensor_plugin" filename="libAriacRayPlugin.so">
           <ros>
-            <namespace></namespace>
+            <namespace>ariac/sensors</namespace>
           </ros>
-          <status_topic>break_beam_status</status_topic>
-          <change_topic>break_beam_change</change_topic>
-          <frame_name>break_beam_frame</frame_name>
+          <sensor_type>break_beam</sensor_type>
+          <sensor_name>break_beam_sensor</sensor_name>
+          <frame_name>break_beam_sensor_frame</frame_name>
         </plugin>
       </sensor>
     </link>

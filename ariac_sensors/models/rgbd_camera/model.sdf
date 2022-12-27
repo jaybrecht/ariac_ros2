@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
-  <model name="rgb_camera">
+  <model name="rgbd_camera">
     <static>true</static>
 
     <link name="link">
@@ -8,7 +8,7 @@
         <pose>-0.03 0 -0.032 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://rgb_camera/meshes/SR4000.stl</uri>
+            <uri>model://rgbd_camera/meshes/SR4000.stl</uri>
           </mesh>
         </geometry>
         <material>
@@ -19,10 +19,10 @@
         </material>
       </visual>
 
-      <sensor type="camera" name="rgb_camera">
+      <sensor type="depth" name="rgbd_camera">
         <always_on>true</always_on>
         <visualize>true</visualize>
-        <update_rate>15</update_rate>
+        <update_rate>5</update_rate>
         
         <camera name="camera_name">
           <horizontal_fov>1.5</horizontal_fov>
@@ -42,11 +42,11 @@
           </noise>
         </camera>
 
-        <plugin name="rgb_camera_plugin" filename="libAriacCameraPlugin.so">
+        <plugin name="rgbd_camera_plugin" filename="libAriacCameraPlugin.so">
           <ros>
             <namespace>ariac/sensors</namespace>
           </ros>
-          <camera_type>rgb</camera_type>
+          <camera_type>rgbd</camera_type>
           <camera_name>custom_camera</camera_name>
           <frame_name>custom_frame</frame_name>
         </plugin>

@@ -14,18 +14,18 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
   "msg/AGVStatus.msg"
-  "msg/Model.msg"
   "msg/BreakBeamStatus.msg"
   "msg/ConveyorBeltState.msg"
-  "msg/LogicalCameraImage.msg"
+  "msg/AdvancedLogicalCameraImage.msg"
+  "msg/BasicLogicalCameraImage.msg"
   "msg/VacuumGripperState.msg"
   "msg/Part.msg"
   "msg/Parts.msg"
+  "msg/PartPose.msg"
   "msg/PartLot.msg"
   "msg/BinInfo.msg"
   "msg/BinParts.msg"
   "msg/ConveyorParts.msg"
-  "msg/PartPose.msg"
   "msg/KitTrayPose.msg"
   "msg/KittingPart.msg"
   "msg/KittingTask.msg"
@@ -33,7 +33,7 @@ set(msg_files
   "msg/AssemblyTask.msg"
   "msg/Order.msg"
   "msg/QualityIssue.msg"
-
+  "msg/Sensors.msg"
 )
 
 set(srv_files
