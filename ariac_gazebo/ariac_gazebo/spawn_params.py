@@ -67,7 +67,7 @@ class SensorSpawnParams(SpawnParams):
             plugin.find('camera_name').text = self.name
             plugin.find('frame_name').text = self.name + "_frame"
 
-        if self.sensor_type == 'quality_control':
+        if self.sensor_type == 'agv_tray_sensor':
             plugin = xml.find('model').find('link').find('sensor').find('plugin')
             plugin.set('name', str(self.name + "_ros_plugin"))
             plugin.find('sensor_num').text = self.name[-1]

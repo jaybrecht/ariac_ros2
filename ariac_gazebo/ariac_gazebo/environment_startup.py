@@ -147,8 +147,8 @@ class EnvironmentStartup(Node):
         
         # Spawn quality control sensors
         for i in range(1, 5):
-            sensor_name = "quality_control_sensor" + str(i)
-            sensor_type = "quality_control"
+            sensor_name = "agv_tray_sensor_" + str(i)
+            sensor_type = "agv_tray_sensor"
             xyz = [0, 0, 1]
             vis = False
 

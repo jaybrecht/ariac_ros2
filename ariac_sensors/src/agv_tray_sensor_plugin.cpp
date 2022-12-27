@@ -1,19 +1,4 @@
-// Copyright 2020 Open Source Robotics Foundation, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-
-#include <ariac_sensors/quality_control_plugin.hpp>
+#include <ariac_sensors/agv_tray_sensor_plugin.hpp>
 #include <gazebo/sensors/LogicalCameraSensor.hh>
 
 #include <gazebo_ros/conversions/builtin_interfaces.hpp>
@@ -48,7 +33,7 @@ struct TrayParts{
   std::map<int, std::string> part_names;
 };
 
-class QualityControlPluginPrivate
+class AGVTraySensorPluginPrivate
 {
 public:
   /// Node for ros communication
@@ -97,16 +82,16 @@ public:
     ariac_msgs::msg::PartPose part_pose);
 };
 
-QualityControlPlugin::QualityControlPlugin()
-: impl_(std::make_unique<QualityControlPluginPrivate>())
+AGVTraySensorPlugin::AGVTraySensorPlugin()
+: impl_(std::make_unique<AGVTraySensorPluginPrivate>())
 {
 }
 
-QualityControlPlugin::~QualityControlPlugin()
+AGVTraySensorPlugin::~AGVTraySensorPlugin()
 {
 }
 
-void QualityControlPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
+void AGVTraySensorPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
 {
   this->impl_->sensor_ = std::dynamic_pointer_cast<gazebo::sensors::LogicalCameraSensor>(_sensor);
   this->impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
@@ -127,7 +112,7 @@ void QualityControlPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::Element
   impl_->quality_check_service_ = this->impl_->ros_node_->create_service<ariac_msgs::srv::PerformQualityCheck>(
   "/ariac/perform_quality_check_agv" + impl_->sensor_num_, 
   std::bind(
-    &QualityControlPluginPrivate::PerformQualityCheck, this->impl_.get(),
+    &AGVTraySensorPluginPrivate::PerformQualityCheck, this->impl_.get(),
     std::placeholders::_1, std::placeholders::_2));
 
   // Register publisher
@@ -135,10 +120,10 @@ void QualityControlPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::Element
   impl_->tray_contents_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Parts>(tray_contents_topic, 10);
 
   impl_->sensor_update_event_ = impl_->sensor_->ConnectUpdated(
-    std::bind(&QualityControlPluginPrivate::OnUpdate, this->impl_.get()));
+    std::bind(&AGVTraySensorPluginPrivate::OnUpdate, this->impl_.get()));
 }
 
-void QualityControlPluginPrivate::OnUpdate()
+void AGVTraySensorPluginPrivate::OnUpdate()
 {
   const auto & image = sensor_->Image();
 
@@ -187,7 +172,7 @@ void QualityControlPluginPrivate::OnUpdate()
   tray_contents_pub_->publish(tray_contents_msg_);
 }
 
-void QualityControlPluginPrivate::PerformQualityCheck(
+void AGVTraySensorPluginPrivate::PerformQualityCheck(
   ariac_msgs::srv::PerformQualityCheck::Request::SharedPtr request,
   ariac_msgs::srv::PerformQualityCheck::Response::SharedPtr response) 
 {
@@ -283,7 +268,7 @@ void QualityControlPluginPrivate::PerformQualityCheck(
 
 }
 
-void QualityControlPluginPrivate::FillOrders()
+void AGVTraySensorPluginPrivate::FillOrders()
 {
   // Create fake order for testing
   ariac_msgs::msg::Order test_order;
@@ -327,7 +312,7 @@ void QualityControlPluginPrivate::FillOrders()
 
 }
 
-TrayParts QualityControlPluginPrivate::LocatePartsOnTray()
+TrayParts AGVTraySensorPluginPrivate::LocatePartsOnTray()
 { 
   TrayParts parts_on_tray;
 
@@ -367,7 +352,7 @@ TrayParts QualityControlPluginPrivate::LocatePartsOnTray()
   return parts_on_tray;
 }
 
-bool QualityControlPluginPrivate::CheckFlipped(
+bool AGVTraySensorPluginPrivate::CheckFlipped(
   ariac_msgs::msg::KitTrayPose tray_pose, 
   ariac_msgs::msg::PartPose part_pose) 
 {
@@ -402,6 +387,6 @@ bool QualityControlPluginPrivate::CheckFlipped(
 }
 
 
-GZ_REGISTER_SENSOR_PLUGIN(QualityControlPlugin)
+GZ_REGISTER_SENSOR_PLUGIN(AGVTraySensorPlugin)
 
 }  // namespace ariac_plugins

@@ -65,18 +65,16 @@ ament_target_dependencies(AriacLogicalCameraPlugin
 ament_export_libraries(AriacLogicalCameraPlugin)
 
 # Quality Control Plugin
-add_library(QualityControlPlugin SHARED
-  src/quality_control_plugin.cpp
+add_library(AGVTraySensorPlugin SHARED
+  src/agv_tray_sensor_plugin.cpp
 )
-target_include_directories(QualityControlPlugin PUBLIC include)
-ament_target_dependencies(QualityControlPlugin
+target_include_directories(AGVTraySensorPlugin PUBLIC include)
+ament_target_dependencies(AGVTraySensorPlugin
   "orocos_kdl"
   "gazebo_ros"
   "ariac_msgs"
 )
-ament_export_libraries(QualityControlPlugin)
-
-
+ament_export_libraries(AGVTraySensorPlugin)
 
 ament_package()
 
@@ -84,10 +82,10 @@ install(DIRECTORY include/
         DESTINATION include)
 
 install(TARGETS
+    AGVTraySensorPlugin
     AriacRayPlugin
     AriacCameraPlugin
     AriacLogicalCameraPlugin
-    QualityControlPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
