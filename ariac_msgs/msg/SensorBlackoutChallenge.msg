@@ -1,0 +1,3 @@
+float64 duration
+ariac_msgs/ChallengeCondition condition
+ariac_msgs/Sensors sensors_to_disable
