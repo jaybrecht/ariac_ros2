@@ -1,2 +1,5 @@
 string order_id
-uint8 quandrant
+bool quandrant1
+bool quandrant2
+bool quandrant3
+bool quandrant4
