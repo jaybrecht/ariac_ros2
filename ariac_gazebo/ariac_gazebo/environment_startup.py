@@ -145,7 +145,7 @@ class EnvironmentStartup(Node):
             params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz, rpy=rpy)
             self.spawn_entity(params)
         
-        # Spawn quality control sensors
+        # Spawn agv tray sensors
         for i in range(1, 5):
             sensor_name = "agv_tray_sensor_" + str(i)
             sensor_type = "agv_tray_sensor"
@@ -154,6 +154,24 @@ class EnvironmentStartup(Node):
 
             params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz)
             params.reference_frame = "agv" + str(i) + "_tray"
+            self.spawn_entity(params)
+        
+        # Spawn assembly station sensors
+        for i in range(1, 5):
+            sensor_name = "assembly_station_sensor_" + str(i)
+            sensor_type = "assembly_station_sensor"
+            vis = False
+
+            try:
+                t = self.tf_buffer.lookup_transform('world', "as" + str(i) + "_insert_frame", rclpy.time.Time())
+            except TransformException as ex:
+                self.get_logger().info(f'Could not transform assembly station {i} to world: {ex}')
+                return
+            
+            xyz = [t.transform.translation.x, t.transform.translation.y, t.transform.translation.z + 0.989]
+
+            params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz)
+
             self.spawn_entity(params)
 
     def spawn_kit_trays(self):

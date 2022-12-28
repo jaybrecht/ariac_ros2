@@ -64,7 +64,7 @@ ament_target_dependencies(AriacLogicalCameraPlugin
 )
 ament_export_libraries(AriacLogicalCameraPlugin)
 
-# Quality Control Plugin
+# AGV Tray Sensor Plugin
 add_library(AGVTraySensorPlugin SHARED
   src/agv_tray_sensor_plugin.cpp
 )
@@ -76,6 +76,17 @@ ament_target_dependencies(AGVTraySensorPlugin
 )
 ament_export_libraries(AGVTraySensorPlugin)
 
+# Assembly Station Sensor Plugin
+add_library(AssemblyStationSensorPlugin SHARED
+  src/assembly_station_sensor_plugin.cpp
+)
+target_include_directories(AssemblyStationSensorPlugin PUBLIC include)
+ament_target_dependencies(AssemblyStationSensorPlugin
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(AssemblyStationSensorPlugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -83,6 +94,7 @@ install(DIRECTORY include/
 
 install(TARGETS
     AGVTraySensorPlugin
+    AssemblyStationSensorPlugin
     AriacRayPlugin
     AriacCameraPlugin
     AriacLogicalCameraPlugin
