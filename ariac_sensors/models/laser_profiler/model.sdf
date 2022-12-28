@@ -46,7 +46,7 @@
 
         <plugin name="laser_profiler_plugin" filename="libAriacRayPlugin.so">
           <ros>
-            <namespace>ariac/sensors</namespace>
+            <namespace></namespace>
           </ros>
           <sensor_type>laser_profiler</sensor_type>
           <sensor_name>laser_profiler</sensor_name>

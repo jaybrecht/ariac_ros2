@@ -102,24 +102,24 @@ void AriacRayPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _s
   if (impl_->sensor_type_ == "break_beam") {
 
     impl_->status_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::BreakBeamStatus>(
-      impl_->sensor_name_ + "/status", rclcpp::SensorDataQoS());
+      "ariac/sensors/" + impl_->sensor_name_ + "/status", rclcpp::SensorDataQoS());
     impl_->change_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::BreakBeamStatus>(
-      impl_->sensor_name_ + "/change", rclcpp::SensorDataQoS());
+      "ariac/sensors/" + impl_->sensor_name_ + "/change", rclcpp::SensorDataQoS());
 
   } else if (impl_->sensor_type_ == "proximity") {
     
     impl_->range_pub_ = impl_->ros_node_->create_publisher<sensor_msgs::msg::Range>(
-      impl_->sensor_name_ + "/scan", rclcpp::SensorDataQoS());
+      "ariac/sensors/" + impl_->sensor_name_ + "/scan", rclcpp::SensorDataQoS());
 
   } else if (impl_->sensor_type_ == "laser_profiler") {
     
     impl_->laser_scan_pub_ = impl_->ros_node_->create_publisher<sensor_msgs::msg::LaserScan>(
-      impl_->sensor_name_ + "/scan", rclcpp::SensorDataQoS());
+      "ariac/sensors/" + impl_->sensor_name_ + "/scan", rclcpp::SensorDataQoS());
 
   } else if (impl_->sensor_type_ == "lidar") {
     
     impl_->point_cloud_pub_ = impl_->ros_node_->create_publisher<sensor_msgs::msg::PointCloud>(
-      impl_->sensor_name_ + "/scan", rclcpp::SensorDataQoS());
+      "ariac/sensors/" + impl_->sensor_name_ + "/scan", rclcpp::SensorDataQoS());
 
   } else {
     RCLCPP_ERROR(impl_->ros_node_->get_logger(), "Sensor type not valid");

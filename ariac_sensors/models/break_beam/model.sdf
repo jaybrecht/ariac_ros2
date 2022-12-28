@@ -46,7 +46,7 @@
 
         <plugin name="break_beam_sensor_plugin" filename="libAriacRayPlugin.so">
           <ros>
-            <namespace>ariac/sensors</namespace>
+            <namespace></namespace>
           </ros>
           <sensor_type>break_beam</sensor_type>
           <sensor_name>break_beam_sensor</sensor_name>

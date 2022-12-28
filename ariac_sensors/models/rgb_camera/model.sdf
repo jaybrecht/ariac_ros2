@@ -44,7 +44,7 @@
 
         <plugin name="rgb_camera_plugin" filename="libAriacCameraPlugin.so">
           <ros>
-            <namespace>ariac/sensors</namespace>
+            <namespace></namespace>
           </ros>
           <camera_type>rgb</camera_type>
           <camera_name>custom_camera</camera_name>

@@ -152,6 +152,7 @@ void AssemblyStationSensorPluginPrivate::ScoreTask(
   ariac_msgs::srv::ScoreTask::Request::SharedPtr request,
   ariac_msgs::srv::ScoreTask::Response::SharedPtr response)
 {
+  // Verify requested order is correct for this station 
   bool valid_id = false;
   ariac_msgs::msg::Order req_order;
   for (const ariac_msgs::msg::Order order: orders_){
@@ -167,11 +168,28 @@ void AssemblyStationSensorPluginPrivate::ScoreTask(
     return;
   }
 
-  // Check to see if the correct station
-  if (req_order.assembly_task.station != std::stoi(sensor_num_)) {
-    RCLCPP_INFO(ros_node_->get_logger(), "Wrong station for this order");
+  if (req_order.type == ariac_msgs::msg::Order::ASSEMBLY) {
+    // Check to see if the correct station
+    if (req_order.assembly_task.station != std::stoi(sensor_num_)) {
+      RCLCPP_INFO(ros_node_->get_logger(), "Wrong station for this order");
+      return;
+    }
+
+    
+
+  } else if (req_order.type == ariac_msgs::msg::Order::COMBINED){
+    // Check to see if the correct station
+    if (req_order.combined_task.station != std::stoi(sensor_num_)) {
+      RCLCPP_INFO(ros_node_->get_logger(), "Wrong station for this order");
+      return;
+    }
+  } else if (req_order.type == ariac_msgs::msg::Order::KITTING) {
+    RCLCPP_INFO(ros_node_->get_logger(), "Unable to score kitting tasks");
     return;
   }
+
+
+  
 }
 
 GZ_REGISTER_SENSOR_PLUGIN(AssemblyStationSensorPlugin)

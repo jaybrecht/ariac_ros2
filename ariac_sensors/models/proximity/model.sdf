@@ -47,7 +47,7 @@
 
         <plugin name="proximity_sensor_plugin" filename="libAriacRayPlugin.so">
           <ros>
-            <namespace>ariac/sensors</namespace>
+            <namespace></namespace>
           </ros>
           <sensor_type>proximity</sensor_type>
           <sensor_name>proximity_sensor</sensor_name>
