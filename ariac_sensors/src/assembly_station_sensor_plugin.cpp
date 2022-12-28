@@ -174,8 +174,10 @@ void AssemblyStationSensorPluginPrivate::ScoreTask(
       RCLCPP_INFO(ros_node_->get_logger(), "Wrong station for this order");
       return;
     }
-
     
+    for (const auto &part : req_order.assembly_task.parts){
+      
+    }
 
   } else if (req_order.type == ariac_msgs::msg::Order::COMBINED){
     // Check to see if the correct station

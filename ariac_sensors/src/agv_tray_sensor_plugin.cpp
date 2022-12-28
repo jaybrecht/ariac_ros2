@@ -427,10 +427,8 @@ void AGVTraySensorPluginPrivate::ScoreTask(
   }
 
   // Check to see that the correct tray is on the AGV
-  if (req_order.kitting_task.tray_id != kit_tray_.id){
-    RCLCPP_INFO(ros_node_->get_logger(), "Tray ID is incorrect");
-    response->score = 0.0;
-    return;
+  if (req_order.kitting_task.tray_id == kit_tray_.id){
+    response->score += 1.0;
   }
 
   // Check each quadrant with a part for issue
@@ -457,6 +455,18 @@ void AGVTraySensorPluginPrivate::ScoreTask(
 
     response->score += quadrant_score;
  
+  }
+
+  // Calculate penalty for extra parts on tray
+  int num_parts_on_tray = LocatePartsOnTray().parts.size();
+  int num_parts_in_order = req_order.kitting_task.parts.size();
+
+  if (num_parts_on_tray > num_parts_in_order) {
+    if (response->score >= (num_parts_on_tray - num_parts_in_order)) {
+      response->score -= (num_parts_on_tray - num_parts_in_order);
+    } else {
+      response->score = 0;
+    }
   }
   
 }
