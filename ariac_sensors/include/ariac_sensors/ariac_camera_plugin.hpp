@@ -4,7 +4,6 @@
 #include <gazebo/common/Plugin.hh>
 #include <ariac_msgs/msg/sensors.hpp>
 
-
 #include <memory>
 
 namespace ariac_sensors

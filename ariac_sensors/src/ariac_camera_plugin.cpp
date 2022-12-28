@@ -103,7 +103,7 @@ void AriacCameraPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr
   impl_->sensor_health_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Sensors>("/ariac/sensor_health", 10, 
     std::bind(&AriacCameraPlugin::SensorHealthCallback, this, std::placeholders::_1));
 
-  const std::string camera_topic = impl_->camera_name_ + "/rgb_image";
+  const std::string camera_topic = "ariac/sensors/" + impl_->camera_name_ + "/rgb_image";
 
   impl_->image_pub_ = image_transport::create_publisher(
         impl_->ros_node_.get(), camera_topic, qos.get_publisher_qos(
@@ -154,7 +154,7 @@ void AriacCameraPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr
 
     impl_->depth_parent_sensor_->SetActive(true);
 
-    const std::string depth_image_topic = impl_->camera_name_ + "/depth_image";
+    const std::string depth_image_topic = "ariac/sensors/" + impl_->camera_name_ + "/depth_image";
 
     impl_->depth_image_pub_ = image_transport::create_publisher(
           impl_->ros_node_.get(), depth_image_topic, qos.get_publisher_qos(
@@ -164,7 +164,7 @@ void AriacCameraPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr
     return;
   }
 
-  const std::string camera_info_topic = impl_->camera_name_ + "/camera_info";
+  const std::string camera_info_topic = "ariac/sensors/" + impl_->camera_name_ + "/camera_info";
 
   impl_->camera_info_pub_ = impl_->ros_node_->create_publisher<sensor_msgs::msg::CameraInfo>(
       camera_info_topic, qos.get_publisher_qos(

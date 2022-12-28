@@ -93,13 +93,13 @@ void AriacLogicalCameraPlugin::Load(gazebo::sensors::SensorPtr _sensor, sdf::Ele
 
   if (impl_->sensor_type_ == "basic") {
     impl_->basic_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::BasicLogicalCameraImage>(
-      impl_->camera_name_ + "/image", rclcpp::SensorDataQoS());
+      "ariac/sensors/" + impl_->camera_name_ + "/image", rclcpp::SensorDataQoS());
 
     impl_->basic_image_msg_ = std::make_shared<ariac_msgs::msg::BasicLogicalCameraImage>();
 
   } else if (impl_->sensor_type_ == "advanced") {
     impl_->advanced_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::AdvancedLogicalCameraImage>(
-      impl_->camera_name_ + "/image", rclcpp::SensorDataQoS());
+      "ariac/sensors/" + impl_->camera_name_ + "/image", rclcpp::SensorDataQoS());
 
     impl_->advanced_image_msg_ = std::make_shared<ariac_msgs::msg::AdvancedLogicalCameraImage>();
   }

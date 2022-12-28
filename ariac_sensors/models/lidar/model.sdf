@@ -54,7 +54,7 @@
 
         <plugin name="lidar_plugin" filename="libAriacRayPlugin.so">
           <ros>
-            <namespace>ariac/sensors</namespace>
+            <namespace></namespace>
           </ros>
           <sensor_type>lidar</sensor_type>
           <sensor_name>lidar</sensor_name>

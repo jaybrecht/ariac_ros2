@@ -156,7 +156,7 @@ void AGVTrayPlugin::OnUpdate()
 
   if (!impl_->sensor_attached_) {
     std::string num(1, impl_->agv_number_.back());
-    std::string sensor_name = "quality_control_sensor" + num;
+    std::string sensor_name = "agv_tray_sensor_" + num;
     gazebo::physics::ModelPtr sensor;
     sensor = impl_->model_->GetWorld()->ModelByName(sensor_name);
     // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Sensor name: " << sensor_name);
