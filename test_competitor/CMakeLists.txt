@@ -20,14 +20,14 @@ find_package(shape_msgs REQUIRED)
 find_package(moveit_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 
-# add_executable(moveit_test src/moveit_test.cpp)
-# ament_target_dependencies(moveit_test rclcpp moveit_ros_planning_interface)
+add_executable(moveit_test src/moveit_test.cpp)
+ament_target_dependencies(moveit_test rclcpp moveit_ros_planning_interface)
 
 # add_executable(pick_test src/pick_test.cpp)
 # ament_target_dependencies(pick_test rclcpp moveit_ros_planning_interface ariac_msgs)
 
 install(TARGETS
-  # moveit_test
+  moveit_test
   # pick_test
   DESTINATION lib/${PROJECT_NAME})
 

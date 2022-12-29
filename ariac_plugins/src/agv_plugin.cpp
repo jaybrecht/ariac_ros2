@@ -81,7 +81,7 @@ void AGVPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   }
 
   // Register velocity publisher
-  std::string vel_topic = "/" + impl_->agv_number_ + "_velocity_controller/commands";
+  std::string vel_topic = "/" + impl_->agv_number_ + "/velocity_controller/commands";
   impl_->velocity_pub_ = impl_->ros_node_->create_publisher<std_msgs::msg::Float64MultiArray>(vel_topic, 10);
 
   // Register status publisher

@@ -28,11 +28,10 @@
     </link>
 
 
-    <gazebo reference="${prefix}_gripper">
+    <!-- <gazebo reference="${prefix}_gripper">
       <visual name="${prefix}_gripper_visual">
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <!-- <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/> -->
         </geometry>
         <plugin filename="libgripper_change_plugin.so" name="${prefix}_gripper_change_plugin">
           <ros>
@@ -40,7 +39,7 @@
           <robot_name>${prefix}_robot</robot_name>
         </plugin>   
       </visual>
-    </gazebo>
+    </gazebo> -->
 
 
     <gazebo reference="${prefix}_gripper">
