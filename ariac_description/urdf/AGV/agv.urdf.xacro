@@ -29,6 +29,7 @@
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="$(arg agv_number)_gazebo_ros2_control">
       <ros>
+        <namespace>$(arg agv_number)</namespace>
       </ros>
       <parameters>$(arg controllers)</parameters>
       <robot_param_node>/$(arg agv_number)/robot_state_publisher</robot_param_node>

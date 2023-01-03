@@ -1,82 +1,82 @@
-ceiling_robot_controller_manager:
+ceiling_robot/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
 
-    ceiling_robot_joint_state_broadcaster:
+    joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    ceiling_robot_joint_trajectory_controller:
+    joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
 
 
-floor_robot_controller_manager:
+floor_robot/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
 
-    floor_robot_joint_state_broadcaster:
+    joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    floor_robot_joint_trajectory_controller:
+    joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
 
 
-agv1_controller_manager:
+agv1/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
 
-    agv1_joint_state_broadcaster:
+    joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    agv1_velocity_controller:
+    velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
 
 
 
-agv2_controller_manager:
+agv2/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
 
-    agv2_joint_state_broadcaster:
+    joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    agv2_velocity_controller:
+    velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
 
 
 
-agv3_controller_manager:
+agv3/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
 
-    agv3_joint_state_broadcaster:
+    joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    agv3_velocity_controller:
+    velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
 
 
 
-agv4_controller_manager:
+agv4/controller_manager:
   ros__parameters:
 
     update_rate: 1000 # Hz
 
-    agv4_joint_state_broadcaster:
+    joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    agv4_velocity_controller:
+    velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
 
 
 
-ceiling_robot_joint_trajectory_controller:
+ceiling_robot/joint_trajectory_controller:
   ros__parameters:
     joints:
       - small_long_joint
@@ -111,7 +111,7 @@ ceiling_robot_joint_trajectory_controller:
 
 
 
-floor_robot_joint_trajectory_controller:
+floor_robot/joint_trajectory_controller:
   ros__parameters:
     joints:
       - linear_actuator
@@ -142,7 +142,7 @@ floor_robot_joint_trajectory_controller:
 
 
 
-agv1_velocity_controller:
+agv1/velocity_controller:
   ros__parameters:
     joints:
       - agv1_joint
@@ -153,7 +153,7 @@ agv1_velocity_controller:
 
 
 
-agv2_velocity_controller:
+agv2/velocity_controller:
   ros__parameters:
     joints:
       - agv2_joint
@@ -164,7 +164,7 @@ agv2_velocity_controller:
 
 
 
-agv3_velocity_controller:
+agv3/velocity_controller:
   ros__parameters:
     joints:
       - agv3_joint
@@ -175,7 +175,7 @@ agv3_velocity_controller:
 
 
 
-agv4_velocity_controller:
+agv4/velocity_controller:
   ros__parameters:
     joints:
       - agv4_joint

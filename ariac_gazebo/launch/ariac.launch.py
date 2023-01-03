@@ -76,15 +76,11 @@ def launch_setup(context, *args, **kwargs):
             namespace=name,
             package="robot_state_publisher",
             executable="robot_state_publisher",
-            # name=name + "_robot_state_publisher",
             output="screen",
             parameters=[
                 {'robot_description': robot_descriptions[name]},
                 {"use_sim_time": True},
             ],
-            remappings=[
-                ('joint_states', '/joint_states'),
-            ]
         )
 
         state_publishers.append(state_pub)
@@ -100,7 +96,6 @@ def launch_setup(context, *args, **kwargs):
         sensor_tf_broadcaster,
         object_tf_broadcaster,
         environment_startup,
-        # conveyor_belt_populator,
         *state_publishers,
         robot_controllers,
     ]

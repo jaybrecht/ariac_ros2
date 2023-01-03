@@ -70,7 +70,7 @@ floor_robot_whole:
   #projection_evaluator: joints(shoulder_pan_joint,shoulder_lift_joint)
   longest_valid_segment_fraction: 0.01
 
-ceiling_arm:
+ceiling_robot_whole:
   planner_configs:
     - SBLkConfigDefault
     - ESTkConfigDefault
