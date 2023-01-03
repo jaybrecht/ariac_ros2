@@ -7,20 +7,16 @@
       <visual name="table">
         <geometry>
           <mesh>
-            <uri>model://kit_tray_table/meshes/kit_tray_table.stl</uri>
+            <uri>model://kit_tray_table/meshes/kit_tray_table.dae</uri>
           </mesh>
         </geometry>
-        <material>
-          <ambient>0.5 0.5 0.5 1.0</ambient>
-          <diffuse>0.5 0.5 0.5 1.0</diffuse>
-        </material>
       </visual>
 
       <visual name="tool_changer_1">
-        <!-- <pose>-0.2 -0.435 0.635 0 0 0</pose> -->
+        <pose>-0.2 -0.435 0.635 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://kit_tray_table/meshes/tool_changer_1.stl</uri>
+            <uri>model://kit_tray_table/meshes/tool_changer.stl</uri>
           </mesh>
         </geometry>
         <material>
@@ -30,10 +26,10 @@
       </visual>
 
       <visual name="tool_changer_2">
-        <!-- <pose>0.2 -0.435 0.635 0 0 0</pose> -->
+        <pose>0.2 -0.435 0.635 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://kit_tray_table/meshes/tool_changer_2.stl</uri>
+            <uri>model://kit_tray_table/meshes/tool_changer.stl</uri>
           </mesh>
         </geometry>
         <material>
@@ -60,19 +56,19 @@
       </collision>
 
       <collision name="tool_changer_1_collision">
-        <!-- <pose>-0.2 -0.435 0.635 0 0 0</pose> -->
+        <pose>-0.2 -0.435 0.635 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://kit_tray_table/meshes/tool_changer_1.stl</uri>
+            <uri>model://kit_tray_table/meshes/tool_changer.stl</uri>
           </mesh>
         </geometry>
       </collision>
 
       <collision name="tool_changer_2_collision">
-        <!-- <pose>0.2 -0.435 0.635 0 0 0</pose> -->
+        <pose>0.2 -0.435 0.635 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://kit_tray_table/meshes/tool_changer_2.stl</uri>
+            <uri>model://kit_tray_table/meshes/tool_changer.stl</uri>
           </mesh>
         </geometry>
       </collision>
