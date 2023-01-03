@@ -6,3 +6,6 @@ bool enabled
 
 # Is an object attached to the gripper?
 bool attached
+
+# Gripper Type
+string type

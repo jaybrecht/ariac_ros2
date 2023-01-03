@@ -78,11 +78,11 @@ kit_tray_stations:
         rpy: [0, 0, 'pi']
     tool_changer_parts:
       pose:
-        xyz: [-0.2, -0.435, -0.07]
+        xyz: [-0.2, -0.46, -0.05]
         rpy: [0, 0, 0]
     tool_changer_trays:
       pose:
-        xyz: [0.2, -0.435, -0.07]
+        xyz: [0.2, -0.46, -0.05]
         rpy: [0, 0, 0]
   kts2:
     table:
@@ -91,11 +91,11 @@ kit_tray_stations:
         rpy: [0, 0, 0]
     tool_changer_parts:
       pose:
-        xyz: [-0.2, -0.435, -0.07]
+        xyz: [-0.2, -0.46, -0.05]
         rpy: [0, 0, 0]
     tool_changer_trays:
       pose:
-        xyz: [0.2, -0.435, -0.07]
+        xyz: [0.2, -0.46, -0.05]
         rpy: [0, 0, 0]
 
 conveyor_belt:

@@ -16,15 +16,15 @@ find_package(sensor_msgs REQUIRED)
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
 # Vacuum Gripper
-add_library(vacuum_gripper SHARED
-  src/vacuum_gripper.cpp
+add_library(VacuumGripperPlugin SHARED
+  src/vacuum_gripper_plugin.cpp
 )
-target_include_directories(vacuum_gripper PUBLIC include)
-ament_target_dependencies(vacuum_gripper
+target_include_directories(VacuumGripperPlugin PUBLIC include)
+ament_target_dependencies(VacuumGripperPlugin
   "gazebo_ros"
   "ariac_msgs"
 )
-ament_export_libraries(vacuum_gripper)
+ament_export_libraries(VacuumGripperPlugin)
 
 # Conveyor Belt Plugin
 add_library(conveyor_belt_plugin SHARED
@@ -49,15 +49,15 @@ ament_target_dependencies(agv_plugin
 ament_export_libraries(agv_plugin)
 
 # Gripper Change Plugin
-add_library(gripper_change_plugin SHARED
-  src/gripper_change_plugin.cpp
+add_library(GripperColorPlugin SHARED
+  src/gripper_color_plugin.cpp
 )
-target_include_directories(gripper_change_plugin PUBLIC include)
-ament_target_dependencies(gripper_change_plugin
+target_include_directories(GripperColorPlugin PUBLIC include)
+ament_target_dependencies(GripperColorPlugin
   "gazebo_ros"
   "ariac_msgs"
 )
-ament_export_libraries(gripper_change_plugin)
+ament_export_libraries(GripperColorPlugin)
 
 # Disable Shadows Plugin
 add_library(disable_shadows_plugin SHARED
@@ -96,10 +96,10 @@ install(DIRECTORY include/
         DESTINATION include)
 
 install(TARGETS
-    vacuum_gripper
+    VacuumGripperPlugin
     conveyor_belt_plugin
     agv_plugin
-    gripper_change_plugin
+    GripperColorPlugin
     disable_shadows_plugin
     ObjectDisposalPlugin
     AGVTrayPlugin

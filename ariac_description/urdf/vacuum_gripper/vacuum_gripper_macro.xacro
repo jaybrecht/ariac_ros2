@@ -28,23 +28,20 @@
     </link>
 
 
-    <!-- <gazebo reference="${prefix}_gripper">
+    <gazebo reference="${prefix}_gripper">
       <visual name="${prefix}_gripper_visual">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-        </geometry>
-        <plugin filename="libgripper_change_plugin.so" name="${prefix}_gripper_change_plugin">
+        <plugin filename="libGripperColorPlugin.so" name="${prefix}_gripper_color_plugin">
           <ros>
           </ros>
           <robot_name>${prefix}_robot</robot_name>
         </plugin>   
       </visual>
-    </gazebo> -->
-
-
-    <gazebo reference="${prefix}_gripper">
-      <material>Gazebo/Black</material>      
     </gazebo>
+
+
+    <!-- <gazebo reference="${prefix}_gripper">
+      <material>Gazebo/Black</material>      
+    </gazebo> -->
 
     <joint name="${prefix}_gripper_joint" type="revolute">
       <axis xyz="0 0 1"/>
@@ -65,7 +62,7 @@
     </gazebo>
 
     <gazebo>
-      <plugin filename="libvacuum_gripper.so" name="${prefix}_vacuum_gripper_plugin">
+      <plugin filename="libVacuumGripperPlugin.so" name="${prefix}_vacuum_gripper_plugin">
         <ros>
           <namespace>${prefix}_robot</namespace>
         </ros>
