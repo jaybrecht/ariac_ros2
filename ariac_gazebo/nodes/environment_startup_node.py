@@ -9,7 +9,7 @@ from ariac_gazebo.environment_startup import EnvironmentStartup
 def main():
     rclpy.init()
 
-    startup_node = EnvironmentStartup(sys.argv[1], sys.argv[2])
+    startup_node = EnvironmentStartup()
 
     # Wait five seconds for gazebo to start up
     time.sleep(2)

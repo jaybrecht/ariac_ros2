@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ariac_robots">
+
+  <!-- Root link -->
+  <link name="world"/>
+
+  <xacro:include filename="$(find ariac_description)/urdf/floor_robot/floor_robot_macro.xacro"/>
+  <xacro:include filename="$(find ariac_description)/urdf/ceiling_robot/ceiling_robot_macro.xacro"/>
+
+  <!-- Floor Robot -->
+  <xacro:floor_robot/>
+
+  <!-- Ceiling Robot -->
+  <xacro:ceiling_robot/>
+
+  <gazebo 
+    reference="world">
+  </gazebo>
+
+  <!-- ROS2 Control Plugin -->
+  <xacro:arg name="controllers" default="$(find ariac_description)/config/robot_controllers.yaml" />
+
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="ariac_robots_gazebo_ros2_control">
+      <ros>
+      </ros>
+      <parameters>$(arg controllers)</parameters>
+      <controller_manager_prefix>ariac_robots</controller_manager_prefix>
+    </plugin>
+  </gazebo>
+
+</robot>

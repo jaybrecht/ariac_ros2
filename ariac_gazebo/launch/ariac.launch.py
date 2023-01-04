@@ -58,8 +58,7 @@ def launch_setup(context, *args, **kwargs):
         executable='environment_startup_node.py',
         output='screen',
         parameters=[
-            {'floor_robot_description': robot_descriptions['floor_robot']},
-            {'ceiling_robot_description': robot_descriptions['ceiling_robot']},
+            {'ariac_robots_description': robot_descriptions['ariac_robots']},
             {'agv1_description': robot_descriptions['agv1']},
             {'agv2_description': robot_descriptions['agv2']},
             {'agv3_description': robot_descriptions['agv3']},
@@ -69,11 +68,16 @@ def launch_setup(context, *args, **kwargs):
             {"use_sim_time": True},
         ],
     )
-    
+
     state_publishers = []
     for name in robot_descriptions.keys():
+        if name == "ariac_robots":
+            ns = ""
+        else:
+            ns = name
+
         state_pub = Node(
-            namespace=name,
+            namespace=ns,
             package="robot_state_publisher",
             executable="robot_state_publisher",
             output="screen",
@@ -105,20 +109,11 @@ def launch_setup(context, *args, **kwargs):
 def generate_robot_descriptions():
     descriptions = {}
     
-    descriptions['floor_robot'] = Command(
+    descriptions['ariac_robots'] = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/floor_robot", "floor_robot.urdf.xacro"]), 
-            " "
-        ]
-    )
-
-    descriptions['ceiling_robot'] = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/ceiling_robot", "ceiling_robot.urdf.xacro"]), 
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/ariac_robots", "ariac_robots.urdf.xacro"]), 
             " "
         ]
     )

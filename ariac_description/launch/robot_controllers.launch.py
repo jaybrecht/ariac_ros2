@@ -1,21 +1,55 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
-
 def generate_launch_description():
-    robot_names = [
-        'floor_robot', 
-        'ceiling_robot', 
+    nodes_to_start = []
+
+    # Controllers for the UR robots
+    ariac_robots_joint_state_broadcaster_spawner = Node(
+        package="ariac_gazebo",
+        executable="spawner",
+        name="ariac_robots_joint_state_broadcaster_spawner",
+        arguments=["ariac_robots_joint_state_broadcaster"],
+        parameters=[
+            {"use_sim_time": True},
+        ],
+    )
+
+    nodes_to_start.append(ariac_robots_joint_state_broadcaster_spawner)
+
+    floor_robot_trajectory_controller_spawner = Node(
+        package="ariac_gazebo",
+        executable="spawner",
+        name="floor_robot_trajectory_controller_spawner",
+        arguments=['floor_robot_joint_trajectory_controller'],
+        parameters=[
+            {"use_sim_time": True},
+        ],
+    )
+
+    nodes_to_start.append(floor_robot_trajectory_controller_spawner)
+
+    ceiling_robot_trajectory_controller_spawner = Node(
+        package="ariac_gazebo",
+        executable="spawner",
+        name="ceiling_robot_trajectory_controller_spawner",
+        arguments=['ceiling_robot_joint_trajectory_controller'],
+        parameters=[
+            {"use_sim_time": True},
+        ],
+    )
+
+    nodes_to_start.append(ceiling_robot_trajectory_controller_spawner)
+    
+    # Controllers for the AGVS
+    agv_names = [
         'agv1',
         'agv2',
         'agv3',
         'agv4'
-        ]
+    ]
 
-
-    nodes_to_start = []
-
-    for name in robot_names:
+    for name in agv_names:
         joint_state_broadcaster_spawner = Node(
             package="ariac_gazebo",
             executable="spawner",
@@ -27,23 +61,20 @@ def generate_launch_description():
             ],
         )
 
-        if name.count('agv') == 0:
-            controller_type = 'joint_trajectory_controller'
-        else:
-            controller_type = 'velocity_controller'
+        nodes_to_start.append(joint_state_broadcaster_spawner)
         
         controller_spawner = Node(
             package="ariac_gazebo",
             executable="spawner",
             namespace=name,
             name=name + "_controller_spawner",
-            arguments=[controller_type, "-n", name],
+            arguments=['velocity_controller', "-n", name],
             parameters=[
                 {"use_sim_time": True},
             ],
         )
-      
-        nodes_to_start.append(joint_state_broadcaster_spawner)
+        
         nodes_to_start.append(controller_spawner)
+
 
     return LaunchDescription(nodes_to_start)

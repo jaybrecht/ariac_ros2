@@ -52,13 +52,11 @@ class PartInfo:
         self.height = None
 
 class EnvironmentStartup(Node):
-    def __init__(self, trial_config_path, user_config_path):
+    def __init__(self):
         super().__init__('environment_startup_node')
 
-        self.declare_parameter('floor_robot_description', '', 
-            ParameterDescriptor(description='Floor robot description'))
-        self.declare_parameter('ceiling_robot_description', '', 
-            ParameterDescriptor(description='Ceiling robot description'))
+        self.declare_parameter('ariac_robots_description', '', 
+            ParameterDescriptor(description='Ariac Robots description'))
         self.declare_parameter('agv1_description', '', 
             ParameterDescriptor(description='AGV1 robot description'))
         self.declare_parameter('agv2_description', '', 
@@ -79,8 +77,7 @@ class EnvironmentStartup(Node):
             self.get_parameter('user_config_path').get_parameter_value().string_value)
 
         self.robot_names = [
-            'floor_robot', 
-            'ceiling_robot', 
+            'ariac_robots', 
             'agv1', 
             'agv2', 
             'agv3', 
