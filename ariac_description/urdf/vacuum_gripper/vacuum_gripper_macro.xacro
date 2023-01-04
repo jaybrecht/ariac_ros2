@@ -39,9 +39,9 @@
     </gazebo>
 
 
-    <!-- <gazebo reference="${prefix}_gripper">
+    <gazebo reference="${prefix}_gripper">
       <material>Gazebo/Black</material>      
-    </gazebo> -->
+    </gazebo>
 
     <joint name="${prefix}_gripper_joint" type="revolute">
       <axis xyz="0 0 1"/>

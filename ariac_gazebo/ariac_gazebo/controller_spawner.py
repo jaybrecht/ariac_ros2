@@ -114,6 +114,7 @@ def is_controller_loaded(node, controller_manager, controller_name):
 def main(args=None):
 
     rclpy.init(args=args)
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'controller_name', help='Name of the controller')

@@ -161,7 +161,7 @@ void AGVTrayPlugin::OnUpdate()
     sensor = impl_->model_->GetWorld()->ModelByName(sensor_name);
     // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Sensor name: " << sensor_name);
     if (sensor != NULL){
-      RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Attaching sensor to agv");
+      // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Attaching sensor to agv");
 
       impl_->sensor_joint_->Load(impl_->agv_tray_link_, sensor->GetLink(), ignition::math::Pose3d());
       impl_->sensor_joint_->Init();

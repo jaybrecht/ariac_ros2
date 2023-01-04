@@ -14,7 +14,7 @@ def main():
     # Wait five seconds for gazebo to start up
     time.sleep(2)
 
-    startup_node.pause_physics()
+    # startup_node.pause_physics()
 
     # Spawn robots
     startup_node.spawn_robots()
@@ -34,7 +34,7 @@ def main():
     # Read conveyor part config
     startup_node.parse_conveyor_config()
 
-    startup_node.unpause_physics()
+    # startup_node.unpause_physics()
 
     try:
         rclpy.spin(startup_node)
