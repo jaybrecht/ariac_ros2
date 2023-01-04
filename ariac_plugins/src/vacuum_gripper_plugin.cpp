@@ -64,6 +64,7 @@ public:
 
   rclcpp::Time last_publish_time_;
   int update_ns_;
+  bool first_publish_;
 
   void OnUpdate();
 
@@ -134,7 +135,7 @@ void VacuumGripperPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr 
 
   double publish_rate = 10;
   impl_->update_ns_ = int((1/publish_rate) * 1e9);
-  impl_->last_publish_time_ = impl_->ros_node_->get_clock()->now();
+  impl_->first_publish_ = true;
 
   // Register enable service
   impl_->enable_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::VacuumGripperControl>(
@@ -176,11 +177,14 @@ void VacuumGripperPluginPrivate::OnUpdate()
 
   // Publish status at rate
   rclcpp::Time now = ros_node_->get_clock()->now();
-  if (now - last_publish_time_ >= rclcpp::Duration(0, update_ns_)) {
+  if (first_publish_) {
+    PublishState();
+    last_publish_time_ = now;
+    first_publish_ = false;
+  } else if (now - last_publish_time_ >= rclcpp::Duration(0, update_ns_)) {
     PublishState();
     last_publish_time_ = now;
   }
-
 }
 
 void VacuumGripperPluginPrivate::OnContact(ConstContactsPtr& _msg){

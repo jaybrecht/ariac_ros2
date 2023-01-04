@@ -32,12 +32,19 @@ ament_target_dependencies(gripper_change
   moveit_ros_planning_interface
   ariac_msgs)
 
+add_executable(test_competitor src/test_competitor.cpp)
+ament_target_dependencies(test_competitor 
+  rclcpp 
+  moveit_ros_planning_interface
+  ariac_msgs)
+
 # add_executable(pick_test src/pick_test.cpp)
 # ament_target_dependencies(pick_test rclcpp moveit_ros_planning_interface ariac_msgs)
 
 install(TARGETS
   moveit_test
   gripper_change
+  test_competitor
   # pick_test
   DESTINATION lib/${PROJECT_NAME})
 
