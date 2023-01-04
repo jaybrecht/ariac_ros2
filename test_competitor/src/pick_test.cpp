@@ -18,11 +18,11 @@
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 
-class FloorRobotCommander : public rclcpp::Node
+class TestCompetitor : public rclcpp::Node
 {
 public:
   /// Constructor
-  FloorRobotCommander(moveit::planning_interface::MoveGroupInterface::Options options);
+  TestCompetitor(moveit::planning_interface::MoveGroupInterface::Options options);
 
   /// Move group interface for the robot
   moveit::planning_interface::MoveGroupInterface move_group_;
@@ -49,7 +49,7 @@ private:
   void logical_camera_callback(const ariac_msgs::msg::LogicalCameraImage::ConstSharedPtr msg);
 };
 
-FloorRobotCommander::FloorRobotCommander(moveit::planning_interface::MoveGroupInterface::Options options) : Node("floor_robot_commander"),
+TestCompetitor::TestCompetitor(moveit::planning_interface::MoveGroupInterface::Options options) : Node("floor_robot_commander"),
   move_group_(std::shared_ptr<rclcpp::Node>(std::move(this)), options),
   planning_scene_interface_()
 {
@@ -59,12 +59,12 @@ FloorRobotCommander::FloorRobotCommander(moveit::planning_interface::MoveGroupIn
 
   // Subscribe to target pose
   logical_camera_sub_ = this->create_subscription<ariac_msgs::msg::LogicalCameraImage>(
-    "/ariac/right_bins_logical_camera", rclcpp::SensorDataQoS(), std::bind(&FloorRobotCommander::logical_camera_callback, this, std::placeholders::_1));
+    "/ariac/right_bins_logical_camera", rclcpp::SensorDataQoS(), std::bind(&TestCompetitor::logical_camera_callback, this, std::placeholders::_1));
 
   RCLCPP_INFO(this->get_logger(), "Initialization successful.");
 }
 
-void FloorRobotCommander::logical_camera_callback(const ariac_msgs::msg::LogicalCameraImage::ConstSharedPtr msg)
+void TestCompetitor::logical_camera_callback(const ariac_msgs::msg::LogicalCameraImage::ConstSharedPtr msg)
 {
   // RCLCPP_INFO(this->get_logger(), "recieved message");
   camera_pose_ = msg->pose;
@@ -74,7 +74,7 @@ void FloorRobotCommander::logical_camera_callback(const ariac_msgs::msg::Logical
   }
 }
 
-bool FloorRobotCommander::part_exists(std::string type, std::string color){
+bool TestCompetitor::part_exists(std::string type, std::string color){
   for (auto &model: models_in_bins_){
     if (type == model.type && color == model.color){
       model_pose_ = model.pose;
@@ -85,7 +85,7 @@ bool FloorRobotCommander::part_exists(std::string type, std::string color){
 
 }
 
-geometry_msgs::msg::Pose FloorRobotCommander::get_pose_of_model(){
+geometry_msgs::msg::Pose TestCompetitor::get_pose_of_model(){
   KDL::Frame model_in_camera_frame;
   KDL::Frame camera_in_world_frame;
 
@@ -97,7 +97,7 @@ geometry_msgs::msg::Pose FloorRobotCommander::get_pose_of_model(){
   return tf2::toMsg(model_in_world_frame);
 }
 
-void FloorRobotCommander::add_model_to_planning_scene(std::string name, std::string mesh_file, geometry_msgs::msg::Pose model_pose){
+void TestCompetitor::add_model_to_planning_scene(std::string name, std::string mesh_file, geometry_msgs::msg::Pose model_pose){
   moveit_msgs::msg::CollisionObject collision;
 
   collision.id = name;
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 
   moveit::planning_interface::MoveGroupInterface::Options options("floor_robot_whole", "robot_description", "/floor_robot");
 
-  auto floor_robot_commander = std::make_shared<FloorRobotCommander>(options);
+  auto floor_robot_commander = std::make_shared<TestCompetitor>(options);
 
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(floor_robot_commander);
