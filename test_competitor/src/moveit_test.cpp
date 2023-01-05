@@ -7,55 +7,54 @@ int main(int argc, char * argv[])
 {
   // Initialize ROS and create the Node
   rclcpp::init(argc, argv);
-  auto const node = std::make_shared<rclcpp::Node>(
-    "floor_robot_moveit_test");
+  rclcpp::NodeOptions node_options;
+  node_options.automatically_declare_parameters_from_overrides(true);
+  auto node = rclcpp::Node::make_shared("moveit_test", node_options);
 
-  // Create a ROS logger
-  auto const logger = rclcpp::get_logger("hello_moveit");
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+  std::thread([&executor]() { executor.spin(); }).detach();
 
-  moveit::planning_interface::MoveGroupInterface::Options floor_opt(
-    "floor_robot_whole", "floor_robot_description", "/floor_robot");
+  moveit::planning_interface::MoveGroupInterface floor_move_group(node, "floor_robot");
+  moveit::planning_interface::MoveGroupInterface ceiling_move_group(node, "ceiling_robot");
 
-  moveit::planning_interface::MoveGroupInterface floor_move_group_interface(node, floor_opt);
+  floor_move_group.setMaxVelocityScalingFactor(1.0);
+  floor_move_group.setMaxAccelerationScalingFactor(1.0);
 
-  moveit::planning_interface::MoveGroupInterface::Options ceiling_opt(
-    "ceiling_robot_whole", "ceiling_robot_description", "/ceiling_robot");
+  ceiling_move_group.setMaxVelocityScalingFactor(1.0);
+  ceiling_move_group.setMaxAccelerationScalingFactor(1.0);
 
-  moveit::planning_interface::MoveGroupInterface ceiling_move_group_interface(node, ceiling_opt);
-
-  floor_move_group_interface.setNamedTarget("home");
+  floor_move_group.setNamedTarget("home");
   
   // Create a plan to that target pose
-  auto const [success1, plan1] = [&floor_move_group_interface]{
+  auto const [success1, plan1] = [&floor_move_group]{
     moveit::planning_interface::MoveGroupInterface::Plan msg1;
-    auto const ok1 = static_cast<bool>(floor_move_group_interface.plan(msg1));
+    auto const ok1 = static_cast<bool>(floor_move_group.plan(msg1));
     return std::make_pair(ok1, msg1);
   }();
 
   // Execute the plan
   if(success1) {
-    floor_move_group_interface.execute(plan1);
+    floor_move_group.execute(plan1);
   } else {
-    RCLCPP_ERROR(logger, "Planing failed!");
+    RCLCPP_ERROR(node->get_logger(), "Planing failed!");
   }
 
-  ceiling_move_group_interface.setNamedTarget("home");
+  ceiling_move_group.setNamedTarget("home");
 
   // Create a plan to that target pose
-  auto const [success2, plan2] = [&ceiling_move_group_interface]{
+  auto const [success2, plan2] = [&ceiling_move_group]{
     moveit::planning_interface::MoveGroupInterface::Plan msg2;
-    auto const ok2 = static_cast<bool>(ceiling_move_group_interface.plan(msg2));
+    auto const ok2 = static_cast<bool>(ceiling_move_group.plan(msg2));
     return std::make_pair(ok2, msg2);
   }();
 
   // Execute the plan
   if(success2) {
-    ceiling_move_group_interface.execute(plan2);
+    ceiling_move_group.execute(plan2);
   } else {
-    RCLCPP_ERROR(logger, "Planing failed!");
+    RCLCPP_ERROR(node->get_logger(), "Planing failed!");
   }
-
-  rclcpp::spin(node);
 
   // Shutdown ROS
   rclcpp::shutdown();

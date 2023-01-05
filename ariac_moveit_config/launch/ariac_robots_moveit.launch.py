@@ -121,7 +121,7 @@ def launch_setup(context, *args, **kwargs):
     
     nodes_to_start = [
         move_group_node,
-        rviz_node    
+        # rviz_node    
     ]
 
     return nodes_to_start

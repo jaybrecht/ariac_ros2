@@ -34,10 +34,7 @@ int main(int argc, char * argv[])
   std::unique_ptr<tf2_ros::Buffer> tf_buffer = std::make_unique<tf2_ros::Buffer>(node->get_clock());
   std::shared_ptr<tf2_ros::TransformListener> tf_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
 
-  moveit::planning_interface::MoveGroupInterface::Options floor_opt(
-    "floor_robot_whole", "floor_robot_description", "/floor_robot");
-
-  moveit::planning_interface::MoveGroupInterface floor_move_group_interface(node, floor_opt);
+  moveit::planning_interface::MoveGroupInterface floor_move_group_interface(node, "floor_robot");
 
   floor_move_group_interface.setMaxVelocityScalingFactor(1.0);
   floor_move_group_interface.setMaxAccelerationScalingFactor(1.0);
@@ -63,7 +60,7 @@ int main(int argc, char * argv[])
   }
 
   // Move to end of linear rail 
-  floor_move_group_interface.setJointValueTarget("linear_actuator", 4.5);
+  floor_move_group_interface.setJointValueTarget("linear_actuator_joint", 4.5);
   floor_move_group_interface.setJointValueTarget("floor_shoulder_pan_joint", 1.5);
 
   success = static_cast<bool>(floor_move_group_interface.plan(plan));
@@ -107,7 +104,7 @@ int main(int argc, char * argv[])
   floor_move_group_interface.computeCartesianPath(waypoints, 0.01, 0.0, trajectory);
 
   // Retime trajectory 
-  robot_trajectory::RobotTrajectory rt(floor_move_group_interface.getCurrentState()->getRobotModel(), "floor_robot_whole");
+  robot_trajectory::RobotTrajectory rt(floor_move_group_interface.getCurrentState()->getRobotModel(), "floor_robot");
   rt.setRobotTrajectoryMsg(*floor_move_group_interface.getCurrentState(), trajectory);
   trajectory_processing::TimeOptimalTrajectoryGeneration totg;
   totg.computeTimeStamps(rt, 0.1, 0.1);

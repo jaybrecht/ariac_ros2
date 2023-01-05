@@ -31,34 +31,32 @@ def load_yaml(package_name, file_path):
 
 
 def generate_launch_description():
-    floor_robot_description_content = Command(
+    robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/floor_robot", "floor_robot.urdf.xacro"]), 
+            PathJoinSubstitution([FindPackageShare("ariac_description"), "urdf/ariac_robots", "ariac_robots.urdf.xacro"]), 
             " "
         ]
     )
 
-    floor_robot_description = {"floor_robot_description": floor_robot_description_content}
-
+    robot_description = {"robot_description": robot_description_content}
+    
     ## Moveit Parameters
-    floor_robot_description_semantic = {"floor_robot_description_semantic": load_file("ariac_moveit_config", "srdf/floor_robot.srdf")}
+    robot_description_semantic = {"robot_description_semantic": load_file("ariac_moveit_config", "srdf/ariac_robots.srdf")}
 
-    floor_robot_kinematics = {"floor_robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
+    robot_description_kinematics = {"robot_description_kinematics": load_yaml("ariac_moveit_config", "config/kinematics.yaml")}
 
     gripper_change = Node(
         package="test_competitor",
-        namespace="floor_robot",
         executable="gripper_change",
         output="screen",
         parameters=[
-            floor_robot_description,
-            floor_robot_description_semantic,
-            floor_robot_kinematics,
+            robot_description,
+            robot_description_semantic,
+            robot_description_kinematics,
             {"use_sim_time": True},
         ],
-        # remappings=[("floor_robot/joint_states", "joint_states")]
         
     )
 

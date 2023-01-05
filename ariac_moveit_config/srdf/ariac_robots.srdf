@@ -36,16 +36,16 @@
         <joint name="linear_actuator_joint" value="0"/>
     </group_state>
     <group_state name="home" group="ceiling_robot">
-        <joint name="ceiling_elbow_joint" value="0"/>
+        <joint name="ceiling_elbow_joint" value="1.571"/>
         <joint name="ceiling_gripper_joint" value="0"/>
-        <joint name="ceiling_shoulder_lift_joint" value="0"/>
+        <joint name="ceiling_shoulder_lift_joint" value="-1.571"/>
         <joint name="ceiling_shoulder_pan_joint" value="0"/>
-        <joint name="ceiling_wrist_1_joint" value="0"/>
-        <joint name="ceiling_wrist_2_joint" value="0"/>
+        <joint name="ceiling_wrist_1_joint" value="3.14"/>
+        <joint name="ceiling_wrist_2_joint" value="-1.571"/>
         <joint name="ceiling_wrist_3_joint" value="0"/>
-        <joint name="gantry_x_axis_joint" value="0"/>
+        <joint name="gantry_x_axis_joint" value="2"/>
         <joint name="gantry_y_axis_joint" value="0"/>
-        <joint name="gantry_rotation_joint" value="0"/>
+        <joint name="gantry_rotation_joint" value="-1.571"/>
     </group_state>
     <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
     <passive_joint name="floor_gripper_joint"/>
