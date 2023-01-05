@@ -55,16 +55,8 @@ class EnvironmentStartup(Node):
     def __init__(self):
         super().__init__('environment_startup_node')
 
-        self.declare_parameter('ariac_robots_description', '', 
+        self.declare_parameter('robot_description', '', 
             ParameterDescriptor(description='Ariac Robots description'))
-        self.declare_parameter('agv1_description', '', 
-            ParameterDescriptor(description='AGV1 robot description'))
-        self.declare_parameter('agv2_description', '', 
-            ParameterDescriptor(description='AGV2 robot description'))
-        self.declare_parameter('agv3_description', '', 
-            ParameterDescriptor(description='AGV3 robot description'))
-        self.declare_parameter('agv4_description', '', 
-            ParameterDescriptor(description='AGV4 robot description'))
         
         self.declare_parameter('trial_config_path', '', 
             ParameterDescriptor(description='Path of the current trial\'s configuration yaml file'))
@@ -75,14 +67,6 @@ class EnvironmentStartup(Node):
             self.get_parameter('trial_config_path').get_parameter_value().string_value)
         self.user_config = self.read_yaml(
             self.get_parameter('user_config_path').get_parameter_value().string_value)
-
-        self.robot_names = [
-            'ariac_robots', 
-            'agv1', 
-            'agv2', 
-            'agv3', 
-            'agv4'
-            ]
 
         # Conveyor 
         self.conveyor_spawn_rate = None
@@ -106,10 +90,6 @@ class EnvironmentStartup(Node):
 
         self.bin_parts_pub_timer = self.create_timer(1.0, self.publish_bin_parts)
         self.conveyor_parts_pub_timer = self.create_timer(1.0, self.publish_conveyor_parts)
-        
-        # Read parameters for robot descriptions
-        self.robot_descriptions = {}
-        self.get_robot_descriptions_from_parameters()
         
         # Create service client to spawn objects into gazebo
         self.spawn_client = self.create_client(SpawnEntity, '/spawn_entity')
@@ -390,10 +370,9 @@ class EnvironmentStartup(Node):
             self.conveyor_spawn_timer.cancel()
 
     def spawn_robots(self):
-        for name in self.robot_names:
-            urdf = ET.fromstring(self.robot_descriptions[name])
-            params = RobotSpawnParams(name, ET.tostring(urdf, encoding="unicode"))
-            self.spawn_entity(params)
+        urdf = ET.fromstring(self.get_parameter('robot_description').value)
+        params = RobotSpawnParams("ariac_robots", ET.tostring(urdf, encoding="unicode"))
+        self.spawn_entity(params)
 
     def spawn_parts_on_agvs(self):
         quadrant_info = {
@@ -579,10 +558,6 @@ class EnvironmentStartup(Node):
 
     def conveyor_status(self, msg: ConveyorBeltState):        
         self.conveyor_enabled = msg.enabled
-
-    def get_robot_descriptions_from_parameters(self):
-        for name in self.robot_names:
-            self.robot_descriptions[name] = self.get_parameter(name + '_description').value
 
     def spawn_entity(self, params: SpawnParams, wait=True) -> bool:
         self.spawn_client.wait_for_service()

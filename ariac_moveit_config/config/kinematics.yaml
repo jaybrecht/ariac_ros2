@@ -1,11 +1,20 @@
-floor_robot_whole:
-  kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
-  kinematics_solver_search_resolution: 0.005
-  kinematics_solver_timeout: 0.005
-  kinematics_solver_attempts: 3
-
-ceiling_robot_whole:
-  kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
-  kinematics_solver_search_resolution: 0.005
-  kinematics_solver_timeout: 0.005
-  kinematics_solver_attempts: 3
+ceiling_arm:
+  kinematics_solver: cached_ik_kinematics_plugin/CachedKDLKinematicsPlugin
+  kinematics_solver_search_resolution: 0.0050000000000000001
+  kinematics_solver_timeout: 0.0050000000000000001
+ceiling_robot:
+  kinematics_solver: cached_ik_kinematics_plugin/CachedKDLKinematicsPlugin
+  kinematics_solver_search_resolution: 0.0050000000000000001
+  kinematics_solver_timeout: 0.0050000000000000001
+floor_arm:
+  kinematics_solver: cached_ik_kinematics_plugin/CachedKDLKinematicsPlugin
+  kinematics_solver_search_resolution: 0.0050000000000000001
+  kinematics_solver_timeout: 0.0050000000000000001
+floor_robot:
+  kinematics_solver: cached_ik_kinematics_plugin/CachedKDLKinematicsPlugin
+  kinematics_solver_search_resolution: 0.0050000000000000001
+  kinematics_solver_timeout: 0.0050000000000000001
+gantry:
+  kinematics_solver: cached_ik_kinematics_plugin/CachedKDLKinematicsPlugin
+  kinematics_solver_search_resolution: 0.0050000000000000001
+  kinematics_solver_timeout: 0.0050000000000000001

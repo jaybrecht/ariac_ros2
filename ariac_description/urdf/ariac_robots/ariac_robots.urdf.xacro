@@ -4,14 +4,45 @@
   <!-- Root link -->
   <link name="world"/>
 
+  <!-- Material for RVIZ -->
+  <material name="Grey">
+    <color rgba="${220/255} ${220/255} ${220/255} 1.0"/>
+  </material>
+
+  <!-- Locate Robot Macros -->
   <xacro:include filename="$(find ariac_description)/urdf/floor_robot/floor_robot_macro.xacro"/>
   <xacro:include filename="$(find ariac_description)/urdf/ceiling_robot/ceiling_robot_macro.xacro"/>
+  <xacro:include filename="$(find ariac_description)/urdf/agv/agv_macro.xacro"/>
 
   <!-- Floor Robot -->
   <xacro:floor_robot/>
 
   <!-- Ceiling Robot -->
   <xacro:ceiling_robot/>
+
+  <!-- AGV1 -->
+  <xacro:agv
+    agv_number="agv1"
+    y_position="4.8" >
+  </xacro:agv>
+
+  <!-- AGV2 -->
+  <xacro:agv
+    agv_number="agv2"
+    y_position="1.2" >
+  </xacro:agv>
+
+  <!-- AGV3 -->
+  <xacro:agv
+    agv_number="agv3"
+    y_position="-1.2" >
+  </xacro:agv>
+
+  <!-- AGV4 -->
+  <xacro:agv
+    agv_number="agv4"
+    y_position="-4.8" >
+  </xacro:agv>
 
   <gazebo 
     reference="world">
@@ -25,7 +56,6 @@
       <ros>
       </ros>
       <parameters>$(arg controllers)</parameters>
-      <controller_manager_prefix>ariac_robots</controller_manager_prefix>
     </plugin>
   </gazebo>
 

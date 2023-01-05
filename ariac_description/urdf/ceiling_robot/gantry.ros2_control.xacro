@@ -10,7 +10,7 @@
         <plugin>gazebo_ros2_control/GazeboSystem</plugin>
       </hardware>
 
-      <joint name="small_long_joint">
+      <joint name="gantry_x_axis_joint">
         <command_interface name="position">
           <param name="min">-12.4</param>
           <param name="max">2.4</param>
@@ -26,7 +26,7 @@
         <state_interface name="effort"/>
       </joint>
 
-      <joint name="torso_rail_joint">
+      <joint name="gantry_y_axis_joint">
         <command_interface name="position">
           <param name="min">-7</param>
           <param name="max">7</param>
@@ -42,7 +42,7 @@
         <state_interface name="effort"/>
       </joint>
 
-      <joint name="torso_base_main_joint">
+      <joint name="gantry_rotation_joint">
         <command_interface name="position">
           <param name="min">{-2*pi}</param>
           <param name="max">{2*pi}</param>
@@ -58,7 +58,7 @@
         <state_interface name="effort"/>
       </joint>
 
-      <joint name="torso_main_torso_tray_joint">
+      <joint name="gantry_tray_joint">
         <state_interface name="position">
           <param name="initial_value">0</param>
         </state_interface>
