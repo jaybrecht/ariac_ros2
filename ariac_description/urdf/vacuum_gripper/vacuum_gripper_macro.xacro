@@ -10,6 +10,7 @@
         <geometry>
           <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/>
         </geometry>
+        <material name="Grey"/>
       </visual>
       
       <collision name="${prefix}_gripper_collision">
@@ -64,7 +65,6 @@
     <gazebo>
       <plugin filename="libVacuumGripperPlugin.so" name="${prefix}_vacuum_gripper_plugin">
         <ros>
-          <namespace>${prefix}_robot</namespace>
         </ros>
         <gripper_link>${prefix}_gripper</gripper_link>
         <robot_name>${prefix}_robot</robot_name>

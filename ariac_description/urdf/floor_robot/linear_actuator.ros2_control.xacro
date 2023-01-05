@@ -10,7 +10,7 @@
         <plugin>gazebo_ros2_control/GazeboSystem</plugin>
       </hardware>
 
-      <joint name="linear_actuator">
+      <joint name="linear_actuator_joint">
       <command_interface name="position">
         <param name="min">-4.8</param>
         <param name="max">4.8</param>

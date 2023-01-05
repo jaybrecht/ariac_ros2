@@ -32,6 +32,7 @@
         <geometry>
           <box size="${long_rail_width} ${long_rail_length} ${rail_thickness}"/>
         </geometry>
+        <material name="Grey"/>
       </visual>
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -66,6 +67,7 @@
         <geometry>
           <box size="${long_rail_width} ${long_rail_length} ${rail_thickness}"/>
         </geometry>
+        <material name="Grey"/>
       </visual>
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -99,6 +101,7 @@
         <geometry>
           <box size="${small_rail_width} ${small_rail_length} ${rail_thickness}"/>
         </geometry>
+        <material name="Grey"/>
       </visual>
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -114,7 +117,7 @@
       <material>Gazebo/GreyTransparent</material>
     </gazebo>
 
-    <joint name="small_long_joint" type="prismatic">
+    <joint name="gantry_x_axis_joint" type="prismatic">
       <parent link="long_rail_2"/>
       <child link="small_rail"/>
       <origin xyz="0.0 -5.0 ${rail_height + rail_thickness}" rpy="0.0 0.0 ${pi/2}"/>
@@ -151,7 +154,7 @@
       <selfCollide>1</selfCollide>
     </gazebo>
 
-    <joint name="torso_rail_joint" type="prismatic">
+    <joint name="gantry_y_axis_joint" type="prismatic">
       <parent link="small_rail"/>
       <child link="torso_base"/>
       <origin xyz="0 0 ${torso_height}" rpy="${pi} ${pi} ${pi/2}"/>
@@ -197,7 +200,7 @@
       <selfCollide>1</selfCollide>
     </gazebo>
 
-    <joint name="torso_base_main_joint" type="revolute">
+    <joint name="gantry_rotation_joint" type="revolute">
       <parent link="torso_base"/>
       <child link="torso_main"/>
       <origin xyz="0 0 0" rpy="${pi} ${pi} 0"/>
@@ -233,7 +236,7 @@
 
     <!-- We have to make this a non-fixed joint otherwise it is not recofnized by Gazebo -->
     <!-- The limit will not allow the joint to move -->
-    <joint name="torso_main_torso_tray_joint" type="revolute">
+    <joint name="gantry_tray_joint" type="revolute">
       <parent link="torso_main"/>
       <child link="torso_tray"/>
       <origin xyz="-0.017851 0.0 0.637444" rpy="0 0 ${pi/2}"/>
