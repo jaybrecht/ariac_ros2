@@ -11,6 +11,7 @@ import ros.msgs.geometry_msgs.Twist;
 import ros.msgs.geometry_msgs.Vector3;
 import ros.msgs.std_msgs.PrimitiveMsg;
 import ros.msgs.ariac_msgs.Snapshot;
+import ros.msgs.ariac_msgs.TimedPose;
 //import ros.msgs.move_base_msgs.MoveBaseActionResult;
 import ros.tools.MessageUnpacker;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +20,7 @@ public class RosEnv extends Environment {
 
     private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
     
-    final int gantry_detection = 2;
+    final int gantry_detection = 10;
     
     int cont = 0;
     
@@ -34,7 +35,7 @@ public class RosEnv extends Environment {
 		
 		/* Subscriber for getting the distance between the Gantry and the human */
 		bridge.subscribe(SubscriptionRequestMsg.generate("/snapshot")
-				.setType("ariac_msgs/Snapshot")
+				.setType("ariac_msgs/Snapshot") // added to java_rosbridge_all
 				.setThrottleRate(1)
 				.setQueueLength(1),
 			new RosListenDelegate() {
@@ -44,7 +45,7 @@ public class RosEnv extends Environment {
 					Snapshot msg = unpacker.unpackRosMessage(data);
 					if (msg.distance_robot_human_operator <= gantry_detection) {
 						clearPercepts("human");
-						logger.info("I see the Gantry robot in less than " + msg.distance_robot_human_operator +" meters!");
+						logger.info("I see the Gantry robot in less than " + msg.distance_robot_human_operator +" meters: gantry_detected");
 						addPercept("human",Literal.parseLiteral("gantry_detected"));
 					}
 //					logger.info(msg.time+"");
@@ -55,9 +56,30 @@ public class RosEnv extends Environment {
 			}
 	);
 	
-	
-		/* Subscriber for getting the information that the Gantry has been disabled. Note that the topic is made up, it should be replaced with the correct one later */ 
-		
+		//New func by Angelo
+	/* Subscriber for getting the current Gantry position */
+	bridge.subscribe(SubscriptionRequestMsg.generate("/monitor/robot/pose")
+		.setType("ariac_msgs/TimedPose") // added to java_rosbridge_all
+		.setThrottleRate(1) 
+		.setQueueLength(1),
+	new RosListenDelegate() {
+
+		public void receive(JsonNode data, String stringRep) {
+			logger.info("Robot pose received, creating belief: gantry_position");
+			MessageUnpacker<TimedPose> unpacker = new MessageUnpacker<TimedPose>(TimedPose.class);
+			TimedPose msg = unpacker.unpackRosMessage(data);
+			clearPercepts("human");
+			//addPercept("human",Literal.parseLiteral(""));
+			Literal gantry_position = new LiteralImpl("gantry_position");
+			gantry_position.addTerm(new NumberTermImpl(msg.value.position.x)); // this is to check, depending on the type of msg.value
+			gantry_position.addTerm(new NumberTermImpl(msg.value.position.y)); // this is to check, depending on the type of msg.value
+			gantry_position.addTerm(new NumberTermImpl(msg.value.position.z)); // this is to check, depending on the type of msg.value
+			addPercept("human", gantry_position);
+		}
+	}
+	);
+
+		/* Subscriber for getting the information that the Gantry has been disabled. Note that the topic is made up, it should be replaced with the correct one later */
 		bridge.subscribe(SubscriptionRequestMsg.generate("/gantry_disabled")
 				.setType("std_msgs/Bool")
 				.setThrottleRate(1)
@@ -73,11 +95,9 @@ public class RosEnv extends Environment {
 					}
 				}
 			}
-	);
+	); 
 	
-	
-		/* Subscriber for move_base result. Note that this will change in ROS2, needs experimentation */
-		
+		/* Subscriber for move_base result. Note that this will change in ROS2, needs experimentation */		
 		bridge.subscribe(SubscriptionRequestMsg.generate("/move_base_result")
 				.setType("std_msgs/Bool")
 				.setThrottleRate(1)
@@ -127,7 +147,7 @@ public class RosEnv extends Environment {
 			teleport();
 		}
 		else if (act.getFunctor().equals("move_to_gantry")) { 
-			teleport();
+			teleport(); //FIX LB
 		}
 		else {
 			logger.info("executing: "+act.getFunctor()+", but not implemented!");
@@ -165,13 +185,12 @@ public class RosEnv extends Environment {
 	}
 	
 	// 2 do: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
-	public void teleport() {
-		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
-		
-		move_base.publish(new Vector3(-15.0, -10.0, 0.0));		
+	public void teleport() { // ros2 service call /ariac/teleport_human ariac_msgs/srv/TeleportHuman
+		Publisher teleport = new Publisher("//ariac/teleport_human", "ariac_msgs/srv/TeleportHuman", bridge);		
+		teleport.publish(null); //new Vector3(-15.0, -10.0, 0.0));		
 	}
 
-	// 2 do: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
+	// Fix: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
 	public void move_to_gantry() {
 		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
 		

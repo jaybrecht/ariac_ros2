@@ -16,15 +16,21 @@ next_location(station2,station4).
 next_location(station4,station3).
 next_location(station3,station1).
 
+//LB test (next 2):
+gantry_position(0.0, 0.0, 0.0).
+
+//////////////// Rules
+g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == percept).
+
 /* Initial goals */
 
 !start.
 
 /* Plans */
 
-+!start : indifferent <- .include("indifferent.asl"); !work(station4).
+//+!start : indifferent <- .include("indifferent.asl"); !work(station4).
 //+!start : helpful <- .include("helpful.asl"); !work(station4).
-//+!start : antagonistic <- .include("antagonistic.asl"); !work(station4).
++!start : antagonistic <- .include("antagonistic.asl"); !work(station4).
 
 // Work pattern plans
 +!work(Location) : location(Location, X, Y, Z) 
@@ -35,17 +41,17 @@ next_location(station3,station1).
 		move(X, Y, Z).
 
 
-+work_completed(_) : working(Location) & next_location(Location,Next)
-	<-
-		.print("Work completed at ", Location);
-		!work(Next).
+//+work_completed(_) : working(Location) & next_location(Location,Next)
+//	<-
+//		.print("Work completed at ", Location);
+//		!work(Next).
 
 
 // Plan for when gantry is disabled
 @disabled[atomic]
 +gantry_disabled : working(Location)
 	<-
-		stop_movement; // stops moving and cancel any navigation goals
+		//stop_movement; // stops moving and cancel any navigation goals
 		teleport_safe; // ask to be teleported to the safe zone
 		.wait(8000); // waits for 8 seconds in the safe zone
 		!!work(Location). // resumes work pattern

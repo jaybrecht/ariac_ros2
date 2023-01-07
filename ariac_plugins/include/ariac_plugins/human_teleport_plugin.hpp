@@ -14,7 +14,7 @@ class HumanTeleportPluginPrivate;
 /// Example ROS-powered Gazebo plugin with some useful boilerplate.
 /// \details This is a `ModelPlugin`, but it could be any supported Gazebo plugin type, such as
 /// System, Visual, GUI, World, Sensor, etc.
-class HumanTeleportPlugin : public gazebo::VisualPlugin
+class HumanTeleportPlugin : public gazebo::ModelPlugin
 {
 public:
   /// Constructor
@@ -24,11 +24,11 @@ public:
   virtual ~HumanTeleportPlugin();
 
   /// Gazebo calls this when the plugin is loaded.
-  /// \param[in] visual Pointer to parent model. Other plugin types will expose different entities,
+  /// \param[in] model Pointer to parent model. Other plugin types will expose different entities,
   /// such as `gazebo::sensors::SensorPtr`, `gazebo::physics::WorldPtr`,
   /// `gazebo::rendering::VisualPtr`, etc.
   /// \param[in] sdf SDF element containing user-defined parameters.
-  void Load(gazebo::rendering::VisualPtr visual, sdf::ElementPtr sdf) override;
+  void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
 
 protected:
   /// Optional callback to be called at every simulation iteration.
