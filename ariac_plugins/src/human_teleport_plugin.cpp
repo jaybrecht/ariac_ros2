@@ -44,6 +44,8 @@ public:
   gazebo::physics::ModelPtr model_;  
   gazebo::physics::WorldPtr world_;
 
+  ignition::math::Pose3d origPose;
+
   // Teleport service
   rclcpp::Service<ariac_msgs::srv::TeleportHuman>::SharedPtr teleport_service_;
 
@@ -74,6 +76,8 @@ void HumanTeleportPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr 
 
 //  impl_->visual_ = visual;
   impl_->model_ = model;
+
+  impl_->origPose = model->WorldPose();
 
   // impl_->agv_number_ = sdf->GetElement("agv_number")->Get<std::string>();
 
@@ -143,9 +147,9 @@ void HumanTeleportPluginPrivate::TeleportHuman(
 
   //double time = world_->SimTime().Double();
   //ignition::math::Pose3d pose(0.0, 0.0, sin(time), 0.0, 0.0, 0.0);  // = orig_pose;
-  ignition::math::Pose3d pose(-15.3, -10.0, 0.0, 0.0, 0.0, 0.0);  
+  ignition::math::Pose3d pose(-15.0, -10.0, 0.008, -0.000008, 0.006262, 0.003736);  
 
-  model_->SetWorldPose(pose);
+  model_->SetWorldPose(origPose);
 
   //LB: other possibilities
   //model_->SetLinearVel(ignition::math::Vector3d(.3, 0, 0));

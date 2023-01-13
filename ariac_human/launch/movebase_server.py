@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from timeit import default_timer as timer
 import geometry_msgs.msg
 import tf2_ros
 import math
@@ -29,15 +30,18 @@ from ariac_msgs.msg import *
 # from nist_gear.msg import *
 #from monitor.msg import *
 
+# https://navigation.ros.org/commander_api/index.html
+
 class movebase_server(Node):
 	def __init__(self):
 		#global pub_eom, tfBuffer, listener
 		self.name='movebase_server'
 		super().__init__(self.name)
-		self.pub_eom = self.create_publisher(topic='/move_base_result', msg_type=Bool, qos_profile = 1000)
+		self.pub_eom = self.create_publisher(topic='move_base_result', msg_type=Bool, qos_profile = 10)
 		self.tfBuffer = tf2_ros.Buffer()
 		self.listener = tf2_ros.TransformListener(self.tfBuffer,node=self)
-		self.create_subscription(topic='jason_to_move_base', msg_type=Vector3, callback=self.goal_movebase, qos_profile = 1000)
+		self.create_subscription(topic='jason_to_move_base', msg_type=Vector3, callback=self.goal_movebase, qos_profile = 10)
+		#self.create_subscription(topic='jason_stop_human'  , msg_type=Vector3, callback=self.goal_stop, qos_profile = 10)
 
 		self._navigator = BasicNavigator()
 		# Set our demo's initial pose
@@ -55,16 +59,22 @@ class movebase_server(Node):
 		self._navigator.setInitialPose(self.current_pose)
 		# Wait for navigation to fully activate, since autostarting nav2
 		self._navigator.waitUntilNav2Active()
-		#self._navigator.lifecycleStartup()
 
-	#LB: callback function to support moving
+	#LB: callback function to perform human STOP
+	def goal_stop(self, data):		
+		self.get_logger().info("Stop goal activated")
+		self._navigator.cancelTask()
+		self._navigator.spin(spin_dist=0.25, time_allowance=10)
+		return
+
+	#LB: callback function to perform human MOVE
 	def goal_movebase(self, data):		
-		#rospy.loginfo(rospy.get_caller_id() + "I heard %f and %f and %f",data.x,data.y,data.z)
 		msg = Bool()
 		msg.data = True
+		#self._navigator.cancelTask()
 		try:
 			result = self.send_to_movebase(data.x,data.y,data.z)
-			if result:
+			if result == TaskResult.SUCCEEDED:
 				self.get_logger().info("Movebase Goal execution done!")
 				self.pub_eom.publish(msg)
 
@@ -82,7 +92,7 @@ class movebase_server(Node):
 		goal_pose.header.stamp = self._navigator.get_clock().now().to_msg()
 		goal_pose.pose.position.x = x
 		goal_pose.pose.position.y = y
-		goal_pose.pose.orientation.w = 1.0
+		goal_pose.pose.orientation.w = z #LB: before as 1.0
 
 		# sanity check a valid path exists
 		path = self._navigator.getPath(self.current_pose, goal_pose)
@@ -91,13 +101,22 @@ class movebase_server(Node):
 		self._navigator.goToPose(goal_pose)
 
 		i = 0
+		#read time
+		# nooooooooooooooow()- previous > 30s
+		#iniTime = datetime.datetime.now()
+		iniTime = timer()
+		
 		while not self._navigator.isTaskComplete():
+#		while not (self._navigator.isTaskComplete() && (datetime.datetime.now() - iniTime).totalseconds() > 30):
 			################################################
 			#
 			# Implement some code here for your application!
 			#
 			################################################
-
+			if (timer() - iniTime) > 50.0:
+				print('50s Timeout in movebase_server [doing nothing]')
+				#return TaskResult.SUCCEEDED;
+ 
 			# Do something with the feedback
 			i = i + 1
 			feedback = self._navigator.getFeedback()

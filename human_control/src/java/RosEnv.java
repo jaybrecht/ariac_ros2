@@ -1,7 +1,5 @@
 import jason.asSyntax.*;
 import jason.environment.*;
-//import jason.asSyntax.Literal;
-//import jason.asSyntax.LiteralImpl;
 import java.util.logging.*;
 import ros.Publisher;
 import ros.RosBridge;
@@ -21,8 +19,13 @@ public class RosEnv extends Environment {
     private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
     
     final int gantry_detection = 10;
-    
-    int cont = 0;
+
+	int cont = 0;
+	int detcont = 0;
+
+	double gpX = 0.0;
+	double gpY = 0.0;
+	double gpZ = 0.0;
     
     RosBridge bridge = new RosBridge();
 
@@ -44,9 +47,12 @@ public class RosEnv extends Environment {
 					MessageUnpacker<Snapshot> unpacker = new MessageUnpacker<Snapshot>(Snapshot.class);
 					Snapshot msg = unpacker.unpackRosMessage(data);
 					if (msg.distance_robot_human_operator <= gantry_detection) {
-						clearPercepts("human");
-						logger.info("I see the Gantry robot in less than " + msg.distance_robot_human_operator +" meters: gantry_detected");
-						addPercept("human",Literal.parseLiteral("gantry_detected"));
+						//clearPercepts("human");
+						//logger.info("I see the Gantry robot in less than " + msg.distance_robot_human_operator +" meters: gantry_detected");
+						Literal gDetectedLit = new LiteralImpl("gantry_detected"); //movebase_result");
+						gDetectedLit.addTerm(new NumberTermImpl(detcont++)); //movebase_result.addTerm(new NumberTermImpl(msg.status.status));
+						addPercept("human",gDetectedLit); 
+						//addPercept("human",Literal.parseLiteral("gantry_detected")); 
 					}
 //					logger.info(msg.time+"");
 //					logger.info(msg.human_operator_speed+"");
@@ -65,16 +71,18 @@ public class RosEnv extends Environment {
 	new RosListenDelegate() {
 
 		public void receive(JsonNode data, String stringRep) {
-			logger.info("Robot pose received, creating belief: gantry_position");
+			//logger.info("Robot pose received, creating belief: gantry_position");
 			MessageUnpacker<TimedPose> unpacker = new MessageUnpacker<TimedPose>(TimedPose.class);
 			TimedPose msg = unpacker.unpackRosMessage(data);
-			clearPercepts("human");
-			//addPercept("human",Literal.parseLiteral(""));
-			Literal gantry_position = new LiteralImpl("gantry_position");
-			gantry_position.addTerm(new NumberTermImpl(msg.value.position.x)); // this is to check, depending on the type of msg.value
-			gantry_position.addTerm(new NumberTermImpl(msg.value.position.y)); // this is to check, depending on the type of msg.value
-			gantry_position.addTerm(new NumberTermImpl(msg.value.position.z)); // this is to check, depending on the type of msg.value
-			addPercept("human", gantry_position);
+			//clearPercepts("human");
+			//Literal gantry_position = new LiteralImpl("gantry_position");
+			// gantry_position.addTerm(new NumberTermImpl(msg.value.position.x)); // this is to check, depending on the type of msg.value
+			// gantry_position.addTerm(new NumberTermImpl(msg.value.position.y)); // this is to check, depending on the type of msg.value
+			// gantry_position.addTerm(new NumberTermImpl(msg.value.position.z)); // this is to check, depending on the type of msg.value
+			gpX = msg.value.position.x;
+			gpY = msg.value.position.y;
+			gpZ = msg.value.position.z;
+			//addPercept("human", gantry_position);
 		}
 	}
 	);
@@ -115,13 +123,12 @@ public class RosEnv extends Environment {
 //					System.out.println("Status: "+msg.status.status);
 //					System.out.println("Text: "+msg.status.text);
 //					System.out.println();
-//					Literal movebase_result = new Literal("work_completed"); //movebase_result");
-					Literal movebase_result = new LiteralImpl("work_completed"); //movebase_result");
 					logger.info("Human reached waypoint	!");
-					movebase_result.addTerm(new NumberTermImpl(cont++));
-//					movebase_result.addTerm(new NumberTermImpl(msg.status.status));
+					Literal movebase_result = new LiteralImpl("work_completed"); //movebase_result");
+					movebase_result.addTerm(new NumberTermImpl(cont++)); //movebase_result.addTerm(new NumberTermImpl(msg.status.status));
+					logger.info("cont: "+cont);
 					addPercept("human", movebase_result);
-//					addPercept("human",Literal.parseLiteral("work_completed"));
+					//addPercept("human",Literal.parseLiteral("work_completed"));
 				}
 			}
 	    );
@@ -134,7 +141,7 @@ public class RosEnv extends Environment {
 			NumberTerm ly = (NumberTerm) act.getTerm(1);
 			NumberTerm lz = (NumberTerm) act.getTerm(2);
 			try{
-				logger.info("Move requested by agent, will now send topic");
+				//logger.info("Move requested by agent, will now send topic");
 				move(lx.solve(),ly.solve(),lz.solve());
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -147,10 +154,10 @@ public class RosEnv extends Environment {
 			teleport();
 		}
 		else if (act.getFunctor().equals("move_to_gantry")) { 
-			teleport(); //FIX LB
+			move_to_gantry(); 
 		}
 		else {
-			logger.info("executing: "+act.getFunctor()+", but not implemented!");
+			logger.info("PROBLEM: requested: "+act.getFunctor()+", but not implemented!");
 		}
         informAgsEnvironmentChanged();
         return true; // the action was executed with success
@@ -170,32 +177,32 @@ public class RosEnv extends Environment {
 	}*/
 	
 	public void move(double x, double y, double z) {
-		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
-		
+		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);		
 		move_base.publish(new Vector3(x,y,z));
 	}
 	
 	// This method also needs to cancel any ongoing move base goals
 	public void stop_moving() {
-		Publisher cmd_vel = new Publisher("/cmd_vel", "geometry_msgs/Twist", bridge);
+		// Publisher cmd_vel = new Publisher("/human/cmd_vel", "geometry_msgs/Twist", bridge);
+		// Vector3 linear = new Vector3(0.0,0.0,0.0);
+		// Vector3 angular = new Vector3(0.0,0.0,0.0);
+		// cmd_vel.publish(new Twist(linear, angular));
 
-		Vector3 linear = new Vector3(0.0,0.0,0.0);
-		Vector3 angular = new Vector3(0.0,0.0,0.0);
-		cmd_vel.publish(new Twist(linear, angular));
+		Publisher move_base = new Publisher("/jason_stop_human", "geometry_msgs/Vector3", bridge);		
+		move_base.publish(new Vector3(0.0, 0.0, 0.0)); //LB: could fix: reimplement without parameters
 	}
 	
 	// 2 do: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
 	public void teleport() { // ros2 service call /ariac/teleport_human ariac_msgs/srv/TeleportHuman
-		Publisher teleport = new Publisher("//ariac/teleport_human", "ariac_msgs/srv/TeleportHuman", bridge);		
-		teleport.publish(null); //new Vector3(-15.0, -10.0, 0.0));		
+		Publisher teleport_h = new Publisher("jason_teleport_human", "std_msgs/Bool", bridge);	
+		logger.info("RosEnv: executing Teleport");	
+		teleport_h.publish(new Boolean(true)); //new Vector3(-15.0, -10.0, 0.0));		
 	}
 
 	// Fix: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
 	public void move_to_gantry() {
-		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);
-		
-		move_base.publish(new Vector3(-15.0, 10.0, 0.0));
-		
+		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);		
+		move_base.publish(new Vector3(-8.0, 0.0, 0.0));		
 	}
 
     /** Called before the end of MAS execution */

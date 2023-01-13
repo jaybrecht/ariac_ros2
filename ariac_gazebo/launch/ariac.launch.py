@@ -188,6 +188,12 @@ def launch_setup(context, *args, **kwargs):
         executable='movebase_server.py'
     )
 
+    # stopbase_server node
+    stopbase_server = Node(
+        package='ariac_human',
+        executable='stopbase_server.py'
+    )
+
 
     spawn_robots_after_sensors = RegisterEventHandler(
         OnProcessExit(
@@ -203,7 +209,8 @@ def launch_setup(context, *args, **kwargs):
                 human_listener,
         	robot_listener,
         	snapshot,
-        	movebase_server
+        	movebase_server,
+        	stopbase_server
             ]
         )
     )
