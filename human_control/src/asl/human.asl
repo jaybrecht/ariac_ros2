@@ -46,10 +46,17 @@ g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == per
 		move(X, Y, Z).
 
 
-+work_completed(_) : working(Location) & next_location(Location,Next)
++work_completed(_) : working(Location) & next_location(Location,Next) & not movingToGantry
 //+work_completed : working(Location) & next_location(Location,Next)
 	<-
 		.print("Work completed at ", Location);
+		!work(Next).
+
+
++work_completed(_) : working(Location) & movingToGantry
+//+work_completed : working(Location) & next_location(Location,Next)
+	<-
+		-movingToGantry;
 		!work(Next).
 
 

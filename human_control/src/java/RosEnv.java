@@ -183,11 +183,6 @@ public class RosEnv extends Environment {
 	
 	// This method also needs to cancel any ongoing move base goals
 	public void stop_moving() {
-		// Publisher cmd_vel = new Publisher("/human/cmd_vel", "geometry_msgs/Twist", bridge);
-		// Vector3 linear = new Vector3(0.0,0.0,0.0);
-		// Vector3 angular = new Vector3(0.0,0.0,0.0);
-		// cmd_vel.publish(new Twist(linear, angular));
-
 		Publisher move_base = new Publisher("/jason_stop_human", "geometry_msgs/Vector3", bridge);		
 		move_base.publish(new Vector3(0.0, 0.0, 0.0)); //LB: could fix: reimplement without parameters
 	}
@@ -201,8 +196,17 @@ public class RosEnv extends Environment {
 
 	// Fix: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
 	public void move_to_gantry() {
+		Publisher stop = new Publisher("/jason_stop_human", "geometry_msgs/Vector3", bridge);		
+		stop.publish(new Vector3(0.0, 0.0, 0.0)); //LB: could fix: reimplement without parameters
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
 		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);		
-		move_base.publish(new Vector3(-8.0, 0.0, 0.0));		
+		move_base.publish(new Vector3(gpX, gpY, gpZ));  //move_base.publish(new Vector3(-8.0, 0.0, 0.0));	
+		logger.info("Move to gantry requesed");	
 	}
 
     /** Called before the end of MAS execution */

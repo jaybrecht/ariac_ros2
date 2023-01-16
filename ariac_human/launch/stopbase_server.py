@@ -26,6 +26,10 @@ from rclpy.node import Node
 from std_msgs.msg import Bool
 from ariac_msgs.msg import *
 
+from ariac_msgs.srv import TeleportHuman 
+#human_teleport_plugin 
+#ariac.teleport_human
+
 # https://navigation.ros.org/commander_api/index.html
 
 class stopbase_server(Node):
@@ -36,29 +40,38 @@ class stopbase_server(Node):
 		#self.pub_eom = self.create_publisher(topic='move_base_result', msg_type=Bool, qos_profile = 10)
 		self.tfBuffer = tf2_ros.Buffer()
 		self.listener = tf2_ros.TransformListener(self.tfBuffer,node=self)
-		self.create_subscription(topic='jason_stop_human'    , msg_type=Vector3, callback=self.goal_stop, qos_profile = 10)
-		self.create_subscription(topic='jason_teleport_human', msg_type=Bool, callback=self.goal_teleport, qos_profile = 10)
+		#self.create_subscription(topic='jason_stop_human_old'    , msg_type=Vector3, callback=self.goal_stop, qos_profile = 10)
+		self.create_subscription(topic='jason_teleport_human_old', msg_type=Bool, callback=self.goal_teleport, qos_profile = 10)
 
-		self._navigator = BasicNavigator()
+		#Teleport service client:
+		self.cli = self.create_client(TeleportHuman, '/ariac/teleport_human')
+		while not self.cli.wait_for_service(timeout_sec=1.0):
+		    self.get_logger().info('teleport service not available, waiting again...')
+		self.req = TeleportHuman.Request()
 
-		# Wait for navigation to fully activate, since autostarting nav2
-		self._navigator.waitUntilNav2Active()
-		#self._navigator.lifecycleStartup()
 
 	#LB: callback function to perform human TELEPORT
 	#1) import the service from the given package: from ariac_human import 
 	#https://docs.ros.org/en/foxy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Service-And-Client.html
 	def goal_teleport(self, data):		
-		self.get_logger().info("2do: Calling Teleport service")		
+		self.get_logger().info("Testing: Calling Teleport service")	
+		#response = send_request()	
+		self.future = self.cli.call_async(self.req)
+		rclpy.spin_until_future_complete(self, self.future)
 		return
 
+	def send_request(self):
+		self.future = self.cli.call_async(self.req)
+		rclpy.spin_until_future_complete(self, self.future)
+		return self.future.result()
+
 	#LB: callback function to perform human STOP
-	def goal_stop(self, data):		
-		self.get_logger().info("First cancelTask")
-		self._navigator.cancelTask()
-		self._navigator.spin(0.25)  #spin_dist=0.25, time_allowance=10)
-		self.get_logger().info("After spin")
-		return
+	#def goal_stop(self, data):		
+	#	self.get_logger().info("First cancelTask")
+	#	#self._navigator.cancelTask()
+	#	#self._navigator.spin(0.25)  #spin_dist=0.25, time_allowance=10)
+	#	#self.get_logger().info("After spin")
+	#	return
 
 if __name__ == '__main__':
     global node

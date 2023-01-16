@@ -11,6 +11,7 @@
   <depend>gazebo_ros_pkgs</depend>
   <depend>nav2_controller</depend>
 
+  <exec_depend> ariac_msgs </exec_depend>
   <export>
     <build_type>ament_cmake</build_type>
     <gazebo_ros gazebo_model_path="${prefix}/models"/>
