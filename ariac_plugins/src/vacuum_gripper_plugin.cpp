@@ -121,7 +121,7 @@ void VacuumGripperPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr 
   std::string link_name = sdf->GetElement("gripper_link")->Get<std::string>();
   impl_->gripper_link_ = impl_->model_->GetLink(link_name);
   
-  std::string topic = "/gazebo/world/" + name + "/" + link_name + "/bumper/contacts";
+  std::string topic = "/gazebo/world/ariac_robots/" + link_name + "/bumper/contacts";
   impl_->contact_sub_ = impl_->gznode_->Subscribe(topic, &VacuumGripperPluginPrivate::OnContact, impl_.get());
 
   impl_->pickable_part_types = {"battery", "regulator", "pump", "sensor"};
@@ -215,10 +215,10 @@ bool VacuumGripperPluginPrivate::CheckModelContact(ConstContactsPtr& msg, std::s
 
   for (int i = 0; i < msg->contact_size(); ++i) {
     // Find out which collision is the robot
-    if (msg->contact(i).collision1().find("robot") != std::string::npos) {
+    if (msg->contact(i).collision1().find("ariac_robots") != std::string::npos) {
       model_in_contact = msg->contact(i).collision2();
     }
-    else if (msg->contact(i).collision2().find("robot") != std::string::npos){
+    else if (msg->contact(i).collision2().find("ariac_robots") != std::string::npos){
       model_in_contact = msg->contact(i).collision1();
     }
     else {
@@ -228,6 +228,7 @@ bool VacuumGripperPluginPrivate::CheckModelContact(ConstContactsPtr& msg, std::s
     if (contact_type == "part") {
       // Check if part is in the pickable_list
       bool is_part = false;
+      
       for (auto &type : pickable_part_types){
         if (model_in_contact.find(type) != std::string::npos){
           is_part = true;
@@ -240,7 +241,7 @@ bool VacuumGripperPluginPrivate::CheckModelContact(ConstContactsPtr& msg, std::s
       }
       
     } else if (contact_type == "tray") {
-      if (!model_in_contact.find("kit_tray") != std::string::npos){
+      if (model_in_contact.find("kit_tray") == std::string::npos){
         continue;
       }
     }
@@ -249,6 +250,7 @@ bool VacuumGripperPluginPrivate::CheckModelContact(ConstContactsPtr& msg, std::s
 
     // Check number of contacts
     if (!msg->contact(i).position_size() > min_contacts){
+      // RCLCPP_INFO(ros_node_->get_logger(), "Not enough contacts");
       continue;
     }
 
@@ -265,6 +267,7 @@ bool VacuumGripperPluginPrivate::CheckModelContact(ConstContactsPtr& msg, std::s
       }
       else{
         aligned.push_back(false);
+        // RCLCPP_INFO(ros_node_->get_logger(), "Not aligned");
       }
     }
     

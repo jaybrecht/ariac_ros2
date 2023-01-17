@@ -38,7 +38,7 @@ def main():
 
     try:
         rclpy.spin(startup_node)
-    except KeyboardInterrupt:
+    except:
         startup_node.destroy_node()
         rclpy.shutdown()
 

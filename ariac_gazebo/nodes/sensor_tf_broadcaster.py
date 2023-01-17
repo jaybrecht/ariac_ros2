@@ -25,8 +25,12 @@ def main():
     
     try:
         sensors = data['sensors']
-    except KeyError:
+    except (TypeError, KeyError):
         sensor_tf_broadcaster.get_logger().warn("No sensors found in config")
+        sensors = []
+
+    if not sensors:
+        sensors = []
 
     for sensor_name in sensors:
         xyz = sensors[sensor_name]['pose']['xyz']
