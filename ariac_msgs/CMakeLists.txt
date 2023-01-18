@@ -57,6 +57,7 @@ set(srv_files
   "srv/ConveyorBeltControl.srv"
   "srv/MoveAGV.srv"
   "srv/ScoreTask.srv"
+  "srv/SubmitOrder.srv"
   "srv/VacuumGripperControl.srv"
   "srv/PerformQualityCheck.srv"
 )
