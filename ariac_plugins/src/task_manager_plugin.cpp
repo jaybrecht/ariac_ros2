@@ -261,6 +261,9 @@ namespace ariac_plugins
             order_conditions.push_back(std::make_shared<ariac_msgs::msg::OrderCondition>(order_condition));
         }
         StoreOrders(order_conditions);
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Number of temporal orders: " << impl_->time_based_orders_.size());
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Number of part place orders: " << impl_->on_part_placement_orders_.size());
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Number of submission orders: " << impl_->on_order_submission_orders_.size());
 
         // Store challenges to be processed later
         if (_msg->challenges.size() > 0)
@@ -364,15 +367,11 @@ namespace ariac_plugins
     {
         for (auto order : orders)
         {
-
             auto order_id = order->id;
             auto order_type = order->type;
             auto order_priority = order->priority;
 
-            bool has_kitting_task = false;
-            bool has_assembly_task = false;
-            bool has_combined_task = false;
-
+            // Pointers to the tasks
             std::shared_ptr<ariac_common::KittingTask> kitting_task = nullptr;
             std::shared_ptr<ariac_common::AssemblyTask> assembly_task = nullptr;
             std::shared_ptr<ariac_common::CombinedTask> combined_task = nullptr;
@@ -397,44 +396,54 @@ namespace ariac_plugins
                 RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown order type: " << int(order_type));
             }
 
-            // time_based_orders_;
-            // std::vector<std::shared_ptr<ariac_common::OrderOnPartPlacement>> on_part_placement_orders_;
             // std::vector<std::shared_ptr<ariac_common::OrderOnSubmission>> on_order_submission_orders_;
 
             // Get the condition
             if (order->condition.type == ariac_common::ConditionType::TIME)
             {
                 auto announcement_time = order->condition.time_condition.seconds;
-                auto temporal_order = std::make_shared<ariac_common::OrderTemporal>(order_id, order_type, order_priority, impl_->time_limit_, announcement_time);
+                auto order_instance = std::make_shared<ariac_common::OrderTemporal>(order_id, order_type, order_priority, impl_->time_limit_, announcement_time);
                 // Set the task
                 if (!kitting_task)
-                    temporal_order->SetKittingTask(kitting_task);
+                    order_instance->SetKittingTask(kitting_task);
                 else if (!assembly_task)
-                    temporal_order->SetAssemblyTask(assembly_task);
+                    order_instance->SetAssemblyTask(assembly_task);
                 else if (!combined_task)
-                    temporal_order->SetCombinedTask(combined_task);
-                
+                    order_instance->SetCombinedTask(combined_task);
+
                 // Add to the list of time based orders
-                impl_->time_based_orders_.push_back(temporal_order);
+                impl_->time_based_orders_.push_back(order_instance);
             }
             else if (order->condition.type == ariac_common::ConditionType::PART_PLACE)
             {
                 auto agv = order->condition.part_place_condition.agv;
                 auto part = std::make_shared<ariac_common::Part>(order->condition.part_place_condition.part.type, order->condition.part_place_condition.part.color);
-                auto part_place_order = std::make_shared<ariac_common::OrderOnPartPlacement>(order_id, order_type, order_priority, impl_->time_limit_, agv, part);
+                auto order_instance = std::make_shared<ariac_common::OrderOnPartPlacement>(order_id, order_type, order_priority, impl_->time_limit_, agv, part);
                 // Set the task
                 if (!kitting_task)
-                    part_place_order->SetKittingTask(kitting_task);
+                    order_instance->SetKittingTask(kitting_task);
                 else if (!assembly_task)
-                    part_place_order->SetAssemblyTask(assembly_task);
+                    order_instance->SetAssemblyTask(assembly_task);
                 else if (!combined_task)
-                    part_place_order->SetCombinedTask(combined_task);
+                    order_instance->SetCombinedTask(combined_task);
 
                 // Add to the list of part placement orders
-                impl_->on_part_placement_orders_.push_back(part_place_order);
+                impl_->on_part_placement_orders_.push_back(order_instance);
             }
             else if (order->condition.type == ariac_common::ConditionType::SUBMISSION)
             {
+                auto submitted_order_id = order->condition.submission_condition.order_id;
+                auto order_instance = std::make_shared<ariac_common::OrderOnSubmission>(order_id, order_type, order_priority, impl_->time_limit_, submitted_order_id);
+                // Set the task
+                if (!kitting_task)
+                    order_instance->SetKittingTask(kitting_task);
+                else if (!assembly_task)
+                    order_instance->SetAssemblyTask(assembly_task);
+                else if (!combined_task)
+                    order_instance->SetCombinedTask(combined_task);
+                
+                // Add to the list of submission orders
+                impl_->on_order_submission_orders_.push_back(order_instance);
             }
             else
             {

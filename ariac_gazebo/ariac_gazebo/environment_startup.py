@@ -634,10 +634,13 @@ class EnvironmentStartup(Node):
             for announcement_key, announcement_value in announcement.items():
                 if announcement_key == 'time_condition':
                     condition.type = self.convert_condition_to_int('time_condition')
+                    # print("Condition type", condition.type)
+                    
                     condition.time_condition.seconds = float(
                         announcement_value)
                 elif announcement_key == 'part_place_condition':
                     condition.type = self.convert_condition_to_int('part_place_condition')
+                    # print("Condition type", condition.type)
                     color = order['announcement']['part_place_condition']['color']
                     condition.part_place_condition.part.color = self.convert_part_color_to_int(
                         color)
@@ -656,9 +659,12 @@ class EnvironmentStartup(Node):
 
                 elif announcement_key == 'submission_condition':
                     condition.type = self.convert_condition_to_int('submission_condition')
+                    # print("Condition type", condition.type)
                     order_id = order['announcement']['submission_condition']['order_id']
                     condition.submission_condition.order_id = order_id
-            # Task
+            # Set condition for order
+            order_condition.condition = condition
+            # Set task for order
             if order['type'] == "kitting":
                 order_condition.kitting_task = self.create_kitting_task(
                     order['kitting_task'])
