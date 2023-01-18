@@ -1,0 +1,425 @@
+// Copyright 2018 Open Source Robotics Foundation, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Gazebo
+#include <gazebo/physics/World.hh>
+#include <gazebo_ros/node.hpp>
+
+// Messages
+#include <ariac_plugins/task_manager_plugin.hpp>
+#include <ariac_msgs/msg/trial.hpp>
+#include <ariac_msgs/msg/order.hpp>
+#include <ariac_msgs/msg/order_condition.hpp>
+#include <ariac_msgs/msg/challenge.hpp>
+#include <ariac_msgs/msg/sensors.hpp>
+#include <ariac_msgs/msg/robots.hpp>
+#include <ariac_msgs/msg/competition_state.hpp>
+// ROS
+#include <rclcpp/rclcpp.hpp>
+// C++
+#include <memory>
+// ARIAC
+#include <ariac_plugins/ariac_common.hpp>
+
+// #include <ariac_msgs/msg/kitting_task.hpp>
+// #include <ariac_msgs/msg/assembly_task.hpp>
+// #include <ariac_msgs/msg/part.hpp>
+// #include <std_msgs/msg/string.hpp>
+// #include <ariac_plugins/ariac_common.hpp>
+
+namespace ariac_plugins
+{
+    /// Class to hold private data members (PIMPL pattern)
+    class TaskManagerPluginPrivate
+    {
+    public:
+        //============== C++ =================
+        /*!< A mutex to protect the current state. */
+        std::mutex lock_;
+        /*!< Pointer to the current state. */
+        std::string current_state_ = "init";
+
+        /*!< Time limit for the current trial. */
+        double time_limit_{-1};
+        /*!< Name of the trial file. */
+        std::string trial_name_;
+
+        //============== GAZEBO =================
+        /*!< Connection to world update event. Callback is called while this is alive. */
+        gazebo::event::ConnectionPtr update_connection_;
+        /*!< ROS node. */
+        gazebo_ros::Node::SharedPtr ros_node_{nullptr};
+        /*!< Pointer to the world. */
+        gazebo::physics::WorldPtr world_;
+        /*!< Pointer to the sdf tag. */
+        sdf::ElementPtr sdf_;
+        /*!< Time since the start competition service is called. */
+        gazebo::common::Time start_competition_time_;
+        gazebo::common::Time last_sim_time_;
+        gazebo::common::Time last_on_update_time_;
+
+        //============== ROS =================
+        /*!< Time when this plugin is loaded. */
+        rclcpp::Time current_sim_time_;
+
+        //============== SUBSCRIBERS =================
+        /*!< Subscriber to topic: "trial_config"*/
+        rclcpp::Subscription<ariac_msgs::msg::Trial>::SharedPtr trial_config_sub_;
+
+        //============== SERVICES =================
+        /*!< Service that allows the user to start the competition. */
+        rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr start_competition_srv_{nullptr};
+
+        //============== PUBLISHERS =================
+        rclcpp::Publisher<ariac_msgs::msg::Order>::SharedPtr order_pub_;
+        rclcpp::Publisher<ariac_msgs::msg::Sensors>::SharedPtr sensor_health_pub_;
+        rclcpp::Publisher<ariac_msgs::msg::CompetitionState>::SharedPtr competition_state_pub_;
+        rclcpp::Publisher<ariac_msgs::msg::Robots>::SharedPtr robot_health_pub_;
+
+        //============== LISTS OF ORDERS AND CHALLENGES =================
+        /*!< List of orders that are announced based on time. */
+        std::vector<std::shared_ptr<ariac_common::OrderTemporal>> time_based_orders_;
+        std::vector<std::shared_ptr<ariac_common::OrderOnPartPlacement>> on_part_placement_orders_;
+        std::vector<std::shared_ptr<ariac_common::OrderOnSubmission>> on_order_submission_orders_;
+    };
+    //==============================================================================
+    TaskManagerPlugin::TaskManagerPlugin()
+        : impl_(std::make_unique<TaskManagerPluginPrivate>())
+    {
+    }
+    //==============================================================================
+    TaskManagerPlugin::~TaskManagerPlugin()
+    {
+        impl_->ros_node_.reset();
+    }
+    //==============================================================================
+    // void TaskManagerPlugin::ManageOrders(std::vector<ariac_msgs::msg::Order> _orders)
+    // {
+    // for (auto order : _orders)
+    // {
+    //     ariac_common::Order new_order;
+    //     new_order.order_id_ = order.id;
+    //     new_order.order_type_ = order.type;
+    //     new_order.high_priority_ = order.priority;
+    //     new_order.announced_condition_ = order.announcement_condition;
+    //     new_order.announced_value_ = order.announcement_value;
+
+    //     // KittingTask
+
+    //     // AssemblyTask
+
+    //     impl_->time_based_orders_.push_back(new_order);
+    // }
+    // }
+    //==============================================================================
+    void
+    TaskManagerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
+    {
+
+        GZ_ASSERT(_world, "TaskManagerPlugin world pointer is NULL");
+        GZ_ASSERT(_sdf, "TaskManagerPlugin sdf pointer is NULL");
+
+        // // Create a GazeboRos node instead of a common ROS node.
+        // // Pass it SDF parameters so common options like namespace and remapping
+        // // can be handled.
+        impl_->ros_node_ = gazebo_ros::Node::Get(_sdf);
+        impl_->world_ = _world;
+        impl_->sdf_ = _sdf;
+
+        RCLCPP_INFO(impl_->ros_node_->get_logger(), "Starting ARIAC 2023");
+
+        // Get QoS profiles
+        const gazebo_ros::QoS &qos = impl_->ros_node_->get_qos();
+
+        // Create a connection so the OnUpdate function is called at every simulation
+        // iteration. Remove this call, the connection and the callback if not needed.
+        impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
+            std::bind(&TaskManagerPlugin::OnUpdate, this));
+
+        impl_->trial_config_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Trial>(
+            "/ariac/trial_config", qos.get_subscription_qos("/ariac/trial_config", rclcpp::QoS(1)),
+            std::bind(&TaskManagerPlugin::OnTrialCallback, this, std::placeholders::_1));
+
+        impl_->sensor_health_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Sensors>("/ariac/sensor_health", 10);
+
+        // impl_->current_sim_time_ = impl_->ros_node_->get_clock()->now();
+        // impl_->current_sim_time_ = impl_->world_->SimTime();
+    }
+
+    //==============================================================================
+    // void TaskManagerPlugin::AnnounceOrder(std::shared_ptr<ariac_common::Order> _order)
+    // {
+    //     auto message = ariac_msgs::msg::Order();
+    //     message.id = _order->GetId();
+    //     message.type = _order->GetType();
+    //     message.priority = _order->GetPriority();
+    // }
+
+    //==============================================================================
+    // void TaskManagerPlugin::ProcessOrdersToAnnounce(double _current_sim_time)
+    // {
+    //     // ProcessTemporalOrders(_current_sim_time);
+    //     // ProcessDuringKittingOrders(_current_sim_time);
+    //     // ProcessDuringAssemblyOrders(_current_sim_time);
+    //     // ProcessAfterKittingOrders(_current_sim_time);
+    //     // ProcessAfterAssemblyOrders(_current_sim_time);
+    // }
+
+    //==============================================================================
+    void TaskManagerPlugin::OnUpdate()
+    {
+        std::lock_guard<std::mutex> lock(impl_->lock_);
+        auto current_sim_time = impl_->world_->SimTime();
+
+        // Delay advertising the competition start service to avoid a crash.
+        // Sometimes if the competition is started before the world is fully loaded, it causes a crash.
+        if (!impl_->start_competition_srv_ && current_sim_time.Double() >= 5.0)
+        {
+            // create the start competition service
+            impl_->start_competition_srv_ = impl_->ros_node_->create_service<std_srvs::srv::Trigger>("/ariac/start_competition",
+                                                                                                     std::bind(&TaskManagerPlugin::StartCompetitionServiceCallback,
+                                                                                                               this,
+                                                                                                               std::placeholders::_1,
+                                                                                                               std::placeholders::_2));
+
+            RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "/ariac/start_competition service created");
+            // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "updated time: " << updated_sim_time.seconds());
+        }
+
+        if ((current_sim_time - impl_->last_sim_time_).Double() >= 1.0)
+        {
+            impl_->last_sim_time_ = current_sim_time;
+        }
+
+        auto elapsed_time = (current_sim_time - impl_->last_on_update_time_).Double();
+        if (impl_->time_limit_ >= 0 && impl_->current_state_ == "go" &&
+            (current_sim_time - impl_->start_competition_time_) > impl_->time_limit_)
+        {
+            impl_->current_state_ = "end_game";
+        }
+
+        // current state is set to "ready" in start competition service callback
+        if (impl_->current_state_ == "ready")
+        {
+            impl_->start_competition_time_ = current_sim_time;
+            impl_->current_state_ = "go";
+        }
+
+        if (impl_->current_state_ == "go")
+        {
+            // ProcessOrdersToAnnounce((current_sim_time - impl_->start_competition_time_).Double());
+        }
+
+        impl_->last_on_update_time_ = current_sim_time;
+    }
+
+    //==============================================================================
+    // std::shared_ptr<ariac_common::KittingTask> static BuildKittingTask(const ariac_msgs::msg::KittingTask &_kitting_task)
+    // {
+    //     // auto agv_number = _kitting_task.agv_number;
+    //     // auto tray_id = _kitting_task.tray_id;
+    //     // auto destination = ariac_common::ConvertDestinationToString(_kitting_task.destination, agv_number);
+    //     // std::vector<ariac_common::KittingPart> kitting_parts;
+
+    //     // for (auto product : _kitting_task.products)
+    //     // {
+    //     //     auto quadrant = product.quadrant;
+    //     //     auto part_type = ariac_common::ConvertPartTypeToString(product.part.type);
+    //     //     auto part_color = ariac_common::ConvertPartColorToString(product.part.color);
+    //     //     auto part = ariac_common::Part(part_type, part_color);
+    //     //     kitting_parts.emplace_back(ariac_common::KittingPart(quadrant, part));
+    //     // }
+    //     // return std::make_shared<ariac_common::KittingTask>(agv_number, tray_id, destination, kitting_parts);
+    // }
+
+    //==============================================================================
+    // std::shared_ptr<ariac_common::AssemblyTask> static BuildAssemblyTask(const ariac_msgs::msg::AssemblyTask &_assembly_task)
+    // {
+    //     // std::vector<unsigned int> agv_numbers = {};
+    //     // for (auto agv_number : _assembly_task.agv_numbers)
+    //     // {
+    //     //     agv_numbers.push_back(agv_number);
+    //     // }
+    //     // auto station = ariac_common::ConvertAssemblyStationToString(_assembly_task.station);
+    //     // std::vector<ariac_common::AssemblyPart> assembly_parts;
+
+    //     // for (auto product : _assembly_task.parts)
+    //     // {
+    //     //     auto part_type = ariac_common::ConvertPartTypeToString(product.part.type);
+    //     //     auto part_color = ariac_common::ConvertPartColorToString(product.part.color);
+    //     //     auto part = ariac_common::Part(part_type, part_color);
+
+    //     //     ignition::math::Pose3d assembled_pose;
+    //     //     assembled_pose.Pos().X() = product.assembled_pose.pose.position.x;
+    //     //     assembled_pose.Pos().Y() = product.assembled_pose.pose.position.y;
+    //     //     assembled_pose.Pos().Z() = product.assembled_pose.pose.position.z;
+    //     //     assembled_pose.Rot().X() = product.assembled_pose.pose.orientation.x;
+    //     //     assembled_pose.Rot().Y() = product.assembled_pose.pose.orientation.y;
+    //     //     assembled_pose.Rot().Z() = product.assembled_pose.pose.orientation.z;
+    //     //     assembled_pose.Rot().W() = product.assembled_pose.pose.orientation.w;
+
+    //     //     ignition::math::Vector3<double> part_direction;
+    //     //     part_direction.X() = product.install_direction.x;
+    //     //     part_direction.Y() = product.install_direction.y;
+    //     //     part_direction.Z() = product.install_direction.z;
+
+    //     //     assembly_parts.emplace_back(ariac_common::AssemblyPart(part, assembled_pose, part_direction));
+    //     // }
+    //     // return std::make_shared<ariac_common::AssemblyTask>(agv_numbers, station, assembly_parts);
+    // }
+
+    //==============================================================================
+    void TaskManagerPlugin::OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg)
+    {
+        std::lock_guard<std::mutex> scoped_lock(impl_->lock_);
+        RCLCPP_FATAL_STREAM(impl_->ros_node_->get_logger(), "------Time limit: " << _msg->time_limit);
+        RCLCPP_FATAL_STREAM(impl_->ros_node_->get_logger(), "------Trial name: " << _msg->trial_name);
+        impl_->time_limit_ = _msg->time_limit;
+        impl_->trial_name_ = _msg->trial_name;
+
+        // Store orders to be processed later
+        std::vector<std::shared_ptr<ariac_msgs::msg::OrderCondition>> order_conditions;
+        for (auto order_condition : _msg->order_conditions)
+        {
+            order_conditions.push_back(std::make_shared<ariac_msgs::msg::OrderCondition>(order_condition));
+        }
+        StoreOrders(order_conditions);
+
+        // Store challenges to be processed later
+        if (_msg->challenges.size() > 0)
+        {
+            std::vector<std::shared_ptr<ariac_msgs::msg::Challenge>> challenges;
+            for (auto challenge : _msg->challenges)
+            {
+                challenges.push_back(std::make_shared<ariac_msgs::msg::Challenge>(challenge));
+            }
+        }
+    }
+
+    std::shared_ptr<ariac_common::KittingTask> TaskManagerPlugin::BuildKittingTask(const ariac_msgs::msg::KittingTask &_kitting_task)
+    {
+        // auto agv_number = _kitting_task.agv_number;
+        // auto tray_id = _kitting_task.tray_id;
+        // auto destination = ariac_common::ConvertDestinationToString(_kitting_task.destination, agv_number);
+        // std::vector<ariac_common::KittingPart> kitting_parts;
+
+        // for (auto product : _kitting_task.products)
+        // {
+        //     auto quadrant = product.quadrant;
+        //     auto part_type = ariac_common::ConvertPartTypeToString(product.part.type);
+        //     auto part_color = ariac_common::ConvertPartColorToString(product.part.color);
+        //     auto part = ariac_common::Part(part_type, part_color);
+        //     kitting_parts.emplace_back(ariac_common::KittingPart(quadrant, part));
+        // }
+        // return std::make_shared<ariac_common::KittingTask>(agv_number, tray_id, destination, kitting_parts);
+    }
+
+    //==============================================================================
+    void TaskManagerPlugin::StoreOrders(const std::vector<std::shared_ptr<ariac_msgs::msg::OrderCondition>> &orders)
+    {
+        for (auto order : orders)
+        {
+            
+            auto order_id = order->id;
+            auto order_type = order->type;
+            auto order_priority = order->priority;
+
+            if (order_type == ariac_common::OrderType::KITTING)
+            {
+
+                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Kitting task: " << order_id);
+                auto kitting_task = BuildKittingTask(order->kitting_task);
+            }
+            else if (order_type == ariac_common::OrderType::ASSEMBLY)
+            {
+                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Assembly task: " << order_id);
+                // auto assembly_task = BuildAssemblyTask(order->assembly_task);
+                // impl_->assembly_tasks_.emplace_back(assembly_task);
+            }
+            else if (order_type == ariac_common::OrderType::COMBINED)
+            {
+                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Combined task: " << order_id);
+                // auto assembly_task = BuildAssemblyTask(order->assembly_task);
+                // impl_->assembly_tasks_.emplace_back(assembly_task);
+            }
+            // else
+            // {
+            //     RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown order type: " << order_type);
+            // }
+
+        }
+    }
+
+    //==============================================================================
+    void TaskManagerPlugin::StoreChallenges(const std::vector<ariac_msgs::msg::Challenge::SharedPtr> &challenges)
+    {
+    }
+
+    // ==================================== //
+    // Services
+    // ==================================== //
+    bool TaskManagerPlugin::StartCompetitionServiceCallback(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+    {
+        std::lock_guard<std::mutex> lock(impl_->lock_);
+
+        // gzdbg << "\n";
+        // gzdbg << "StartCompetitionServiceCallback\n";
+
+        (void)request;
+
+        if (impl_->current_state_ == "init")
+        {
+            impl_->current_state_ = "ready";
+            response->success = true;
+            response->message = "Competition started successfully!";
+
+            // publish on /ariac/sensor_health topic
+            auto sensor_message = ariac_msgs::msg::Sensors();
+            sensor_message.break_beam = true;
+            sensor_message.proximity = true;
+            sensor_message.laser_profiler = true;
+            sensor_message.lidar = true;
+            sensor_message.camera = true;
+            sensor_message.logical_camera = true;
+            impl_->sensor_health_pub_->publish(sensor_message);
+            RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Activated all sensors");
+
+            return true;
+        }
+        response->success = false;
+        response->message = "ERROR: Cannot start competition if current state is not 'init'";
+        return true;
+    }
+    //==============================================================================
+    bool TaskManagerPlugin::EndCompetitionServiceCallback(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+    {
+        std::lock_guard<std::mutex> lock(this->impl_->lock_);
+        // gzdbg << "\n";
+        // gzdbg << "EndCompetitionServiceCallback\n";
+
+        (void)request;
+
+        this->impl_->current_state_ = "end_game";
+        response->success = true;
+        response->message = "Competition ended successfully!";
+        return true;
+    }
+
+    // Register this plugin with the simulator
+    GZ_REGISTER_WORLD_PLUGIN(TaskManagerPlugin)
+} // namespace ariac_plugins

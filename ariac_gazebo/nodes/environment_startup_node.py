@@ -2,15 +2,19 @@
 
 import sys
 import rclpy
+import time
 
 from ariac_gazebo.environment_startup import EnvironmentStartup
 
 def main():
     rclpy.init()
 
-    startup_node = EnvironmentStartup(sys.argv[1], sys.argv[2])
+    startup_node = EnvironmentStartup()
 
-    startup_node.pause_physics()
+    # Wait five seconds for gazebo to start up
+    time.sleep(2)
+
+    # startup_node.pause_physics()
 
     # Spawn robots
     startup_node.spawn_robots()
@@ -29,8 +33,11 @@ def main():
 
     # Read conveyor part config
     startup_node.parse_conveyor_config()
+    
+    # Parse the trial config file
+    startup_node.parse_trial_file()
 
-    startup_node.unpause_physics()
+    # startup_node.unpause_physics()
 
     try:
         rclpy.spin(startup_node)

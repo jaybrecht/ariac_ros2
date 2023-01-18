@@ -10,6 +10,7 @@
         <geometry>
           <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/>
         </geometry>
+        <material name="Grey"/>
       </visual>
       
       <collision name="${prefix}_gripper_collision">
@@ -30,11 +31,7 @@
 
     <gazebo reference="${prefix}_gripper">
       <visual name="${prefix}_gripper_visual">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <!-- <mesh filename="file://$(find ariac_description)/meshes/vacuum_gripper/vacuum_gripper.stl" scale="1 1 1"/> -->
-        </geometry>
-        <plugin filename="libgripper_change_plugin.so" name="${prefix}_gripper_change_plugin">
+        <plugin filename="libGripperColorPlugin.so" name="${prefix}_gripper_color_plugin">
           <ros>
           </ros>
           <robot_name>${prefix}_robot</robot_name>
@@ -66,9 +63,8 @@
     </gazebo>
 
     <gazebo>
-      <plugin filename="libvacuum_gripper.so" name="${prefix}_vacuum_gripper_plugin">
+      <plugin filename="libVacuumGripperPlugin.so" name="${prefix}_vacuum_gripper_plugin">
         <ros>
-          <namespace>${prefix}_robot</namespace>
         </ros>
         <gripper_link>${prefix}_gripper</gripper_link>
         <robot_name>${prefix}_robot</robot_name>

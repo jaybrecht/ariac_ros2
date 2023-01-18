@@ -7,6 +7,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(camera_info_manager REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -26,38 +27,65 @@ find_package(ariac_msgs REQUIRED)
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
-add_library(break_beam_sensor SHARED
-  src/break_beam_sensor.cpp
+# Ariac Ray Plugin
+add_library(AriacRayPlugin SHARED
+  src/ariac_ray_plugin.cpp
 )
-target_include_directories(break_beam_sensor PUBLIC include)
-ament_target_dependencies(break_beam_sensor
+target_include_directories(AriacRayPlugin PUBLIC include)
+ament_target_dependencies(AriacRayPlugin
   "gazebo_ros"
   "sensor_msgs"
   "ariac_msgs"
 )
-ament_export_libraries(break_beam_sensor)
+ament_export_libraries(AriacRayPlugin)
 
-add_library(logical_camera SHARED
-  src/logical_camera.cpp
+# Ariac Camera Plugin
+add_library(AriacCameraPlugin SHARED
+  src/ariac_camera_plugin.cpp
 )
-target_include_directories(logical_camera PUBLIC include)
-ament_target_dependencies(logical_camera
+target_include_directories(AriacCameraPlugin PUBLIC include)
+ament_target_dependencies(AriacCameraPlugin
+  "gazebo_ros"
+  "sensor_msgs"
+  "ariac_msgs"
+  "camera_info_manager"
+  "image_transport"
+)
+ament_export_libraries(AriacCameraPlugin)
+
+# Ariac Logical Camera Plugin
+add_library(AriacLogicalCameraPlugin SHARED
+  src/ariac_logical_camera_plugin.cpp
+)
+target_include_directories(AriacLogicalCameraPlugin PUBLIC include)
+ament_target_dependencies(AriacLogicalCameraPlugin
   "gazebo_ros"
   "ariac_msgs"
 )
-ament_export_libraries(logical_camera)
+ament_export_libraries(AriacLogicalCameraPlugin)
 
-# Quality Control Plugin
-add_library(QualityControlPlugin SHARED
-  src/quality_control_plugin.cpp
+# AGV Tray Sensor Plugin
+add_library(AGVTraySensorPlugin SHARED
+  src/agv_tray_sensor_plugin.cpp
 )
-target_include_directories(QualityControlPlugin PUBLIC include)
-ament_target_dependencies(QualityControlPlugin
+target_include_directories(AGVTraySensorPlugin PUBLIC include)
+ament_target_dependencies(AGVTraySensorPlugin
   "orocos_kdl"
   "gazebo_ros"
   "ariac_msgs"
 )
-ament_export_libraries(QualityControlPlugin)
+ament_export_libraries(AGVTraySensorPlugin)
+
+# Assembly Station Sensor Plugin
+add_library(AssemblyStationSensorPlugin SHARED
+  src/assembly_station_sensor_plugin.cpp
+)
+target_include_directories(AssemblyStationSensorPlugin PUBLIC include)
+ament_target_dependencies(AssemblyStationSensorPlugin
+  "gazebo_ros"
+  "ariac_msgs"
+)
+ament_export_libraries(AssemblyStationSensorPlugin)
 
 ament_package()
 
@@ -65,9 +93,11 @@ install(DIRECTORY include/
         DESTINATION include)
 
 install(TARGETS
-    break_beam_sensor
-    logical_camera
-    QualityControlPlugin
+    AGVTraySensorPlugin
+    AssemblyStationSensorPlugin
+    AriacRayPlugin
+    AriacCameraPlugin
+    AriacLogicalCameraPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

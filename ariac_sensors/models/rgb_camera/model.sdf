@@ -42,13 +42,13 @@
           </noise>
         </camera>
 
-        <plugin name="plugin_name" filename="libgazebo_ros_camera.so">
+        <plugin name="rgb_camera_plugin" filename="libAriacCameraPlugin.so">
           <ros>
             <namespace></namespace>
           </ros>
+          <camera_type>rgb</camera_type>
           <camera_name>custom_camera</camera_name>
           <frame_name>custom_frame</frame_name>
-          <!-- <hack_baseline>0.07</hack_baseline> -->
         </plugin>
       </sensor>
     </link>

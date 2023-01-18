@@ -1,0 +1,5 @@
+string type
+ariac_msgs/FaultyPartChallenge faulty_part_challenge
+ariac_msgs/DroppedPartChallenge dropped_part_challenge
+ariac_msgs/SensorBlackoutChallenge sensor_blackout_challenge
+ariac_msgs/RobotMalfunctionChallenge robot_malfunction_challenge

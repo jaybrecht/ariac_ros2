@@ -323,6 +323,11 @@
       <uri>model://assembly_insert</uri>
     </include>
 
+    <joint name="assembly_insert_1_joint" type="fixed">
+      <parent>assembly_table_1::assembly_table_link</parent>
+      <child>assembly_insert_1::insert_link</child>
+    </joint>
+
     <include>
       <name>assembly_table_2</name>
       <pose>-12.3 3 0 0 0 0 </pose>
@@ -371,5 +376,8 @@
       <pose>-1.3 5.84 0 0 0 0</pose>
       <uri>model://kit_tray_table</uri>
     </include>
+
+    <plugin name="task_manager" filename="libTaskManagerPlugin.so" />
+
   </world>
 </sdf>

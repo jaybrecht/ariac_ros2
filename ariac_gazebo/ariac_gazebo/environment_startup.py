@@ -9,6 +9,8 @@ import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor
 
+from rclpy.qos import QoSProfile, DurabilityPolicy
+
 from ariac_gazebo.tf2_geometry_msgs import do_transform_pose
 from ariac_gazebo.utilities import quaternion_from_euler, euler_from_quaternion, convert_pi_string_to_float
 
@@ -16,25 +18,42 @@ from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import (
+    Pose,
+    PoseStamped,
+    Vector3
+)
 
 from ariac_msgs.msg import (
-    Part,
-    PartLot,
+    AssemblyPart,
+    AssemblyTask,
     BinInfo,
     BinParts,
+    Challenge,
+    CombinedTask,
+    Condition,
     ConveyorParts,
     ConveyorBeltState,
+    KittingPart,
+    KittingTask,
+    OrderCondition,
+    Order,
+    Part,
+    PartLot,
+    RobotMalfunctionChallenge,
+    SensorBlackoutChallenge,
+    Trial,
 )
 
 from gazebo_msgs.srv import SpawnEntity
 from std_srvs.srv import Empty
 from ariac_gazebo.spawn_params import (
-    SpawnParams, 
-    RobotSpawnParams, 
+    SpawnParams,
+    RobotSpawnParams,
     SensorSpawnParams,
     PartSpawnParams,
     TraySpawnParams)
+
 
 class PartInfo:
     part_heights = {
@@ -51,44 +70,25 @@ class PartInfo:
         self.flipped = False
         self.height = None
 
+
 class EnvironmentStartup(Node):
-    def __init__(self, trial_config_path, user_config_path):
+    def __init__(self):
         super().__init__('environment_startup_node')
 
-        self.declare_parameter('floor_robot_description', '', 
-            ParameterDescriptor(description='Floor robot description'))
-        self.declare_parameter('ceiling_robot_description', '', 
-            ParameterDescriptor(description='Ceiling robot description'))
-        self.declare_parameter('agv1_description', '', 
-            ParameterDescriptor(description='AGV1 robot description'))
-        self.declare_parameter('agv2_description', '', 
-            ParameterDescriptor(description='AGV2 robot description'))
-        self.declare_parameter('agv3_description', '', 
-            ParameterDescriptor(description='AGV3 robot description'))
-        self.declare_parameter('agv4_description', '', 
-            ParameterDescriptor(description='AGV4 robot description'))
-        
-        self.declare_parameter('trial_config_path', '', 
-            ParameterDescriptor(description='Path of the current trial\'s configuration yaml file'))
-        self.declare_parameter('user_config_path', '', 
-            ParameterDescriptor(description='Path of the user\'s configuration yaml file'))
+        self.declare_parameter('robot_description', '',
+                               ParameterDescriptor(description='Ariac Robots description'))
+
+        self.declare_parameter('trial_config_path', '',
+                               ParameterDescriptor(description='Path of the current trial\'s configuration yaml file'))
+        self.declare_parameter('user_config_path', '',
+                               ParameterDescriptor(description='Path of the user\'s configuration yaml file'))
 
         self.trial_config = self.read_yaml(
             self.get_parameter('trial_config_path').get_parameter_value().string_value)
         self.user_config = self.read_yaml(
             self.get_parameter('user_config_path').get_parameter_value().string_value)
 
-        self.robot_names = [
-            'floor_robot', 
-            'ceiling_robot', 
-            'agv1', 
-            'agv2', 
-            'agv3', 
-            'agv4']
-
-
-
-        # Conveyor 
+        # Conveyor
         self.conveyor_spawn_rate = None
         self.conveyor_parts_to_spawn = []
         self.conveyor_transform = None
@@ -96,25 +96,37 @@ class EnvironmentStartup(Node):
         self.conveyor_spawn_order_types = ['sequential', 'random']
         self.conveyor_width = 0.28
 
-        self.conveyor_status_sub = self.create_subscription(ConveyorBeltState, 
-            '/ariac/conveyor_state', self.conveyor_status, 10)
+        self.conveyor_status_sub = self.create_subscription(ConveyorBeltState,
+                                                            '/ariac/conveyor_state', self.conveyor_status, 10)
 
         # Create publishers for bin and conveyor parts
         self.bin_parts = BinParts()
-        self.bin_parts_publisher = self.create_publisher(BinParts, 
-            '/ariac/bin_parts', 10)
+        self.bin_parts_publisher = self.create_publisher(BinParts,
+                                                         '/ariac/bin_parts', 10)
 
         self.conveyor_parts = ConveyorParts()
-        self.conveyor_parts_publisher = self.create_publisher(ConveyorParts, 
-            '/ariac/conveyor_parts', 10)
+        self.conveyor_parts_publisher = self.create_publisher(ConveyorParts,
+                                                              '/ariac/conveyor_parts', 10)
 
-        self.bin_parts_pub_timer = self.create_timer(1.0, self.publish_bin_parts)
-        self.conveyor_parts_pub_timer = self.create_timer(1.0, self.publish_conveyor_parts)
-        
-        # Read parameters for robot descriptions
-        self.robot_descriptions = {}
-        self.get_robot_descriptions_from_parameters()
-        
+        self.bin_parts_pub_timer = self.create_timer(
+            1.0, self.publish_bin_parts)
+        self.conveyor_parts_pub_timer = self.create_timer(
+            1.0, self.publish_conveyor_parts)
+
+        # Create publisher for the trial config file
+        # This is used by the task manager
+        latching_qos = QoSProfile(
+            depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        self.trial_info_pub = self.create_publisher(
+            Trial, '/ariac/trial_config', latching_qos)
+
+        # Create a subscriber for debugging purposes
+        self.trial_config_sub = self.create_subscription(
+            Trial,
+            '/ariac/trial_config',
+            self.trial_config_callback,
+            10)
+
         # Create service client to spawn objects into gazebo
         self.spawn_client = self.create_client(SpawnEntity, '/spawn_entity')
 
@@ -125,6 +137,512 @@ class EnvironmentStartup(Node):
         # Setup TF listener
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
+
+
+    def trial_config_callback(self, msg: Trial):
+        """Simple callback to print the trial name
+
+        Args:
+            msg (Trial): The trial config message
+        """
+        pass
+        # self.get_logger().info('Trial name: "%s"' % msg.trial_name)
+        
+        
+    def parse_trial_file(self):
+        config_file_name = self.get_parameter(
+            'trial_config_path').get_parameter_value().string_value
+
+        config_file_name = config_file_name.rsplit('/', 1)[1]
+        # self.get_logger().info(f'CONFIG FILE: {config_file_name}')
+        message = Trial()
+
+        # If time limit is not specified, use default of -1
+        try:
+            message.time_limit = float(self.trial_config["time_limit"])
+        except KeyError:
+            self.get_logger().info(
+                "Trial configuration file is missing time_limit field...default to -1")
+
+        # Check we have at least one order
+        try:
+            orders = self.trial_config["orders"]
+        except KeyError:
+            self.get_logger().fatal("No orders found in trial configuration file...exiting")
+            return
+
+        # Retrieve challenges
+        try:
+            challenges = self.trial_config["challenges"]
+            message.challenges = self.create_challenge_list(challenges)
+        except KeyError:
+            self.get_logger().info("No challenges found in trial configuration file")
+
+        message.order_conditions = self.create_order_list(orders)
+        
+        message.trial_name = config_file_name
+        self.trial_info_pub.publish(message)
+
+
+    def convert_order_type_to_int(self, order_type):
+        """Converts an order type to an integer.
+        - kitting: Order.KITTING
+        - assembly: Order.ASSEMBLY
+        - combined: Order.COMBINED
+
+        Args:
+            order_type (str): The type of an order in string format.
+
+        Returns:
+            int: The type of an order in integer format.
+        """
+        options = {
+            'kitting': Order.KITTING,
+            'assembly': Order.ASSEMBLY,
+            'combined': Order.COMBINED
+        }
+
+        found_type = options.get(order_type)
+
+        if found_type in [Order.KITTING, Order.ASSEMBLY, Order.COMBINED]:
+            return found_type
+        else:
+            self.get_logger().fatal(
+                f"Order type '{order_type}' is not correct. Check spelling.")
+            return None
+
+
+    def convert_part_type_to_int(self, part_type):
+        """Converts a part type to an integer.
+        - battery: Part.BATTERY
+        - pump: Part.PUMP
+        - sensor: Part.SENSOR
+        - regulator: Part.REGULATOR
+
+        Args:
+            part_type (str): The type of a part in string format.
+
+        Returns:
+            int: The type of a part in integer format.
+        """
+
+        options = {
+            'battery': Part.BATTERY,
+            'pump': Part.PUMP,
+            'sensor': Part.SENSOR,
+            'regulator': Part.REGULATOR
+        }
+
+        found_type = options.get(part_type)
+
+        if found_type in [Part.BATTERY, Part.PUMP, Part.SENSOR, Part.REGULATOR]:
+            return found_type
+        else:
+            self.get_logger().fatal(
+                f"Part type '{part_type}' is not correct. Check spelling.")
+            return None
+
+
+    def convert_part_color_to_int(self, part_color):
+        """Converts a part color to an integer.
+        - red: Part.RED
+        - green: Part.GREEN
+        - blue: Part.BLUE
+        - orange: Part.ORANGE
+        - purple: Part.PURPLE
+
+        Args:
+            part_color (str): The color of a part in string format.
+
+        Returns:
+            int: The color of a part in integer format.
+        """
+
+        options = {
+            'red': Part.RED,
+            'green': Part.GREEN,
+            'blue': Part.BLUE,
+            'orange': Part.ORANGE,
+            'purple': Part.PURPLE
+        }
+
+        found_type = options.get(part_color)
+
+        if found_type in [Part.RED, Part.GREEN, Part.BLUE, Part.ORANGE, Part.PURPLE]:
+            return found_type
+        else:
+            self.get_logger().fatal(
+                f"Part color '{part_color}' is not correct. Check spelling.")
+            return None
+
+
+    def convert_destination_to_int(self, destination):
+        """Converts a destination to an integer.
+        - as1: KittingTask.ASSEMBLY_FRONT,
+        - as2: KittingTask.ASSEMBLY_BACK,
+        - as3: KittingTask.ASSEMBLY_FRONT,
+        - as4: KittingTask.ASSEMBLY_BACK,
+        - kitting: KittingTask.KITTING,
+        - warehouse: KittingTask.WAREHOUSE,
+
+        Args:
+            destination (str): The destination in string format.
+
+        Returns:
+            int: The destination in integer format.
+        """
+
+        options = {
+            'as1': KittingTask.ASSEMBLY_FRONT,
+            'as2': KittingTask.ASSEMBLY_BACK,
+            'as3': KittingTask.ASSEMBLY_FRONT,
+            'as4': KittingTask.ASSEMBLY_BACK,
+            'kitting': KittingTask.KITTING,
+            'warehouse': KittingTask.WAREHOUSE,
+        }
+
+        found_type = options.get(destination)
+
+        if found_type in [KittingTask.ASSEMBLY_FRONT,
+                          KittingTask.ASSEMBLY_BACK,
+                          KittingTask.ASSEMBLY_FRONT,
+                          KittingTask.ASSEMBLY_BACK,
+                          KittingTask.KITTING,
+                          KittingTask.WAREHOUSE]:
+            return found_type
+        else:
+            self.get_logger().fatal(
+                f"Destination '{destination}' is not correct. Check spelling.")
+            return None
+
+
+    def convert_assembly_station_to_int(self, assembly_station):
+        """Converts an assembly station to an integer.
+        - as1: AssemblyTask.AS1,
+        - as2: AssemblyTask.AS2,
+        - as3: AssemblyTask.AS3,
+        - as4: AssemblyTask.AS4,
+
+        Args:
+            assembly_station (str): The assembly station in string format.
+
+        Returns:
+            int: The assembly station in integer format.
+        """
+
+        options = {
+            'as1': AssemblyTask.AS1,
+            'as2': AssemblyTask.AS2,
+            'as3': AssemblyTask.AS3,
+            'as4': AssemblyTask.AS4
+        }
+
+        found_type = options.get(assembly_station)
+
+        if found_type in [AssemblyTask.AS1, AssemblyTask.AS2, AssemblyTask.AS3, AssemblyTask.AS4]:
+            return found_type
+        else:
+            self.get_logger().fatal(
+                f"Assembly station '{assembly_station}' is not correct. Check spelling.")
+            return None
+
+
+    def create_robot_malfunction(self, challenge_dict):
+        """Method to build and return a RobotMalfunctionChallenge object from a dictionary
+
+        Args:
+            challenge_dict (dict): robot_malfunction dictionary from config file
+
+        Returns:
+            RobotMalfunctionChallenge: Object containing robot malfunction information
+        """
+        msg = RobotMalfunctionChallenge()
+        msg.duration = challenge_dict['duration']
+
+        if "floor_robot" in challenge_dict['robots_to_disable']:
+            msg.robots_to_disable.floor_robot = True
+        if "ceiling_robot" in challenge_dict['robots_to_disable']:
+            msg.robots_to_disable.ceiling_robot = True
+
+        if challenge_dict.get('part_place_condition'):
+            msg.condition.type = "part_place_condition"
+            msg.condition.part_place_condition.part.type = self.convert_part_type_to_int(
+                challenge_dict['part_place_condition']['type'])
+            msg.condition.part_place_condition.part.color = self.convert_part_color_to_int(
+                challenge_dict['part_place_condition']['color'])
+
+            for key in challenge_dict['part_place_condition'].keys():
+                if key == 'agv':
+                    msg.condition.part_place_condition.agv = challenge_dict[
+                        'part_place_condition']['agv']
+                elif key == 'as':
+                    msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
+                        challenge_dict['part_place_condition']['as'])
+        elif challenge_dict.get('time_condition'):
+            msg.condition.type = "time_condition"
+            msg.condition.time_condition.seconds = challenge_dict['time_condition']
+        elif challenge_dict.get('submission_condition'):
+            msg.condition.type = "submission_condition"
+            msg.condition.submission_condition.order_id = challenge_dict[
+                'submission_condition']['order_id']
+
+        challenge_msg = Challenge()
+        challenge_msg.type = "robot_malfunction"
+        challenge_msg.robot_malfunction_challenge = msg
+        return challenge_msg
+
+
+    def create_sensor_blackout(self, challenge_dict):
+        """Method to build and return a SensorBlackoutChallenge object from a dictionary
+
+        Args:
+            challenge_dict (dict): sensor_blackout dictionary from config file
+
+        Returns:
+            SensorBlackoutChallenge: Object containing sensor blackout information
+        """
+        msg = SensorBlackoutChallenge()
+        msg.duration = challenge_dict['duration']
+
+        if "break_beam" in challenge_dict['sensors_to_disable']:
+            msg.sensors_to_disable.break_beam = True
+        if "proximity" in challenge_dict['sensors_to_disable']:
+            msg.sensors_to_disable.proximity = True
+        if "laser_profiler" in challenge_dict['sensors_to_disable']:
+            msg.sensors_to_disable.laser_profiler = True
+        if "lidar" in challenge_dict['sensors_to_disable']:
+            msg.sensors_to_disable.lidar = True
+        if "camera" in challenge_dict['sensors_to_disable']:
+            msg.sensors_to_disable.camera = True
+        if "logical_camera" in challenge_dict['sensors_to_disable']:
+            msg.sensors_to_disable.logical_camera = True
+
+        if challenge_dict.get('part_place_condition'):
+            msg.condition.type = "part_place_condition"
+            msg.condition.part_place_condition.part.type = self.convert_part_type_to_int(
+                challenge_dict['part_place_condition']['type'])
+            msg.condition.part_place_condition.part.color = self.convert_part_color_to_int(
+                challenge_dict['part_place_condition']['color'])
+
+            for key in challenge_dict['part_place_condition'].keys():
+                if key == 'agv':
+                    agv = challenge_dict['part_place_condition']['agv']
+                    msg.condition.part_place_condition.agv = agv
+                elif key == 'as':
+                    station = challenge_dict['part_place_condition']['as']
+                    msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
+                        station)
+
+        elif challenge_dict.get('time_condition'):
+            msg.condition.type = "time_condition"
+            msg.condition.time_condition.seconds = challenge_dict['time_condition']
+        elif challenge_dict.get('submission_condition'):
+            msg.condition.type = "submission_condition"
+            msg.condition.submission_condition.order_id = challenge_dict[
+                'submission_condition']['order_id']
+
+        challenge_msg = Challenge()
+        challenge_msg.type = "sensor_blackout"
+        challenge_msg.sensor_blackout_challenge = msg
+        return challenge_msg
+
+
+    def create_challenge_list(self, challenges):
+        """Create a list of challenges from a list of challenge dictionaries
+
+        Args:
+            challenges (dict): List of challenge dictionaries
+
+        Returns:
+            [ariac_msgs.Challenge]: List of challenges
+        """
+
+        challenge_list = []
+
+        for challenge in challenges:
+            for key, value in challenge.items():
+                # self.get_logger().fatal(f"KEY: {key}")
+                if key == 'robot_malfunction':
+                    challenge_list.append(self.create_robot_malfunction(value))
+                if key == 'sensor_blackout':
+                    challenge_list.append(self.create_sensor_blackout(value))
+
+        return challenge_list
+
+
+    def create_assembly_task(self, assembly_task_dict):
+        msg = AssemblyTask()
+        products = assembly_task_dict['products']
+        assembly_product_list = []
+        for product in products:
+            assembly_part_msg = AssemblyPart()
+            assembly_part_msg.part.type = self.convert_part_type_to_int(
+                product['type'])
+            assembly_part_msg.part.color = self.convert_part_color_to_int(
+                product['color'])
+
+            assembly_part_msg.assembled_pose = PoseStamped()
+            assembly_part_msg.assembled_pose.pose.position.x = product['assembled_pose']['xyz'][0]
+            assembly_part_msg.assembled_pose.pose.position.y = product['assembled_pose']['xyz'][1]
+            assembly_part_msg.assembled_pose.pose.position.z = product['assembled_pose']['xyz'][2]
+
+            roll = product['assembled_pose']['rpy'][0]
+            if isinstance(roll, str):
+                roll = convert_pi_string_to_float(roll)
+
+            pitch = product['assembled_pose']['rpy'][1]
+            if isinstance(pitch, str):
+                pitch = convert_pi_string_to_float(pitch)
+
+            yaw = product['assembled_pose']['rpy'][2]
+            if isinstance(yaw, str):
+                yaw = convert_pi_string_to_float(yaw)
+
+            orientation = quaternion_from_euler(roll, pitch, yaw)
+            assembly_part_msg.assembled_pose.pose.orientation.x = orientation[0]
+            assembly_part_msg.assembled_pose.pose.orientation.y = orientation[1]
+            assembly_part_msg.assembled_pose.pose.orientation.z = orientation[2]
+            assembly_part_msg.assembled_pose.pose.orientation.w = orientation[3]
+
+            vector3 = Vector3()
+            vector3.x = float(product['assembly_direction'][0])
+            vector3.y = float(product['assembly_direction'][1])
+            vector3.z = float(product['assembly_direction'][2])
+            assembly_part_msg.install_direction = vector3
+            # add the product to the list
+            assembly_product_list.append(assembly_part_msg)
+
+        agv_number_list = []
+        for item in assembly_task_dict['agv_number']:
+            agv_number_list.append(int(item))
+        msg.agv_numbers = agv_number_list
+        msg.station = self.convert_assembly_station_to_int(
+            assembly_task_dict['station'])
+        msg.parts = assembly_product_list
+        return msg
+
+
+    def create_combined_task(self, combined_task_dict):
+        msg = CombinedTask()
+        products = combined_task_dict['products']
+        product_list = []
+        for product in products:
+            assembly_part_msg = AssemblyPart()
+            assembly_part_msg.part.type = self.convert_part_type_to_int(
+                product['type'])
+            assembly_part_msg.part.color = self.convert_part_color_to_int(
+                product['color'])
+
+            assembly_part_msg.assembled_pose = PoseStamped()
+            assembly_part_msg.assembled_pose.pose.position.x = product['assembled_pose']['xyz'][0]
+            assembly_part_msg.assembled_pose.pose.position.y = product['assembled_pose']['xyz'][1]
+            assembly_part_msg.assembled_pose.pose.position.z = product['assembled_pose']['xyz'][2]
+
+            roll = product['assembled_pose']['rpy'][0]
+            if isinstance(roll, str):
+                roll = convert_pi_string_to_float(roll)
+
+            pitch = product['assembled_pose']['rpy'][1]
+            if isinstance(pitch, str):
+                pitch = convert_pi_string_to_float(pitch)
+
+            yaw = product['assembled_pose']['rpy'][2]
+            if isinstance(yaw, str):
+                yaw = convert_pi_string_to_float(yaw)
+
+            orientation = quaternion_from_euler(roll, pitch, yaw)
+            assembly_part_msg.assembled_pose.pose.orientation.x = orientation[0]
+            assembly_part_msg.assembled_pose.pose.orientation.y = orientation[1]
+            assembly_part_msg.assembled_pose.pose.orientation.z = orientation[2]
+            assembly_part_msg.assembled_pose.pose.orientation.w = orientation[3]
+
+            vector3 = Vector3()
+            vector3.x = float(product['assembly_direction'][0])
+            vector3.y = float(product['assembly_direction'][1])
+            vector3.z = float(product['assembly_direction'][2])
+            assembly_part_msg.install_direction = vector3
+            # add the product to the list
+            product_list.append(assembly_part_msg)
+
+        msg.station = self.convert_assembly_station_to_int(
+            combined_task_dict['station'])
+        msg.parts = product_list
+        return msg
+
+
+    def create_kitting_task(self, kitting_task_dict):
+        msg = KittingTask()
+        products = kitting_task_dict['products']
+        kitting_product_list = []
+        for product in products:
+            kitting_part_msg = KittingPart()
+            kitting_part_msg.part.type = self.convert_part_type_to_int(
+                product['type'])
+            kitting_part_msg.part.color = self.convert_part_color_to_int(
+                product['color'])
+            kitting_part_msg.quadrant = product['quadrant']
+            kitting_product_list.append(kitting_part_msg)
+
+        msg.agv_number = kitting_task_dict['agv_number']
+        msg.tray_id = kitting_task_dict['tray_id']
+        msg.destination = self.convert_destination_to_int(
+            kitting_task_dict['destination'])
+        msg.parts = kitting_product_list
+        return msg
+
+
+    def create_order_list(self, orders):
+        order_condition_list = []
+        for order in orders:
+            order_condition = OrderCondition()
+            order_condition.id = order['id']
+            order_condition.type = self.convert_order_type_to_int(
+                order['type'])
+            order_condition.priority = order['priority']
+            # Announcement
+            announcement = order['announcement']
+            condition = Condition()
+            for announcement_key, announcement_value in announcement.items():
+                if announcement_key == 'time_condition':
+                    condition.type = 'time_condition'
+                    condition.time_condition.seconds = float(
+                        announcement_value)
+                elif announcement_key == 'part_place_condition':
+                    condition.type = 'part_place_condition'
+                    color = order['announcement']['part_place_condition']['color']
+                    condition.part_place_condition.part.color = self.convert_part_color_to_int(
+                        color)
+                    part = order['announcement']['part_place_condition']['type']
+                    condition.part_place_condition.part.color = self.convert_part_type_to_int(
+                        part)
+
+                    for key in order['announcement']['part_place_condition'].keys():
+                        if key == 'agv':
+                            agv = order['announcement']['part_place_condition']['agv']
+                            condition.part_place_condition.agv = agv
+                        elif key == 'as':
+                            station = order['announcement']['part_place_condition']['as']
+                            condition.part_place_condition.station = self.convert_assembly_station_to_int(
+                                station)
+
+                elif announcement_key == 'submission_condition':
+                    condition.type = 'submission_condition'
+                    order_id = order['announcement']['submission_condition']['order_id']
+                    condition.submission_condition.order_id = order_id
+            # Task
+            if order['type'] == "kitting":
+                order_condition.kitting_task = self.create_kitting_task(
+                    order['kitting_task'])
+            elif order['type'] == "assembly":
+                order_condition.assembly_task = self.create_assembly_task(
+                    order['assembly_task'])
+            elif order['type'] == "combined":
+                order_condition.combined_task = self.create_combined_task(
+                    order['combined_task'])
+
+            order_condition_list.append(order_condition)
+        return order_condition_list
+
 
     def spawn_sensors(self):
         try:
@@ -138,25 +656,50 @@ class EnvironmentStartup(Node):
             sensor_type = user_sensors[sensor_name]['type']
             xyz = user_sensors[sensor_name]['pose']['xyz']
             rpy = user_sensors[sensor_name]['pose']['rpy']
-            
+
             if 'visualize_fov' in user_sensors[sensor_name].keys():
                 vis = user_sensors[sensor_name]['visualize_fov']
             else:
                 vis = False
 
-            params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz, rpy=rpy)
+            params = SensorSpawnParams(
+                sensor_name, sensor_type, visualize=vis, xyz=xyz, rpy=rpy)
             self.spawn_entity(params)
-        
-        # Spawn quality control sensors
+
+        # Spawn agv tray sensors
         for i in range(1, 5):
-            sensor_name = "quality_control_sensor" + str(i)
-            sensor_type = "quality_control"
+            sensor_name = "agv_tray_sensor_" + str(i)
+            sensor_type = "agv_tray_sensor"
             xyz = [0, 0, 1]
             vis = False
 
-            params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz)
+            params = SensorSpawnParams(
+                sensor_name, sensor_type, visualize=vis, xyz=xyz)
             params.reference_frame = "agv" + str(i) + "_tray"
             self.spawn_entity(params)
+
+        # Spawn assembly station sensors
+        for i in range(1, 5):
+            sensor_name = "assembly_station_sensor_" + str(i)
+            sensor_type = "assembly_station_sensor"
+            vis = False
+
+            try:
+                t = self.tf_buffer.lookup_transform(
+                    'world', "as" + str(i) + "_insert_frame", rclpy.time.Time())
+            except TransformException as ex:
+                self.get_logger().info(
+                    f'Could not transform assembly station {i} to world: {ex}')
+                return
+
+            xyz = [t.transform.translation.x, t.transform.translation.y,
+                   t.transform.translation.z + 0.989]
+
+            params = SensorSpawnParams(
+                sensor_name, sensor_type, visualize=vis, xyz=xyz)
+
+            self.spawn_entity(params)
+
 
     def spawn_kit_trays(self):
         possible_slots = [1, 2, 3, 4, 5, 6]
@@ -201,18 +744,22 @@ class EnvironmentStartup(Node):
         # Calculate location of tables using tf
         transforms = {}
         try:
-            transforms['table_1'] = self.tf_buffer.lookup_transform('world', "kts1_table_frame", rclpy.time.Time())
+            transforms['table_1'] = self.tf_buffer.lookup_transform(
+                'world', "kts1_table_frame", rclpy.time.Time())
         except TransformException as ex:
-            self.get_logger().info(f'Could not transform kts1_table_frame to world: {ex}')
+            self.get_logger().info(
+                f'Could not transform kts1_table_frame to world: {ex}')
             return
 
         try:
-            transforms['table_2'] = self.tf_buffer.lookup_transform('world', "kts2_table_frame", rclpy.time.Time())
+            transforms['table_2'] = self.tf_buffer.lookup_transform(
+                'world', "kts2_table_frame", rclpy.time.Time())
         except TransformException as ex:
-            self.get_logger().info(f'Could not transform kts1_table_frame to world: {ex}')
+            self.get_logger().info(
+                f'Could not transform kts1_table_frame to world: {ex}')
             return
 
-        # Spawn trays 
+        # Spawn trays
         num_trays = 0
         kit_tray_thickness = 0.01
         for id, slot in zip(ids, slots):
@@ -220,22 +767,26 @@ class EnvironmentStartup(Node):
             rel_pose.position.x = slot_info[slot]["offset"]
             rel_pose.position.z = kit_tray_thickness
 
-            world_pose = do_transform_pose(rel_pose, transforms[slot_info[slot]["table"]])
-            
+            world_pose = do_transform_pose(
+                rel_pose, transforms[slot_info[slot]["table"]])
+
             # Create unique name for each tray that includes the id
             marker_id = str(id).zfill(2)
-            name = "kit_tray_" +  marker_id + "_" + str(num_trays)
+            name = "kit_tray_" + marker_id + "_" + str(num_trays)
             num_trays += 1
 
-            xyz = [world_pose.position.x, world_pose.position.y, world_pose.position.z]
+            xyz = [world_pose.position.x,
+                   world_pose.position.y, world_pose.position.z]
             rpy = euler_from_quaternion(world_pose.orientation)
 
             params = TraySpawnParams(name, marker_id, xyz=xyz, rpy=rpy)
 
             self.spawn_entity(params, wait=False)
 
+
     def spawn_bin_parts(self):
-        possible_bins = ['bin1', 'bin2', 'bin3', 'bin4', 'bin5', 'bin6', 'bin7', 'bin8']
+        possible_bins = ['bin1', 'bin2', 'bin3',
+                         'bin4', 'bin5', 'bin6', 'bin7', 'bin8']
 
         slot_info = {
             1: {"x_offset": 0.18, "y_offset": 0.18},
@@ -255,7 +806,7 @@ class EnvironmentStartup(Node):
         except KeyError:
             self.get_logger().warn("No bin parts found in configuration")
             return
-        
+
         if not bin_parts_config:
             return
 
@@ -264,23 +815,25 @@ class EnvironmentStartup(Node):
             if not bin_name in possible_bins:
                 self.get_logger().warn(f"{bin_name} is not a valid bin name")
                 continue
-        
+
             try:
-                bin_transform = self.tf_buffer.lookup_transform('world', bin_name + "_frame", rclpy.time.Time())
+                bin_transform = self.tf_buffer.lookup_transform(
+                    'world', bin_name + "_frame", rclpy.time.Time())
             except TransformException as ex:
-                self.get_logger().info(f'Could not transform {bin_name}_frame to world: {ex}')
+                self.get_logger().info(
+                    f'Could not transform {bin_name}_frame to world: {ex}')
                 return
 
             # Fill bin info msg for each bin that has parts
             bin_info = BinInfo()
             bin_info.bin_number = int(bin_name[-1])
 
-            available_slots = list(range(1,10))
+            available_slots = list(range(1, 10))
             for part_info in bin_parts_config[bin_name]:
                 ret, part = self.parse_part_info(part_info)
                 if not ret:
                     continue
-                
+
                 try:
                     slots = part_info['slots']
                     if not type(slots) == list:
@@ -289,22 +842,25 @@ class EnvironmentStartup(Node):
                 except KeyError:
                     self.get_logger().warn("Part slots are not specified")
                     continue
-                
+
                 # Spawn parts into slots
                 num_parts_in_bin = 0
                 for slot in slots:
                     if not slot in slot_info.keys():
-                        self.get_logger().warn(f"Slot {slot} is not a valid option")
+                        self.get_logger().warn(
+                            f"Slot {slot} is not a valid option")
                         continue
                     elif not slot in available_slots:
-                        self.get_logger().warn(f"Slot {slot} is already occupied")
+                        self.get_logger().warn(
+                            f"Slot {slot} is already occupied")
                         continue
 
                     num_parts_in_bin += 1
-                    
+
                     available_slots.remove(slot)
-                    
-                    part_name = part.type + "_" + part.color + "_b" + str(part_count).zfill(2)
+
+                    part_name = part.type + "_" + part.color + \
+                        "_b" + str(part_count).zfill(2)
                     part_count += 1
 
                     if part.flipped:
@@ -313,7 +869,7 @@ class EnvironmentStartup(Node):
                         roll = 0
 
                     yaw = convert_pi_string_to_float(part.rotation)
-                    
+
                     q = quaternion_from_euler(roll, 0, yaw)
                     rel_pose = Pose()
                     rel_pose.position.x = slot_info[slot]["x_offset"]
@@ -329,15 +885,18 @@ class EnvironmentStartup(Node):
 
                     world_pose = do_transform_pose(rel_pose, bin_transform)
 
-                    xyz = [world_pose.position.x, world_pose.position.y, world_pose.position.z]
+                    xyz = [world_pose.position.x,
+                           world_pose.position.y, world_pose.position.z]
                     rpy = euler_from_quaternion(world_pose.orientation)
 
-                    params = PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy)
+                    params = PartSpawnParams(
+                        part_name, part.type, part.color, xyz=xyz, rpy=rpy)
 
                     self.spawn_entity(params, wait=False)
-            
-                bin_info.parts.append(self.fill_part_lot_msg(part, num_parts_in_bin))
-            
+
+                bin_info.parts.append(
+                    self.fill_part_lot_msg(part, num_parts_in_bin))
+
             self.bin_parts.bins.append(bin_info)
 
     def fill_part_lot_msg(self, part: PartInfo, quantity: int):
@@ -348,7 +907,7 @@ class EnvironmentStartup(Node):
             'orange': Part.ORANGE,
             'purple': Part.PURPLE,
         }
-        
+
         part_types = {
             'battery': Part.BATTERY,
             'pump': Part.PUMP,
@@ -362,24 +921,25 @@ class EnvironmentStartup(Node):
         lot.quantity = quantity
 
         return lot
-        
+
     def spawn_conveyor_part(self):
         if self.conveyor_enabled:
             if self.conveyor_spawn_order == 'sequential':
                 part_params = self.conveyor_parts_to_spawn.pop(0)
             elif self.conveyor_spawn_order == 'random':
-                part_params = self.conveyor_parts_to_spawn.pop(randint(0, len(self.conveyor_parts_to_spawn) - 1))
-            
+                part_params = self.conveyor_parts_to_spawn.pop(
+                    randint(0, len(self.conveyor_parts_to_spawn) - 1))
+
             self.spawn_entity(part_params, wait=False)
 
         if not self.conveyor_parts_to_spawn:
             self.conveyor_spawn_timer.cancel()
 
     def spawn_robots(self):
-        for name in self.robot_names:
-            urdf = ET.fromstring(self.robot_descriptions[name])
-            params = RobotSpawnParams(name, ET.tostring(urdf, encoding="unicode"))
-            self.spawn_entity(params)
+        urdf = ET.fromstring(self.get_parameter('robot_description').value)
+        params = RobotSpawnParams(
+            "ariac_robots", ET.tostring(urdf, encoding="unicode"))
+        self.spawn_entity(params)
 
     def spawn_parts_on_agvs(self):
         quadrant_info = {
@@ -397,7 +957,7 @@ class EnvironmentStartup(Node):
         except KeyError:
             self.get_logger().log("No agv parts found in configuration")
             return
-        
+
         part_count = 0
         for agv in agv_parts:
             if not agv in possible_agvs:
@@ -409,26 +969,28 @@ class EnvironmentStartup(Node):
                 tray_id = agv_parts[agv]['tray_id']
             except KeyError:
                 tray_id = 0
-            
+
             marker_id = str(tray_id).zfill(2)
-            name = "kit_tray_" +  marker_id + "_a" + agv[-1]
+            name = "kit_tray_" + marker_id + "_a" + agv[-1]
 
             xyz = [0, 0, 0.01]
             reference_frame = agv + "_tray"
-            params = TraySpawnParams(name, marker_id, xyz=xyz, rf=reference_frame)
+            params = TraySpawnParams(
+                name, marker_id, xyz=xyz, rf=reference_frame)
             self.spawn_entity(params)
 
             # Spawn parts onto kit tray
-            available_quadrants = list(range(1,5))
+            available_quadrants = list(range(1, 5))
             for part_info in agv_parts[agv]['parts']:
                 ret, part = self.parse_part_info(part_info)
                 if not ret:
                     continue
-                
+
                 try:
                     quadrant = part_info['quadrant']
                     if not quadrant in quadrant_info.keys():
-                        self.get_logger().warn(f"Quadrant {quadrant} is not an option")
+                        self.get_logger().warn(
+                            f"Quadrant {quadrant} is not an option")
                         continue
                 except KeyError:
                     self.get_logger().warn("Quadrant is not specified")
@@ -442,20 +1004,23 @@ class EnvironmentStartup(Node):
                 else:
                     roll = 0
                     z_height = 0.01
-                
-                part_name = part.type + "_" + part.color + "_a" + str(part_count).zfill(2)
+
+                part_name = part.type + "_" + part.color + \
+                    "_a" + str(part_count).zfill(2)
                 part_count += 1
 
-                xyz = [quadrant_info[quadrant]["x_offset"], quadrant_info[quadrant]["y_offset"], z_height]
+                xyz = [quadrant_info[quadrant]["x_offset"],
+                       quadrant_info[quadrant]["y_offset"], z_height]
                 rpy = [roll, 0, part.rotation]
 
-                params = PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy, rf=reference_frame)
+                params = PartSpawnParams(
+                    part_name, part.type, part.color, xyz=xyz, rpy=rpy, rf=reference_frame)
 
                 self.spawn_entity(params, wait=False)
-            
+
     def parse_conveyor_config(self):
         # Parse Conveyor Configuration
-        try: 
+        try:
             conveyor_config = self.trial_config['parts']['conveyor_belt']
         except KeyError:
             self.get_logger().error("Unable to find conveyor belt params in configuration file")
@@ -474,7 +1039,7 @@ class EnvironmentStartup(Node):
         except KeyError:
             self.get_logger().error("Spawn rate paramater not set in conveyor belt configuration")
             return False
-        
+
         try:
             self.spawn_rate = float(spawn_rate)
         except ValueError:
@@ -483,8 +1048,8 @@ class EnvironmentStartup(Node):
 
         # Get conveyor transform
         try:
-            conveyor_transform = self.tf_buffer.lookup_transform('world', 
-                "conveyor_belt_part_spawn_frame", rclpy.time.Time())
+            conveyor_transform = self.tf_buffer.lookup_transform('world',
+                                                                 "conveyor_belt_part_spawn_frame", rclpy.time.Time())
         except TransformException:
             return
 
@@ -492,7 +1057,8 @@ class EnvironmentStartup(Node):
             if conveyor_config['order'] in self.conveyor_spawn_order_types:
                 self.conveyor_spawn_order = conveyor_config['order']
             else:
-                self.get_logger().error(f"Order paramater must be of type: {self.conveyor_spawn_order_types}")
+                self.get_logger().error(
+                    f"Order paramater must be of type: {self.conveyor_spawn_order_types}")
                 return False
         except ValueError:
             self.get_logger().error("Spawn rate paramater must be a number")
@@ -524,10 +1090,12 @@ class EnvironmentStartup(Node):
             except KeyError:
                 offset = 0
 
-            self.conveyor_parts.parts.append(self.fill_part_lot_msg(part, amount))
+            self.conveyor_parts.parts.append(
+                self.fill_part_lot_msg(part, amount))
 
             for i in range(amount):
-                part_name = part.type + "_" + part.color + "_c" + str(part_count).zfill(2)
+                part_name = part.type + "_" + part.color + \
+                    "_c" + str(part_count).zfill(2)
                 part_count += 1
 
                 if part.flipped:
@@ -548,27 +1116,26 @@ class EnvironmentStartup(Node):
                 rel_pose.orientation.x = q[1]
                 rel_pose.orientation.y = q[2]
                 rel_pose.orientation.z = q[3]
-            
+
                 world_pose = do_transform_pose(rel_pose, conveyor_transform)
 
-                xyz = [world_pose.position.x, world_pose.position.y, world_pose.position.z]
+                xyz = [world_pose.position.x,
+                       world_pose.position.y, world_pose.position.z]
                 rpy = euler_from_quaternion(world_pose.orientation)
 
-                self.conveyor_parts_to_spawn.append(PartSpawnParams(part_name, part.type, part.color, xyz=xyz, rpy=rpy))
+                self.conveyor_parts_to_spawn.append(PartSpawnParams(
+                    part_name, part.type, part.color, xyz=xyz, rpy=rpy))
 
         if len(self.conveyor_parts_to_spawn) > 0:
             # Create Spawn Timer
-            self.conveyor_spawn_timer = self.create_timer(self.spawn_rate, self.spawn_conveyor_part)
+            self.conveyor_spawn_timer = self.create_timer(
+                self.spawn_rate, self.spawn_conveyor_part)
             return True
-        
+
         return False
 
-    def conveyor_status(self, msg: ConveyorBeltState):        
+    def conveyor_status(self, msg: ConveyorBeltState):
         self.conveyor_enabled = msg.enabled
-
-    def get_robot_descriptions_from_parameters(self):
-        for name in self.robot_names:
-            self.robot_descriptions[name] = self.get_parameter(name + '_description').value
 
     def spawn_entity(self, params: SpawnParams, wait=True) -> bool:
         self.spawn_client.wait_for_service()
@@ -585,7 +1152,7 @@ class EnvironmentStartup(Node):
 
         future = self.spawn_client.call_async(req)
 
-        if wait: 
+        if wait:
             rclpy.spin_until_future_complete(self, future)
             return future.result().success
         else:
@@ -593,7 +1160,7 @@ class EnvironmentStartup(Node):
 
     def parse_part_info(self, part_info):
         part = PartInfo()
-        
+
         try:
             part.type = part_info['type']
             part.height = PartInfo.part_heights[part.type]
@@ -621,13 +1188,15 @@ class EnvironmentStartup(Node):
             pass
 
         if not part.type in PartSpawnParams.part_types:
-            self.get_logger().warn(f"{part_info['type']} is not a valid part type")
+            self.get_logger().warn(
+                f"{part_info['type']} is not a valid part type")
             return (False, part)
-        
-        if  not part.color in PartSpawnParams.colors:
-            self.get_logger().warn(f"{part_info['color']} is not a valid part color")
+
+        if not part.color in PartSpawnParams.colors:
+            self.get_logger().warn(
+                f"{part_info['color']} is not a valid part color")
             return (False, part)
-        
+
         return (True, part)
 
     def read_yaml(self, path):
@@ -644,16 +1213,16 @@ class EnvironmentStartup(Node):
         request = Empty.Request()
 
         self.pause_client.call_async(request)
-    
+
     def unpause_physics(self):
         self.unpause_client.wait_for_service()
 
         request = Empty.Request()
 
         self.unpause_client.call_async(request)
-    
+
     def publish_bin_parts(self):
         self.bin_parts_publisher.publish(self.bin_parts)
-    
+
     def publish_conveyor_parts(self):
         self.conveyor_parts_publisher.publish(self.conveyor_parts)

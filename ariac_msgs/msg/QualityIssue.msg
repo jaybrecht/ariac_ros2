@@ -1,3 +1,4 @@
+bool all_passed
 bool missing_part
 bool flipped_part
 bool faulty_part

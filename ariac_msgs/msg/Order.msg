@@ -7,3 +7,4 @@ uint8 type
 bool priority
 ariac_msgs/KittingTask kitting_task 
 ariac_msgs/AssemblyTask assembly_task
+ariac_msgs/CombinedTask combined_task
