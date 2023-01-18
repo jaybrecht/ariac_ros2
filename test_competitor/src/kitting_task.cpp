@@ -25,9 +25,14 @@ int main(int argc, char *argv[])
   part1.part.color = ariac_msgs::msg::Part::BLUE;
   part1.part.type = ariac_msgs::msg::Part::BATTERY;
   part1.quadrant = ariac_msgs::msg::KittingPart::QUADRANT2;
-
   task.parts.push_back(part1);
 
+  ariac_msgs::msg::KittingPart part2;
+  part2.part.color = ariac_msgs::msg::Part::ORANGE;
+  part2.part.type = ariac_msgs::msg::Part::SENSOR;
+  part2.quadrant = ariac_msgs::msg::KittingPart::QUADRANT3;
+  task.parts.push_back(part2);
+  
   test_competitor->FloorRobotSendHome();
 
   test_competitor->FloorRobotPickandPlaceTray(task.tray_id, task.agv_number);
@@ -36,6 +41,8 @@ int main(int argc, char *argv[])
     test_competitor->FloorRobotPickBinPart(kit_part.part);
     test_competitor->FloorRobotPlacePartOnKitTray(task.agv_number, kit_part.quadrant);
   }
+
+  test_competitor->MoveAGV(task.agv_number, task.destination);
 
   rclcpp::shutdown();
 }

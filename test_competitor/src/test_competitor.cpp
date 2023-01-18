@@ -450,7 +450,7 @@ bool TestCompetitor::FloorRobotPickandPlaceTray(int tray_id, int agv_num)
   waypoints.push_back(BuildPose(tray_pose.position.x, tray_pose.position.y, 
     tray_pose.position.z + 0.2, FloorRobotSetOrientation(tray_rotation)));
   waypoints.push_back(BuildPose(tray_pose.position.x, tray_pose.position.y, 
-    tray_pose.position.z - 0.001, FloorRobotSetOrientation(tray_rotation)));
+    tray_pose.position.z, FloorRobotSetOrientation(tray_rotation)));
   FloorRobotMoveCartesian(waypoints, 0.3, 0.3);
 
   FloorRobotSetGripperState(true);
@@ -518,7 +518,7 @@ bool TestCompetitor::FloorRobotPickBinPart(ariac_msgs::msg::Part part_to_pick)
   }
   // Check table 2
   if (!found_part) {
-    for (auto part: left_bins_parts_) {
+    for (auto part: right_bins_parts_) {
       if (part.part.type == part_to_pick.type && part.part.color == part_to_pick.color) {
         part_pose = MultiplyPose(right_bins_camera_pose_, part.pose);
         found_part = true;
@@ -563,7 +563,7 @@ bool TestCompetitor::FloorRobotPickBinPart(ariac_msgs::msg::Part part_to_pick)
     part_pose.position.z + 0.5, FloorRobotSetOrientation(part_rotation)));
   
   waypoints.push_back(BuildPose(part_pose.position.x, part_pose.position.y, 
-    part_pose.position.z + part_heights_[part_to_pick.type] - 0.001, FloorRobotSetOrientation(part_rotation)));
+    part_pose.position.z + part_heights_[part_to_pick.type], FloorRobotSetOrientation(part_rotation)));
   
   FloorRobotMoveCartesian(waypoints, 0.3, 0.3);
 
@@ -646,6 +646,23 @@ bool TestCompetitor::LockAGVTray(int agv_num)
   client = this->create_client<std_srvs::srv::Trigger>(srv_name);
 
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+
+  auto result =client->async_send_request(request);
+  result.wait();
+
+  return result.get()->success;
+}
+
+bool TestCompetitor::MoveAGV(int agv_num, int destination)
+{
+  rclcpp::Client<ariac_msgs::srv::MoveAGV>::SharedPtr client;
+
+  std::string srv_name = "/ariac/move_agv" + std::to_string(agv_num);
+
+  client = this->create_client<ariac_msgs::srv::MoveAGV>(srv_name);
+
+  auto request = std::make_shared<ariac_msgs::srv::MoveAGV::Request>();
+  request->location = destination;
 
   auto result =client->async_send_request(request);
   result.wait();

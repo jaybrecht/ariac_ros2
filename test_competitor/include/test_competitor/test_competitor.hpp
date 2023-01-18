@@ -28,6 +28,7 @@
 
 #include <ariac_msgs/srv/change_gripper.hpp>
 #include <ariac_msgs/srv/vacuum_gripper_control.hpp>
+#include <ariac_msgs/srv/move_agv.hpp>
 
 #include <geometry_msgs/msg/pose.hpp>
 
@@ -48,15 +49,16 @@ public:
   bool FloorRobotPickConveyorPart(ariac_msgs::msg::Part part_to_pick);
   bool FloorRobotPlacePartOnKitTray(int agv_num, int quadrant);
 
+  // ARIAC Functions
+  bool LockAGVTray(int agv_num);
+  bool MoveAGV(int agv_num, int destination);
+
 private:
   // Robot Move Functions
   bool FloorRobotMovetoTarget();
   bool FloorRobotMoveCartesian(std::vector<geometry_msgs::msg::Pose> waypoints, double vsf, double asf);
   geometry_msgs::msg::Quaternion FloorRobotSetOrientation(double rotation);
   void FloorRobotWaitForAttach(double timeout);
-
-  // ARIAC Functions
-  bool LockAGVTray(int agv_num);
 
   // Helper Functions
   geometry_msgs::msg::Pose MultiplyPose(geometry_msgs::msg::Pose p1, geometry_msgs::msg::Pose p2);
@@ -152,7 +154,7 @@ private:
     {ariac_msgs::msg::Part::BATTERY, 0.04},
     {ariac_msgs::msg::Part::PUMP, 0.12},
     {ariac_msgs::msg::Part::REGULATOR, 0.07},
-    {ariac_msgs::msg::Part::SENSOR, 0.10}
+    {ariac_msgs::msg::Part::SENSOR, 0.07}
   };
 
   // Quadrant Offsets
