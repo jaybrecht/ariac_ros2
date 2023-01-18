@@ -1,9 +1,16 @@
 #include <rclcpp/qos.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
+#include <moveit_msgs/msg/collision_object.hpp>
+
+#include <geometric_shapes/shapes.h>
+#include <geometric_shapes/shape_operations.h>
+#include <shape_msgs/msg/mesh.h>
 
 #include "tf2/exceptions.h"
 #include "tf2_ros/transform_listener.h"
@@ -11,6 +18,8 @@
 
 #include <kdl/frames.hpp>
 #include <tf2_kdl/tf2_kdl.h>
+
+#include <std_srvs/srv/trigger.hpp>
 
 #include <ariac_msgs/msg/advanced_logical_camera_image.hpp>
 #include <ariac_msgs/msg/kitting_task.hpp>
@@ -31,35 +40,34 @@ public:
   ~TestCompetitor();
 
   // Floor Robot Public Functions
-  bool FloorRobotSendHome();
-  bool FloorRobotChangeGripper(std::string gripper_type);
-  bool FloorRobotPickTray(int tray_id);
+  void FloorRobotSendHome();
+  bool FloorRobotSetGripperState(bool enable);
+  bool FloorRobotChangeGripper(std::string station, std::string gripper_type);
+  bool FloorRobotPickandPlaceTray(int tray_id, int agv_num);
   bool FloorRobotPickBinPart(ariac_msgs::msg::Part part_to_pick);
   bool FloorRobotPickConveyorPart(ariac_msgs::msg::Part part_to_pick);
-  bool FloorRobotPlaceTrayOnAGV(std::string agv);
-  bool FloorRobotPlacePartOnKitTray(std::string agv, int quadrant);
-
-  // ARIAC Functions
-  bool LockTrayOnAGV(std::string agv);
-  bool PerformQualityCheck(int);
-  bool MoveAGV(int destination);
-
-  // Analyze Data from Sensors
-  std::string LocateKitTrayStation(int);
-  geometry_msgs::msg::Pose LocateKitTray(std::string, int);
-  geometry_msgs::msg::Pose LocateBinPart(ariac_msgs::msg::Part);
-
-  bool ChangeFloorRobotTool(std::string, std::string);
-  bool MoveToKitTrayStation(std::string);
-  bool LockTrayOnAGV(int);
-  bool PickTray(int);
-  bool PickBinPart(ariac_msgs::msg::Part);
-  bool PlaceTrayOnAGV(int);
-  bool PlacePartOnKitTray(int, int);
-  bool CompleteKittingTask(ariac_msgs::msg::KittingTask &task);
-  bool SendRobotToHome(std::string);
+  bool FloorRobotPlacePartOnKitTray(int agv_num, int quadrant);
 
 private:
+  // Robot Move Functions
+  bool FloorRobotMovetoTarget();
+  bool FloorRobotMoveCartesian(std::vector<geometry_msgs::msg::Pose> waypoints, double vsf, double asf);
+  geometry_msgs::msg::Quaternion FloorRobotSetOrientation(double rotation);
+  void FloorRobotWaitForAttach(double timeout);
+
+  // ARIAC Functions
+  bool LockAGVTray(int agv_num);
+
+  // Helper Functions
+  geometry_msgs::msg::Pose MultiplyPose(geometry_msgs::msg::Pose p1, geometry_msgs::msg::Pose p2);
+  geometry_msgs::msg::Pose BuildPose(double x, double y, double z, geometry_msgs::msg::Quaternion orientation);
+  geometry_msgs::msg::Pose FrameWorldPose(std::string frame_id);
+  double GetYaw(geometry_msgs::msg::Pose pose);
+  geometry_msgs::msg::Quaternion QuaternionFromRPY(double r, double p, double y);
+
+  void AddModelToPlanningScene(std::string name, std::string mesh_file, geometry_msgs::msg::Pose model_pose);
+  void AddModelsToPlanningScene();
+
   // Callback Groups
   rclcpp::CallbackGroup::SharedPtr client_cb_group_;
   rclcpp::CallbackGroup::SharedPtr topic_cb_group_;
@@ -69,9 +77,6 @@ private:
   moveit::planning_interface::MoveGroupInterface ceiling_robot_;
   
   moveit::planning_interface::PlanningSceneInterface planning_scene_;
-
-  geometry_msgs::msg::Quaternion floor_robot_home_orientation_;
-  geometry_msgs::msg::Quaternion ceiling_robot_home_orientation_;
 
   trajectory_processing::TimeOptimalTrajectoryGeneration totg_;
 
@@ -89,6 +94,7 @@ private:
 
   // Gripper State
   ariac_msgs::msg::VacuumGripperState floor_gripper_state_;
+  ariac_msgs::msg::Part floor_robot_attached_part_;
 
   // Sensor poses
   geometry_msgs::msg::Pose kts1_camera_pose_;
@@ -121,4 +127,69 @@ private:
   // ARIAC Services 
   rclcpp::Client<ariac_msgs::srv::ChangeGripper>::SharedPtr floor_robot_tool_changer_;
   rclcpp::Client<ariac_msgs::srv::VacuumGripperControl>::SharedPtr floor_robot_gripper_enable_;
+
+  // Constants
+  double kit_tray_thickness_ = 0.01;
+  double drop_height_ = 0.002;
+
+  std::map<int, std::string> part_types_ = {
+    {ariac_msgs::msg::Part::BATTERY, "battery"},
+    {ariac_msgs::msg::Part::PUMP, "pump"},
+    {ariac_msgs::msg::Part::REGULATOR, "regulator"},
+    {ariac_msgs::msg::Part::SENSOR, "sensor"}
+  };
+
+  std::map<int, std::string> part_colors_ = {
+    {ariac_msgs::msg::Part::RED, "red"},
+    {ariac_msgs::msg::Part::BLUE, "blue"},
+    {ariac_msgs::msg::Part::GREEN, "green"},
+    {ariac_msgs::msg::Part::ORANGE, "orange"},
+    {ariac_msgs::msg::Part::PURPLE, "purple"},
+  };
+
+  // Part heights
+  std::map<int, double> part_heights_ = {
+    {ariac_msgs::msg::Part::BATTERY, 0.04},
+    {ariac_msgs::msg::Part::PUMP, 0.12},
+    {ariac_msgs::msg::Part::REGULATOR, 0.07},
+    {ariac_msgs::msg::Part::SENSOR, 0.10}
+  };
+
+  // Quadrant Offsets
+  std::map<int, std::pair<double, double>> quad_offsets_ = {
+    {ariac_msgs::msg::KittingPart::QUADRANT1, std::pair<double, double>(-0.08, 0.12)},
+    {ariac_msgs::msg::KittingPart::QUADRANT2, std::pair<double, double>(0.08, 0.12)},
+    {ariac_msgs::msg::KittingPart::QUADRANT3, std::pair<double, double>(-0.08, -0.12)},
+    {ariac_msgs::msg::KittingPart::QUADRANT4, std::pair<double, double>(0.08, -0.12)},
+  };
+
+  std::map<std::string, double> rail_positions_ = {
+    {"agv1", -4.5},
+    {"agv2", -1.2},
+    {"agv3", 1.2},
+    {"agv4", 4.5},
+    {"left_bins", 3}, 
+    {"right_bins", -3}
+  };
+
+  // Joint value targets for kitting stations
+  std::map<std::string, double> floor_kts1_js_ = {
+    {"linear_actuator_joint", 4.0},
+    {"floor_shoulder_pan_joint", 1.57},
+    {"floor_shoulder_lift_joint", -1.57},
+    {"floor_elbow_joint", 1.57},
+    {"floor_wrist_1_joint", -1.57},
+    {"floor_wrist_2_joint", -1.57},
+    {"floor_wrist_3_joint", 0.0}
+  };
+
+  std::map<std::string, double> floor_kts2_js_ = {
+    {"linear_actuator_joint", -4.0},
+    {"floor_shoulder_pan_joint", -1.57},
+    {"floor_shoulder_lift_joint", -1.57},
+    {"floor_elbow_joint", 1.57},
+    {"floor_wrist_1_joint", -1.57},
+    {"floor_wrist_2_joint", -1.57},
+    {"floor_wrist_3_joint", 0.0}
+  };
 };
