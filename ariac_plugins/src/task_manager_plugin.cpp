@@ -245,8 +245,6 @@ namespace ariac_plugins
     //     // return std::make_shared<ariac_common::KittingTask>(agv_number, tray_id, destination, kitting_parts);
     // }
 
-    
-
     //==============================================================================
     void TaskManagerPlugin::OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg)
     {
@@ -276,7 +274,7 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    std::shared_ptr<ariac_common::KittingTask> TaskManagerPlugin::BuildKittingTask(const ariac_msgs::msg::KittingTask& _kitting_task)
+    std::shared_ptr<ariac_common::KittingTask> TaskManagerPlugin::BuildKittingTask(const ariac_msgs::msg::KittingTask &_kitting_task)
     {
         auto agv_number = _kitting_task.agv_number;
         auto tray_id = _kitting_task.tray_id;
@@ -295,7 +293,7 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    std::shared_ptr<ariac_common::AssemblyTask> TaskManagerPlugin::BuildAssemblyTask(const ariac_msgs::msg::AssemblyTask& _assembly_task)
+    std::shared_ptr<ariac_common::AssemblyTask> TaskManagerPlugin::BuildAssemblyTask(const ariac_msgs::msg::AssemblyTask &_assembly_task)
     {
         std::vector<unsigned int> agv_numbers = {};
         for (auto agv_number : _assembly_task.agv_numbers)
@@ -331,7 +329,7 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    std::shared_ptr<ariac_common::CombinedTask> TaskManagerPlugin::BuildCombinedTask(const ariac_msgs::msg::CombinedTask& _combined_task)
+    std::shared_ptr<ariac_common::CombinedTask> TaskManagerPlugin::BuildCombinedTask(const ariac_msgs::msg::CombinedTask &_combined_task)
     {
         auto station = _combined_task.station;
         std::vector<ariac_common::AssemblyPart> assembly_parts;
@@ -366,33 +364,83 @@ namespace ariac_plugins
     {
         for (auto order : orders)
         {
-            
+
             auto order_id = order->id;
             auto order_type = order->type;
             auto order_priority = order->priority;
 
+            bool has_kitting_task = false;
+            bool has_assembly_task = false;
+            bool has_combined_task = false;
+
+            std::shared_ptr<ariac_common::KittingTask> kitting_task = nullptr;
+            std::shared_ptr<ariac_common::AssemblyTask> assembly_task = nullptr;
+            std::shared_ptr<ariac_common::CombinedTask> combined_task = nullptr;
+
             if (order_type == ariac_common::OrderType::KITTING)
             {
-
-                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Kitting task: " << order_id);
-                auto kitting_task = BuildKittingTask(order->kitting_task);
+                // RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Kitting task: " << order_id);
+                kitting_task = BuildKittingTask(order->kitting_task);
             }
             else if (order_type == ariac_common::OrderType::ASSEMBLY)
             {
-                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Assembly task: " << order_id);
-                auto assembly_task = BuildAssemblyTask(order->assembly_task);
+                // RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Assembly task: " << order_id);
+                assembly_task = BuildAssemblyTask(order->assembly_task);
             }
             else if (order_type == ariac_common::OrderType::COMBINED)
             {
-                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Combined task: " << order_id);
-                auto combined_task = BuildCombinedTask(order->combined_task);
+                // RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Combined task: " << order_id);
+                combined_task = BuildCombinedTask(order->combined_task);
             }
             else
             {
                 RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown order type: " << int(order_type));
             }
-        }
 
+            // time_based_orders_;
+            // std::vector<std::shared_ptr<ariac_common::OrderOnPartPlacement>> on_part_placement_orders_;
+            // std::vector<std::shared_ptr<ariac_common::OrderOnSubmission>> on_order_submission_orders_;
+
+            // Get the condition
+            if (order->condition.type == ariac_common::ConditionType::TIME)
+            {
+                auto announcement_time = order->condition.time_condition.seconds;
+                auto temporal_order = std::make_shared<ariac_common::OrderTemporal>(order_id, order_type, order_priority, impl_->time_limit_, announcement_time);
+                // Set the task
+                if (!kitting_task)
+                    temporal_order->SetKittingTask(kitting_task);
+                else if (!assembly_task)
+                    temporal_order->SetAssemblyTask(assembly_task);
+                else if (!combined_task)
+                    temporal_order->SetCombinedTask(combined_task);
+                
+                // Add to the list of time based orders
+                impl_->time_based_orders_.push_back(temporal_order);
+            }
+            else if (order->condition.type == ariac_common::ConditionType::PART_PLACE)
+            {
+                auto agv = order->condition.part_place_condition.agv;
+                auto part = std::make_shared<ariac_common::Part>(order->condition.part_place_condition.part.type, order->condition.part_place_condition.part.color);
+                auto part_place_order = std::make_shared<ariac_common::OrderOnPartPlacement>(order_id, order_type, order_priority, impl_->time_limit_, agv, part);
+                // Set the task
+                if (!kitting_task)
+                    part_place_order->SetKittingTask(kitting_task);
+                else if (!assembly_task)
+                    part_place_order->SetAssemblyTask(assembly_task);
+                else if (!combined_task)
+                    part_place_order->SetCombinedTask(combined_task);
+
+                // Add to the list of part placement orders
+                impl_->on_part_placement_orders_.push_back(part_place_order);
+            }
+            else if (order->condition.type == ariac_common::ConditionType::SUBMISSION)
+            {
+            }
+            else
+            {
+                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown condition type: " << int(order->condition.type));
+            }
+        }
     }
 
     //==============================================================================

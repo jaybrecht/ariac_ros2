@@ -589,6 +589,16 @@ namespace ariac_common
         }
 
         /**
+         * @brief Set the Combined Task object for the order
+         *
+         * @param _combined_task  Shared pointer to the combined task for the order
+         */
+        virtual void SetCombinedTask(std::shared_ptr<CombinedTask> _combined_task)
+        {
+            combined_task_ = _combined_task;
+        }
+
+        /**
          * @brief Check whether or not the order has been announced
          *
          * @return true Order has already been announced
@@ -653,6 +663,11 @@ namespace ariac_common
          *
          */
         std::shared_ptr<AssemblyTask> assembly_task_ = nullptr;
+        /**
+         * @brief A pointer to the combined task for this order.
+         *
+         */
+        std::shared_ptr<CombinedTask> combined_task_ = nullptr;
     };
     //-- end class Order
 
@@ -716,14 +731,14 @@ namespace ariac_common
                              bool _priority,
                              double _trial_time_limit,
                              unsigned int _agv,
-                             unsigned int _quadrant) : Order(_id, _type, _priority, _trial_time_limit),
-                                                       agv_(_agv), quadrant_(_quadrant) {}
+                             std::shared_ptr<Part> _part) : Order(_id, _type, _priority, _trial_time_limit),
+                                                            agv_(_agv), part_(_part) {}
 
     private:
         //! AGV on which the part is placed
         unsigned int agv_;
-        //! Quadrant of the AGV on which the part is placed
-        unsigned int quadrant_;
+        //! Part
+        std::shared_ptr<Part> part_;
     }; // class OrderOnPartPlacement
 
     //==============================================================================
