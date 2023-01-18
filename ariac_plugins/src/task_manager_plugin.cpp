@@ -29,6 +29,9 @@
 #include <ariac_msgs/msg/competition_state.hpp>
 // ROS
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp/executor.hpp>
+#include <controller_manager_msgs/srv/switch_controller.hpp>
+
 // C++
 #include <memory>
 // ARIAC
@@ -50,7 +53,7 @@ namespace ariac_plugins
         /*!< A mutex to protect the current state. */
         std::mutex lock_;
         /*!< Pointer to the current state. */
-        std::string current_state_ = "init";
+        unsigned int current_state_ = ariac_msgs::msg::CompetitionState::UNSTARTED;
 
         /*!< Time limit for the current trial. */
         double time_limit_{-1};
@@ -82,17 +85,28 @@ namespace ariac_plugins
         //============== SERVICES =================
         /*!< Service that allows the user to start the competition. */
         rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr start_competition_srv_{nullptr};
+        rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr end_competition_srv_{nullptr};
+        /*!< Client to start/stop robot controllers. */
+        rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr switch_controller_srv_client_;
+        /*!< Client to stop the competition. */
+        rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr end_competition_srv_client_;
 
         //============== PUBLISHERS =================
+        /*!< Publisher to the topic /ariac/orders */
         rclcpp::Publisher<ariac_msgs::msg::Order>::SharedPtr order_pub_;
+        /*!< Publisher to the topic /ariac/sensor_health */
         rclcpp::Publisher<ariac_msgs::msg::Sensors>::SharedPtr sensor_health_pub_;
+        /*!< Publisher to the topic /ariac/competition_state */
         rclcpp::Publisher<ariac_msgs::msg::CompetitionState>::SharedPtr competition_state_pub_;
+        /*!< Publisher to the topic /ariac/robot_health */
         rclcpp::Publisher<ariac_msgs::msg::Robots>::SharedPtr robot_health_pub_;
 
         //============== LISTS OF ORDERS AND CHALLENGES =================
         /*!< List of orders that are announced based on time. */
         std::vector<std::shared_ptr<ariac_common::OrderTemporal>> time_based_orders_;
+        /*!< List of orders that are announced based on part placement. */
         std::vector<std::shared_ptr<ariac_common::OrderOnPartPlacement>> on_part_placement_orders_;
+        /*!< List of orders that are announced based on submission. */
         std::vector<std::shared_ptr<ariac_common::OrderOnSubmission>> on_order_submission_orders_;
     };
     //==============================================================================
@@ -155,6 +169,9 @@ namespace ariac_plugins
 
         impl_->sensor_health_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Sensors>("/ariac/sensor_health", 10);
 
+        // Initialize service clients
+        impl_->switch_controller_srv_client_ = impl_->ros_node_->create_client<controller_manager_msgs::srv::SwitchController>("/controller_manager/switch_controller");
+        impl_->end_competition_srv_client_ = impl_->ros_node_->create_client<std_srvs::srv::Trigger>("/ariac/end_competition");
         // impl_->current_sim_time_ = impl_->ros_node_->get_clock()->now();
         // impl_->current_sim_time_ = impl_->world_->SimTime();
     }
@@ -195,6 +212,12 @@ namespace ariac_plugins
                                                                                                                std::placeholders::_1,
                                                                                                                std::placeholders::_2));
 
+            impl_->end_competition_srv_ = impl_->ros_node_->create_service<std_srvs::srv::Trigger>("/ariac/end_competition",
+                                                                                                    std::bind(&TaskManagerPlugin::EndCompetitionServiceCallback,
+                                                                                                              this,
+                                                                                                              std::placeholders::_1,
+                                                                                                              std::placeholders::_2));
+
             RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "/ariac/start_competition service created");
             // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "updated time: " << updated_sim_time.seconds());
         }
@@ -205,20 +228,29 @@ namespace ariac_plugins
         }
 
         auto elapsed_time = (current_sim_time - impl_->last_on_update_time_).Double();
-        if (impl_->time_limit_ >= 0 && impl_->current_state_ == "go" &&
+        if (impl_->time_limit_ >= 0 && impl_->current_state_ == ariac_msgs::msg::CompetitionState::STARTED &&
             (current_sim_time - impl_->start_competition_time_) > impl_->time_limit_)
         {
-            impl_->current_state_ = "end_game";
+            impl_->current_state_ = ariac_msgs::msg::CompetitionState::ENDED;
+
+            // Call the end competition service
+            auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+            auto result_future = impl_->end_competition_srv_client_->async_send_request(request);
+            if (rclcpp::spin_until_future_complete(impl_->ros_node_, result_future) !=
+                rclcpp::FutureReturnCode::SUCCESS)
+            {
+                RCLCPP_ERROR(impl_->ros_node_->get_logger(), "End competition service call failed");
+            }
         }
 
         // current state is set to "ready" in start competition service callback
-        if (impl_->current_state_ == "ready")
+        if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::UNSTARTED)
         {
             impl_->start_competition_time_ = current_sim_time;
-            impl_->current_state_ = "go";
+            impl_->current_state_ = ariac_msgs::msg::CompetitionState::STARTED;
         }
 
-        if (impl_->current_state_ == "go")
+        if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::STARTED)
         {
             // ProcessOrdersToAnnounce((current_sim_time - impl_->start_competition_time_).Double());
         }
@@ -457,6 +489,21 @@ namespace ariac_plugins
     {
     }
 
+    //==============================================================================
+    void TaskManagerPlugin::ActivateAllSensors()
+    {
+        // publish on /ariac/sensor_health topic
+        auto sensor_message = ariac_msgs::msg::Sensors();
+        sensor_message.break_beam = true;
+        sensor_message.proximity = true;
+        sensor_message.laser_profiler = true;
+        sensor_message.lidar = true;
+        sensor_message.camera = true;
+        sensor_message.logical_camera = true;
+        impl_->sensor_health_pub_->publish(sensor_message);
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Activated all sensors");
+    }
+
     // ==================================== //
     // Services
     // ==================================== //
@@ -471,22 +518,14 @@ namespace ariac_plugins
 
         (void)request;
 
-        if (impl_->current_state_ == "init")
+        if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::UNSTARTED)
         {
-            impl_->current_state_ = "ready";
+            impl_->current_state_ = ariac_msgs::msg::CompetitionState::STARTED;
             response->success = true;
             response->message = "Competition started successfully!";
 
-            // publish on /ariac/sensor_health topic
-            auto sensor_message = ariac_msgs::msg::Sensors();
-            sensor_message.break_beam = true;
-            sensor_message.proximity = true;
-            sensor_message.laser_profiler = true;
-            sensor_message.lidar = true;
-            sensor_message.camera = true;
-            sensor_message.logical_camera = true;
-            impl_->sensor_health_pub_->publish(sensor_message);
-            RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Activated all sensors");
+            // Activate all sensors
+            ActivateAllSensors();
 
             return true;
         }
@@ -505,7 +544,7 @@ namespace ariac_plugins
 
         (void)request;
 
-        this->impl_->current_state_ = "end_game";
+        this->impl_->current_state_ = ariac_msgs::msg::CompetitionState::ENDED;
         response->success = true;
         response->message = "Competition ended successfully!";
         return true;

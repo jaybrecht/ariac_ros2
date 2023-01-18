@@ -33,11 +33,46 @@ namespace ariac_plugins
 
         /// Destructor
         virtual ~TaskManagerPlugin();
-
+        /**
+         * @brief Activate all sensor types once the competition has started
+         */
         void ActivateAllSensors();
-        void StartConveyor();
-        std::shared_ptr<ariac_common::KittingTask> BuildKittingTask(const ariac_msgs::msg::KittingTask& _kitting_task);
+        /**
+         * @brief Start the controllers for all robots
+         */
+        void StartAllRobots();
+        /**
+         * @brief Stop the controllers for all robots
+         */
+        void StopAllRobots();
+        /**
+         * @brief Stop the controllers for the ceiling robot
+         */
+        void StopCeilingRobot();
+        /**
+         * @brief Stop the controllers for the floor robot
+         */
+        void StopFloorRobot();
+        /**
+         * @brief Build a kitting task from ROS message
+         * 
+         * @param _kitting_task Kitting task ROS message
+         * @return std::shared_ptr<ariac_common::KittingTask> Pointer to the kitting task
+         */
+        std::shared_ptr<ariac_common::KittingTask> BuildKittingTask(const ariac_msgs::msg::KittingTask &_kitting_task);
+        /**
+         * @brief Build an assembly task from ROS message
+         *
+         * @param _assembly_task Assembly task ROS message
+         * @return std::shared_ptr<ariac_common::AssemblyTask> Pointer to the assembly task
+         */
         std::shared_ptr<ariac_common::AssemblyTask> BuildAssemblyTask(const ariac_msgs::msg::AssemblyTask &_assembly_task);
+        /**
+         * @brief Build a combined task from ROS message
+         *
+         * @param _combined_task Combined task ROS message
+         * @return std::shared_ptr<ariac_common::CombinedTask> Pointer to the combined task
+         */
         std::shared_ptr<ariac_common::CombinedTask> BuildCombinedTask(const ariac_msgs::msg::CombinedTask &_combined_task);
 
         /**
@@ -50,7 +85,7 @@ namespace ariac_plugins
          * @brief Store the challenges
          * @param challenges Challenges retrieved from the topic /ariac/task_manager/trial_config
          */
-        void StoreChallenges(const std::vector<ariac_msgs::msg::Challenge::SharedPtr>& challenges);
+        void StoreChallenges(const std::vector<ariac_msgs::msg::Challenge::SharedPtr> &challenges);
 
         /**
          * @brief Callback for the start competition service
@@ -125,7 +160,7 @@ namespace ariac_plugins
          * @param _msg Shared pointer to the message
          */
         void OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
-       
+
         /**
          * @brief Build and publish an order message
          *
