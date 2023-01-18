@@ -37,12 +37,14 @@ namespace ariac_plugins
         void ActivateAllSensors();
         void StartConveyor();
         std::shared_ptr<ariac_common::KittingTask> BuildKittingTask(const ariac_msgs::msg::KittingTask& _kitting_task);
+        std::shared_ptr<ariac_common::AssemblyTask> BuildAssemblyTask(const ariac_msgs::msg::AssemblyTask &_assembly_task);
+        std::shared_ptr<ariac_common::CombinedTask> BuildCombinedTask(const ariac_msgs::msg::CombinedTask &_combined_task);
 
         /**
          * @brief Store the orders
          * @param orders Orders retrieved from the topic /ariac/task_manager/trial_config
          */
-        void StoreOrders(const std::vector<ariac_msgs::msg::OrderCondition::SharedPtr>& orders);
+        void StoreOrders(const std::vector<ariac_msgs::msg::OrderCondition::SharedPtr> &orders);
 
         /**
          * @brief Store the challenges

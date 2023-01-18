@@ -23,6 +23,8 @@
 #include <ariac_msgs/msg/order_condition.hpp>
 #include <ariac_msgs/msg/challenge.hpp>
 #include <ariac_msgs/msg/sensors.hpp>
+#include <ariac_msgs/msg/kitting_task.hpp>
+#include <ariac_msgs/msg/assembly_task.hpp>
 #include <ariac_msgs/msg/robots.hpp>
 #include <ariac_msgs/msg/competition_state.hpp>
 // ROS
@@ -243,48 +245,14 @@ namespace ariac_plugins
     //     // return std::make_shared<ariac_common::KittingTask>(agv_number, tray_id, destination, kitting_parts);
     // }
 
-    //==============================================================================
-    // std::shared_ptr<ariac_common::AssemblyTask> static BuildAssemblyTask(const ariac_msgs::msg::AssemblyTask &_assembly_task)
-    // {
-    //     // std::vector<unsigned int> agv_numbers = {};
-    //     // for (auto agv_number : _assembly_task.agv_numbers)
-    //     // {
-    //     //     agv_numbers.push_back(agv_number);
-    //     // }
-    //     // auto station = ariac_common::ConvertAssemblyStationToString(_assembly_task.station);
-    //     // std::vector<ariac_common::AssemblyPart> assembly_parts;
-
-    //     // for (auto product : _assembly_task.parts)
-    //     // {
-    //     //     auto part_type = ariac_common::ConvertPartTypeToString(product.part.type);
-    //     //     auto part_color = ariac_common::ConvertPartColorToString(product.part.color);
-    //     //     auto part = ariac_common::Part(part_type, part_color);
-
-    //     //     ignition::math::Pose3d assembled_pose;
-    //     //     assembled_pose.Pos().X() = product.assembled_pose.pose.position.x;
-    //     //     assembled_pose.Pos().Y() = product.assembled_pose.pose.position.y;
-    //     //     assembled_pose.Pos().Z() = product.assembled_pose.pose.position.z;
-    //     //     assembled_pose.Rot().X() = product.assembled_pose.pose.orientation.x;
-    //     //     assembled_pose.Rot().Y() = product.assembled_pose.pose.orientation.y;
-    //     //     assembled_pose.Rot().Z() = product.assembled_pose.pose.orientation.z;
-    //     //     assembled_pose.Rot().W() = product.assembled_pose.pose.orientation.w;
-
-    //     //     ignition::math::Vector3<double> part_direction;
-    //     //     part_direction.X() = product.install_direction.x;
-    //     //     part_direction.Y() = product.install_direction.y;
-    //     //     part_direction.Z() = product.install_direction.z;
-
-    //     //     assembly_parts.emplace_back(ariac_common::AssemblyPart(part, assembled_pose, part_direction));
-    //     // }
-    //     // return std::make_shared<ariac_common::AssemblyTask>(agv_numbers, station, assembly_parts);
-    // }
+    
 
     //==============================================================================
     void TaskManagerPlugin::OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg)
     {
         std::lock_guard<std::mutex> scoped_lock(impl_->lock_);
-        RCLCPP_FATAL_STREAM(impl_->ros_node_->get_logger(), "------Time limit: " << _msg->time_limit);
-        RCLCPP_FATAL_STREAM(impl_->ros_node_->get_logger(), "------Trial name: " << _msg->trial_name);
+        // RCLCPP_FATAL_STREAM(impl_->ros_node_->get_logger(), "------Time limit: " << _msg->time_limit);
+        // RCLCPP_FATAL_STREAM(impl_->ros_node_->get_logger(), "------Trial name: " << _msg->trial_name);
         impl_->time_limit_ = _msg->time_limit;
         impl_->trial_name_ = _msg->trial_name;
 
@@ -307,22 +275,90 @@ namespace ariac_plugins
         }
     }
 
-    std::shared_ptr<ariac_common::KittingTask> TaskManagerPlugin::BuildKittingTask(const ariac_msgs::msg::KittingTask &_kitting_task)
+    //==============================================================================
+    std::shared_ptr<ariac_common::KittingTask> TaskManagerPlugin::BuildKittingTask(const ariac_msgs::msg::KittingTask& _kitting_task)
     {
-        // auto agv_number = _kitting_task.agv_number;
-        // auto tray_id = _kitting_task.tray_id;
-        // auto destination = ariac_common::ConvertDestinationToString(_kitting_task.destination, agv_number);
-        // std::vector<ariac_common::KittingPart> kitting_parts;
+        auto agv_number = _kitting_task.agv_number;
+        auto tray_id = _kitting_task.tray_id;
+        auto destination = _kitting_task.destination;
+        std::vector<ariac_common::KittingPart> kitting_parts;
 
-        // for (auto product : _kitting_task.products)
-        // {
-        //     auto quadrant = product.quadrant;
-        //     auto part_type = ariac_common::ConvertPartTypeToString(product.part.type);
-        //     auto part_color = ariac_common::ConvertPartColorToString(product.part.color);
-        //     auto part = ariac_common::Part(part_type, part_color);
-        //     kitting_parts.emplace_back(ariac_common::KittingPart(quadrant, part));
-        // }
-        // return std::make_shared<ariac_common::KittingTask>(agv_number, tray_id, destination, kitting_parts);
+        for (auto product : _kitting_task.parts)
+        {
+            auto quadrant = product.quadrant;
+            auto part_type = product.part.type;
+            auto part_color = product.part.color;
+            auto part = ariac_common::Part(part_type, part_color);
+            kitting_parts.emplace_back(ariac_common::KittingPart(quadrant, part));
+        }
+        return std::make_shared<ariac_common::KittingTask>(agv_number, tray_id, destination, kitting_parts);
+    }
+
+    //==============================================================================
+    std::shared_ptr<ariac_common::AssemblyTask> TaskManagerPlugin::BuildAssemblyTask(const ariac_msgs::msg::AssemblyTask& _assembly_task)
+    {
+        std::vector<unsigned int> agv_numbers = {};
+        for (auto agv_number : _assembly_task.agv_numbers)
+        {
+            agv_numbers.push_back(agv_number);
+        }
+        auto station = _assembly_task.station;
+        std::vector<ariac_common::AssemblyPart> assembly_parts;
+
+        for (auto product : _assembly_task.parts)
+        {
+            auto part_type = product.part.type;
+            auto part_color = product.part.color;
+            auto part = ariac_common::Part(part_type, part_color);
+
+            ignition::math::Pose3d assembled_pose;
+            assembled_pose.Pos().X() = product.assembled_pose.pose.position.x;
+            assembled_pose.Pos().Y() = product.assembled_pose.pose.position.y;
+            assembled_pose.Pos().Z() = product.assembled_pose.pose.position.z;
+            assembled_pose.Rot().X() = product.assembled_pose.pose.orientation.x;
+            assembled_pose.Rot().Y() = product.assembled_pose.pose.orientation.y;
+            assembled_pose.Rot().Z() = product.assembled_pose.pose.orientation.z;
+            assembled_pose.Rot().W() = product.assembled_pose.pose.orientation.w;
+
+            ignition::math::Vector3<double> part_direction;
+            part_direction.X() = product.install_direction.x;
+            part_direction.Y() = product.install_direction.y;
+            part_direction.Z() = product.install_direction.z;
+
+            assembly_parts.emplace_back(ariac_common::AssemblyPart(part, assembled_pose, part_direction));
+        }
+        return std::make_shared<ariac_common::AssemblyTask>(agv_numbers, station, assembly_parts);
+    }
+
+    //==============================================================================
+    std::shared_ptr<ariac_common::CombinedTask> TaskManagerPlugin::BuildCombinedTask(const ariac_msgs::msg::CombinedTask& _combined_task)
+    {
+        auto station = _combined_task.station;
+        std::vector<ariac_common::AssemblyPart> assembly_parts;
+
+        for (auto product : _combined_task.parts)
+        {
+            auto part_type = product.part.type;
+            auto part_color = product.part.color;
+            auto part = ariac_common::Part(part_type, part_color);
+
+            ignition::math::Pose3d assembled_pose;
+            assembled_pose.Pos().X() = product.assembled_pose.pose.position.x;
+            assembled_pose.Pos().Y() = product.assembled_pose.pose.position.y;
+            assembled_pose.Pos().Z() = product.assembled_pose.pose.position.z;
+            assembled_pose.Rot().X() = product.assembled_pose.pose.orientation.x;
+            assembled_pose.Rot().Y() = product.assembled_pose.pose.orientation.y;
+            assembled_pose.Rot().Z() = product.assembled_pose.pose.orientation.z;
+            assembled_pose.Rot().W() = product.assembled_pose.pose.orientation.w;
+
+            ignition::math::Vector3<double> part_direction;
+            part_direction.X() = product.install_direction.x;
+            part_direction.Y() = product.install_direction.y;
+            part_direction.Z() = product.install_direction.z;
+
+            assembly_parts.emplace_back(ariac_common::AssemblyPart(part, assembled_pose, part_direction));
+        }
+        return std::make_shared<ariac_common::CombinedTask>(station, assembly_parts);
     }
 
     //==============================================================================
@@ -344,21 +380,19 @@ namespace ariac_plugins
             else if (order_type == ariac_common::OrderType::ASSEMBLY)
             {
                 RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Assembly task: " << order_id);
-                // auto assembly_task = BuildAssemblyTask(order->assembly_task);
-                // impl_->assembly_tasks_.emplace_back(assembly_task);
+                auto assembly_task = BuildAssemblyTask(order->assembly_task);
             }
             else if (order_type == ariac_common::OrderType::COMBINED)
             {
                 RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Combined task: " << order_id);
-                // auto assembly_task = BuildAssemblyTask(order->assembly_task);
-                // impl_->assembly_tasks_.emplace_back(assembly_task);
+                auto combined_task = BuildCombinedTask(order->combined_task);
             }
-            // else
-            // {
-            //     RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown order type: " << order_type);
-            // }
-
+            else
+            {
+                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown order type: " << int(order_type));
+            }
         }
+
     }
 
     //==============================================================================

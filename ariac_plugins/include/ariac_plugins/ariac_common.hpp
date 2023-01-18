@@ -1,19 +1,21 @@
 #ifndef ARIAC_PLUGINS__ARIAC_COMMON_HPP_
 #define ARIAC_PLUGINS__ARIAC_COMMON_HPP_
 
-// c++
+// C++
 #include <ostream>
 #include <map>
 #include <string>
 #include <vector>
 #include <memory>
-// ros
+// ROS
 #include <geometry_msgs/msg/pose.hpp>
-// gazebo
+// Gazebo
 #include <gazebo/gazebo.hh>
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Vector3.hh>
+// Messages
 #include <ariac_msgs/msg/order.hpp>
+#include <ariac_msgs/msg/condition.hpp>
 
 namespace ariac_common
 {
@@ -172,15 +174,22 @@ namespace ariac_common
         const static unsigned int COMBINED{ariac_msgs::msg::Order::COMBINED};
     };
 
+    struct ConditionType
+    {
+        const static unsigned int TIME{ariac_msgs::msg::Condition::TIME};
+        const static unsigned int PART_PLACE{ariac_msgs::msg::Condition::PART_PLACE};
+        const static unsigned int SUBMISSION{ariac_msgs::msg::Condition::SUBMISSION};
+    };
+
     //==============================================================================
     class Part
     {
     public:
-        Part(std::string _color, std::string _type) : color_(_color), type_(_type) {}
+        Part(unsigned int _color, unsigned int _type) : color_(_color), type_(_type) {}
 
     private:
-        std::string color_;
-        std::string type_;
+        unsigned int color_;
+        unsigned int type_;
     };
 
     //==============================================================================
@@ -215,14 +224,14 @@ namespace ariac_common
     {
     public:
         AssemblyTask(std::vector<unsigned int> _agv_numbers,
-                     std::string _station,
+                     unsigned int _station,
                      const std::vector<AssemblyPart> &_products) : agv_numbers_(_agv_numbers),
                                                                    station_(_station),
                                                                    products_(_products) {}
 
     private:
         std::vector<unsigned int> agv_numbers_;
-        std::string station_;
+        unsigned int station_;
         std::vector<AssemblyPart> products_;
     };
 
@@ -235,7 +244,7 @@ namespace ariac_common
     public:
         KittingTask(unsigned int _agv_number,
                     unsigned int _tray_id,
-                    std::string _destination,
+                    unsigned int _destination,
                     const std::vector<KittingPart> &_products) : agv_number_(_agv_number),
                                                                  tray_id_(_tray_id),
                                                                  destination_(_destination),
@@ -244,7 +253,7 @@ namespace ariac_common
     private:
         unsigned int agv_number_;
         unsigned int tray_id_;
-        std::string destination_;
+        unsigned int destination_;
         std::vector<KittingPart> products_;
     };
 
@@ -255,12 +264,12 @@ namespace ariac_common
     class CombinedTask
     {
     public:
-        CombinedTask(std::string _station,
+        CombinedTask(unsigned int _station,
                      const std::vector<AssemblyPart> &_products) : station_(_station),
                                                                    products_(_products) {}
 
     private:
-        std::string station_;
+        unsigned int station_;
         std::vector<AssemblyPart> products_;
     };
 

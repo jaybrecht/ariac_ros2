@@ -316,6 +316,35 @@ class EnvironmentStartup(Node):
             return None
 
 
+    def convert_condition_to_int(self, condition):
+        """Converts a condition to an integer.
+        - 'time_condition': Condition.TIME,
+        - 'part_place_condition': Condition.PART_PLACE,
+        - 'submission_condition': Condition.SUBMISSION,
+
+        Args:
+            condition (str): The condition in string format.
+
+        Returns:
+            int: The condition in integer format.
+        """
+        options = {
+            'time_condition': Condition.TIME,
+            'part_place_condition': Condition.PART_PLACE,
+            'submission_condition': Condition.SUBMISSION,
+        }
+        
+        found_type = options.get(condition)
+
+        if found_type in [Condition.TIME, Condition.PART_PLACE, Condition.SUBMISSION]:
+            return found_type
+        else:
+            self.get_logger().fatal(
+                f"Condition '{condition}' is not correct. Check spelling.")
+            return None
+        
+        
+        
     def convert_assembly_station_to_int(self, assembly_station):
         """Converts an assembly station to an integer.
         - as1: AssemblyTask.AS1,
@@ -365,7 +394,7 @@ class EnvironmentStartup(Node):
             msg.robots_to_disable.ceiling_robot = True
 
         if challenge_dict.get('part_place_condition'):
-            msg.condition.type = "part_place_condition"
+            msg.condition.type = self.convert_condition_to_int("part_place_condition")
             msg.condition.part_place_condition.part.type = self.convert_part_type_to_int(
                 challenge_dict['part_place_condition']['type'])
             msg.condition.part_place_condition.part.color = self.convert_part_color_to_int(
@@ -379,10 +408,10 @@ class EnvironmentStartup(Node):
                     msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
                         challenge_dict['part_place_condition']['as'])
         elif challenge_dict.get('time_condition'):
-            msg.condition.type = "time_condition"
+            msg.condition.type = self.convert_condition_to_int("time_condition")
             msg.condition.time_condition.seconds = challenge_dict['time_condition']
         elif challenge_dict.get('submission_condition'):
-            msg.condition.type = "submission_condition"
+            msg.condition.type = self.convert_condition_to_int("submission_condition")
             msg.condition.submission_condition.order_id = challenge_dict[
                 'submission_condition']['order_id']
 
@@ -418,7 +447,7 @@ class EnvironmentStartup(Node):
             msg.sensors_to_disable.logical_camera = True
 
         if challenge_dict.get('part_place_condition'):
-            msg.condition.type = "part_place_condition"
+            msg.condition.type = self.convert_condition_to_int("part_place_condition")
             msg.condition.part_place_condition.part.type = self.convert_part_type_to_int(
                 challenge_dict['part_place_condition']['type'])
             msg.condition.part_place_condition.part.color = self.convert_part_color_to_int(
@@ -434,10 +463,10 @@ class EnvironmentStartup(Node):
                         station)
 
         elif challenge_dict.get('time_condition'):
-            msg.condition.type = "time_condition"
+            msg.condition.type = self.convert_condition_to_int("time_condition")
             msg.condition.time_condition.seconds = challenge_dict['time_condition']
         elif challenge_dict.get('submission_condition'):
-            msg.condition.type = "submission_condition"
+            msg.condition.type = self.convert_condition_to_int("submission_condition")
             msg.condition.submission_condition.order_id = challenge_dict[
                 'submission_condition']['order_id']
 
@@ -604,11 +633,11 @@ class EnvironmentStartup(Node):
             condition = Condition()
             for announcement_key, announcement_value in announcement.items():
                 if announcement_key == 'time_condition':
-                    condition.type = 'time_condition'
+                    condition.type = self.convert_condition_to_int('time_condition')
                     condition.time_condition.seconds = float(
                         announcement_value)
                 elif announcement_key == 'part_place_condition':
-                    condition.type = 'part_place_condition'
+                    condition.type = self.convert_condition_to_int('part_place_condition')
                     color = order['announcement']['part_place_condition']['color']
                     condition.part_place_condition.part.color = self.convert_part_color_to_int(
                         color)
@@ -626,7 +655,7 @@ class EnvironmentStartup(Node):
                                 station)
 
                 elif announcement_key == 'submission_condition':
-                    condition.type = 'submission_condition'
+                    condition.type = self.convert_condition_to_int('submission_condition')
                     order_id = order['announcement']['submission_condition']['order_id']
                     condition.submission_condition.order_id = order_id
             # Task
