@@ -14,6 +14,7 @@
 #include <ariac_msgs/msg/trial.hpp>
 #include <ariac_msgs/msg/challenge.hpp>
 #include <ariac_msgs/msg/kitting_task.hpp>
+#include <ariac_msgs/msg/competition_state.hpp>
 // ARIAC
 #include <ariac_plugins/ariac_common.hpp>
 
@@ -33,29 +34,58 @@ namespace ariac_plugins
 
         /// Destructor
         virtual ~TaskManagerPlugin();
+
         /**
-         * @brief Activate all sensor types once the competition has started
+         * @brief Publish the competition state
+         *
+         * @param _state State of the competition
+         */
+        void PublishCompetitionState(unsigned int _state);
+        /**
+         * @brief Activate all sensor types
          */
         void ActivateAllSensors();
         /**
+         * @brief Deactivate all sensor types
+         */
+        void DeactivateAllSensors();
+        /**
+         * @brief Deactivate some sensor types
+         * @param _sensor_types List of sensor types to deactivate
+         */
+        void DeactivateSensors(std::vector<std::string> _sensor_types);
+        /**
+         * @brief Activate some sensor types
+         * @param _sensor_types List of sensor types to activate
+         */
+        void ActivateSensors(std::vector<std::string> _sensor_types);
+        /**
          * @brief Start the controllers for all robots
          */
-        void StartAllRobots();
+        int StartAllRobots();
         /**
          * @brief Stop the controllers for all robots
          */
         void StopAllRobots();
         /**
-         * @brief Stop the controllers for the ceiling robot
+         * @brief Start the controllers for the floor robot
          */
-        void StopCeilingRobot();
+        void StartFloorRobot();
         /**
-         * @brief Stop the controllers for the floor robot
+         * @brief Start the controllers for the ceiling robot
+         */
+        void StartCeilingRobot();
+        /**
+         * @brief Stop the controllers for the ceiling robot
          */
         void StopFloorRobot();
         /**
+         * @brief Stop the controllers for the floor robot
+         */
+        void StopCeilingRobot();
+        /**
          * @brief Build a kitting task from ROS message
-         * 
+         *
          * @param _kitting_task Kitting task ROS message
          * @return std::shared_ptr<ariac_common::KittingTask> Pointer to the kitting task
          */

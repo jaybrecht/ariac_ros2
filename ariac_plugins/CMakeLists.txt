@@ -11,6 +11,7 @@ find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(ariac_msgs REQUIRED)
+find_package(controller_manager_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
@@ -98,6 +99,7 @@ target_include_directories(TaskManagerPlugin PUBLIC include)
 ament_target_dependencies(TaskManagerPlugin
   "gazebo_ros"
   "ariac_msgs"
+  "controller_manager_msgs"
 )
 ament_export_libraries(TaskManagerPlugin)
 

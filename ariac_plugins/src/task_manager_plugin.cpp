@@ -29,19 +29,12 @@
 #include <ariac_msgs/msg/competition_state.hpp>
 // ROS
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/executor.hpp>
 #include <controller_manager_msgs/srv/switch_controller.hpp>
 
 // C++
 #include <memory>
 // ARIAC
 #include <ariac_plugins/ariac_common.hpp>
-
-// #include <ariac_msgs/msg/kitting_task.hpp>
-// #include <ariac_msgs/msg/assembly_task.hpp>
-// #include <ariac_msgs/msg/part.hpp>
-// #include <std_msgs/msg/string.hpp>
-// #include <ariac_plugins/ariac_common.hpp>
 
 namespace ariac_plugins
 {
@@ -53,7 +46,7 @@ namespace ariac_plugins
         /*!< A mutex to protect the current state. */
         std::mutex lock_;
         /*!< Pointer to the current state. */
-        unsigned int current_state_ = ariac_msgs::msg::CompetitionState::UNSTARTED;
+        unsigned int current_state_{ariac_msgs::msg::CompetitionState::UNSTARTED};
 
         /*!< Time limit for the current trial. */
         double time_limit_{-1};
@@ -108,6 +101,17 @@ namespace ariac_plugins
         std::vector<std::shared_ptr<ariac_common::OrderOnPartPlacement>> on_part_placement_orders_;
         /*!< List of orders that are announced based on submission. */
         std::vector<std::shared_ptr<ariac_common::OrderOnSubmission>> on_order_submission_orders_;
+
+        //============== LISTS OF CONTROLLERS =================
+        /*!< List of controllers for the ceiling robot. */
+        std::vector<std::string> ceiling_robot_controllers_{"ceiling_robot_controller", "linear_rail_controller"};
+        /*!< List of controllers for the floor robot. */
+        std::vector<std::string> floor_robot_controllers_{"floor_robot_controller", "linear_rail_controller"};
+        /*!< List of controllers for both robots. */
+        std::vector<std::string> all_robots_controllers_{"ceiling_robot_controller",
+                                                         "linear_rail_controller",
+                                                         "floor_robot_controller",
+                                                         "linear_rail_controller"};
     };
     //==============================================================================
     TaskManagerPlugin::TaskManagerPlugin()
@@ -163,13 +167,17 @@ namespace ariac_plugins
         impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
             std::bind(&TaskManagerPlugin::OnUpdate, this));
 
+        //============== SUBSCRIBERS =================
         impl_->trial_config_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Trial>(
             "/ariac/trial_config", qos.get_subscription_qos("/ariac/trial_config", rclcpp::QoS(1)),
             std::bind(&TaskManagerPlugin::OnTrialCallback, this, std::placeholders::_1));
 
+        //============== PUBLISHERS =================
         impl_->sensor_health_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Sensors>("/ariac/sensor_health", 10);
+        impl_->robot_health_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Robots>("/ariac/robot_health", 10);
+        impl_->competition_state_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::CompetitionState>("/ariac/competition_state", 10);
 
-        // Initialize service clients
+        //============== SERVICES =================
         impl_->switch_controller_srv_client_ = impl_->ros_node_->create_client<controller_manager_msgs::srv::SwitchController>("/controller_manager/switch_controller");
         impl_->end_competition_srv_client_ = impl_->ros_node_->create_client<std_srvs::srv::Trigger>("/ariac/end_competition");
         // impl_->current_sim_time_ = impl_->ros_node_->get_clock()->now();
@@ -195,11 +203,21 @@ namespace ariac_plugins
     //     // ProcessAfterAssemblyOrders(_current_sim_time);
     // }
 
+    void TaskManagerPlugin::PublishCompetitionState(unsigned int _state)
+    {
+        auto state_message = ariac_msgs::msg::CompetitionState();
+        state_message.competition_state = _state;
+        impl_->competition_state_pub_->publish(state_message);
+    }
+
     //==============================================================================
     void TaskManagerPlugin::OnUpdate()
     {
         std::lock_guard<std::mutex> lock(impl_->lock_);
         auto current_sim_time = impl_->world_->SimTime();
+
+        // publish the competition state
+        PublishCompetitionState(impl_->current_state_);
 
         // Delay advertising the competition start service to avoid a crash.
         // Sometimes if the competition is started before the world is fully loaded, it causes a crash.
@@ -212,13 +230,14 @@ namespace ariac_plugins
                                                                                                                std::placeholders::_1,
                                                                                                                std::placeholders::_2));
 
-            impl_->end_competition_srv_ = impl_->ros_node_->create_service<std_srvs::srv::Trigger>("/ariac/end_competition",
-                                                                                                    std::bind(&TaskManagerPlugin::EndCompetitionServiceCallback,
-                                                                                                              this,
-                                                                                                              std::placeholders::_1,
-                                                                                                              std::placeholders::_2));
-
             RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "/ariac/start_competition service created");
+
+            impl_->end_competition_srv_ = impl_->ros_node_->create_service<std_srvs::srv::Trigger>("/ariac/end_competition",
+                                                                                                   std::bind(&TaskManagerPlugin::EndCompetitionServiceCallback,
+                                                                                                             this,
+                                                                                                             std::placeholders::_1,
+                                                                                                             std::placeholders::_2));
+
             // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "updated time: " << updated_sim_time.seconds());
         }
 
@@ -232,6 +251,8 @@ namespace ariac_plugins
             (current_sim_time - impl_->start_competition_time_) > impl_->time_limit_)
         {
             impl_->current_state_ = ariac_msgs::msg::CompetitionState::ENDED;
+            // publish the competition state
+            // impl_->competition_state_pub_->publish(impl_->current_state_);
 
             // Call the end competition service
             auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
@@ -243,11 +264,11 @@ namespace ariac_plugins
             }
         }
 
-        // current state is set to "ready" in start competition service callback
-        if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::UNSTARTED)
+        // current state is set to UNSTARTED in start competition service callback
+        if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::STARTED)
         {
             impl_->start_competition_time_ = current_sim_time;
-            impl_->current_state_ = ariac_msgs::msg::CompetitionState::STARTED;
+            // impl_->current_state_ = ariac_msgs::msg::CompetitionState::STARTED;
         }
 
         if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::STARTED)
@@ -257,25 +278,6 @@ namespace ariac_plugins
 
         impl_->last_on_update_time_ = current_sim_time;
     }
-
-    //==============================================================================
-    // std::shared_ptr<ariac_common::KittingTask> static BuildKittingTask(const ariac_msgs::msg::KittingTask &_kitting_task)
-    // {
-    //     // auto agv_number = _kitting_task.agv_number;
-    //     // auto tray_id = _kitting_task.tray_id;
-    //     // auto destination = ariac_common::ConvertDestinationToString(_kitting_task.destination, agv_number);
-    //     // std::vector<ariac_common::KittingPart> kitting_parts;
-
-    //     // for (auto product : _kitting_task.products)
-    //     // {
-    //     //     auto quadrant = product.quadrant;
-    //     //     auto part_type = ariac_common::ConvertPartTypeToString(product.part.type);
-    //     //     auto part_color = ariac_common::ConvertPartColorToString(product.part.color);
-    //     //     auto part = ariac_common::Part(part_type, part_color);
-    //     //     kitting_parts.emplace_back(ariac_common::KittingPart(quadrant, part));
-    //     // }
-    //     // return std::make_shared<ariac_common::KittingTask>(agv_number, tray_id, destination, kitting_parts);
-    // }
 
     //==============================================================================
     void TaskManagerPlugin::OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg)
@@ -473,7 +475,7 @@ namespace ariac_plugins
                     order_instance->SetAssemblyTask(assembly_task);
                 else if (!combined_task)
                     order_instance->SetCombinedTask(combined_task);
-                
+
                 // Add to the list of submission orders
                 impl_->on_order_submission_orders_.push_back(order_instance);
             }
@@ -504,6 +506,52 @@ namespace ariac_plugins
         RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Activated all sensors");
     }
 
+    //==============================================================================
+    void TaskManagerPlugin::DeactivateAllSensors()
+    {
+        // publish on /ariac/sensor_health topic
+        auto sensor_message = ariac_msgs::msg::Sensors();
+        sensor_message.break_beam = false;
+        sensor_message.proximity = false;
+        sensor_message.laser_profiler = false;
+        sensor_message.lidar = false;
+        sensor_message.camera = false;
+        sensor_message.logical_camera = false;
+        impl_->sensor_health_pub_->publish(sensor_message);
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Deactivated all sensors");
+    }
+
+    // //==============================================================================
+    // int TaskManagerPlugin::StartAllRobots()
+    // {
+    //     // auto request = std::make_shared<controller_manager_msgs::srv::SwitchController::Request>();
+    //     // request->start_controllers = impl_->all_robots_controllers_;
+    //     // request->strictness = request->BEST_EFFORT;
+
+    //     // auto result = impl_->switch_controller_srv_client_->async_send_request(request);
+    //     // if (rclcpp::spin_until_future_complete(impl_->ros_node_, result) != rclcpp::FutureReturnCode::SUCCESS)
+    //     // {
+    //     //     RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Failed to call service to start robots controllers");
+    //     //     return -1;
+    //     // }
+    //     // else
+    //     // {
+    //     //     if (result.get()->ok)
+    //     //     {
+    //     //         // publish on /ariac/robot_health topic
+    //     //         auto robot_health_message = ariac_msgs::msg::Robots();
+    //     //         robot_health_message.ceiling_robot = true;
+    //     //         robot_health_message.floor_robot = true;
+    //     //         impl_->robot_health_pub_->publish(robot_health_message);
+    //     //         RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Started all robots");
+    //     //         return 1;
+    //     //     }
+    //     //     else
+    //     //         return -1;
+    //     // }
+    //     return -1;
+    // }
+
     // ==================================== //
     // Services
     // ==================================== //
@@ -521,16 +569,20 @@ namespace ariac_plugins
         if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::UNSTARTED)
         {
             impl_->current_state_ = ariac_msgs::msg::CompetitionState::STARTED;
+            // publish the competition state
+            // impl_->competition_state_pub_->publish(impl_->current_state_);
             response->success = true;
             response->message = "Competition started successfully!";
 
             // Activate all sensors
             ActivateAllSensors();
+            // Start all robot controllers
+            // StartAllRobots();
 
             return true;
         }
         response->success = false;
-        response->message = "ERROR: Cannot start competition if current state is not 'init'";
+        response->message = "ERROR: Cannot start competition if current state is not UNSTARTED";
         return true;
     }
     //==============================================================================
@@ -545,6 +597,9 @@ namespace ariac_plugins
         (void)request;
 
         this->impl_->current_state_ = ariac_msgs::msg::CompetitionState::ENDED;
+        // publish the competition state
+        // impl_->competition_state_pub_->publish(impl_->current_state_);
+
         response->success = true;
         response->message = "Competition ended successfully!";
         return true;
