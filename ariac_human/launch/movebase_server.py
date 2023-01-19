@@ -48,7 +48,7 @@ class movebase_server(Node):
 		#self.create_subscription(topic='jason_stop_human'  , msg_type=Vector3, callback=self.goal_stop, qos_profile = 10)
 		
 		my_subscription1 = self.create_subscription(Vector3, "/jason_stop_human",     self.goal_stop,     qos_profile=1, callback_group=my_callback_group)
-		my_subscription2 = self.create_subscription(Bool,    "/jason_teleport_human", self.goal_teleport, qos_profile=1, callback_group=my_callback_group)
+		my_subscription2 = self.create_subscription(Vector3, "/jason_teleport_human", self.goal_teleport, qos_profile=1, callback_group=my_callback_group)
 		my_subscription3 = self.create_subscription(Vector3, "/jason_to_move_base",   self.goal_movebase, qos_profile=1, callback_group=my_callback_group)
 		
 		#Teleport service client:
@@ -59,17 +59,17 @@ class movebase_server(Node):
 
 		self._navigator = BasicNavigator()
 		# Set our demo's initial pose
-		initial_pose = PoseStamped()
-		initial_pose.header.frame_id = 'map'
-		initial_pose.header.stamp = self._navigator.get_clock().now().to_msg()
-		initial_pose.pose.position.x = -15.0
-		initial_pose.pose.position.y = -10.0
-		initial_pose.pose.position.z = 0.0
-		initial_pose.pose.orientation.x = 0.0
-		initial_pose.pose.orientation.y = 0.0
-		initial_pose.pose.orientation.z = 0.0
-		initial_pose.pose.orientation.w = 1.0
-		self.current_pose = initial_pose
+		self.initial_pose = PoseStamped()
+		self.initial_pose.header.frame_id = 'map'
+		self.initial_pose.header.stamp = self._navigator.get_clock().now().to_msg()
+		self.initial_pose.pose.position.x = -15.0
+		self.initial_pose.pose.position.y = -10.0
+		self.initial_pose.pose.position.z = 0.0
+		self.initial_pose.pose.orientation.x = 0.0
+		self.initial_pose.pose.orientation.y = 0.0
+		self.initial_pose.pose.orientation.z = 0.0
+		self.initial_pose.pose.orientation.w = 1.0
+		self.current_pose = self.initial_pose
 		self._navigator.setInitialPose(self.current_pose)
 		# Wait for navigation to fully activate, since autostarting nav2
 		self._navigator.waitUntilNav2Active()
@@ -81,8 +81,8 @@ class movebase_server(Node):
 		self.stopMove = True
 		#self._navigator.clearAllCostmaps()
 		self.future = self.cli.call_async(self.req)
-		rclpy.spin_until_future_complete(self, self.future)
-		self._navigator.setInitialPose(self.current_pose)
+		#rclpy.spin_until_future_complete(self, self.future)
+		self._navigator.setInitialPose(self.initial_pose)
 		return
 
 	#LB: callback function to perform human STOP

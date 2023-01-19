@@ -18,7 +18,7 @@ public class RosEnv extends Environment {
 
     private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
     
-    final int gantry_detection = 10;
+    final int gantry_detection = 5;
 
 	int cont = 0;
 	int detcont = 0;
@@ -189,9 +189,9 @@ public class RosEnv extends Environment {
 	
 	// 2 do: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
 	public void teleport() { // ros2 service call /ariac/teleport_human ariac_msgs/srv/TeleportHuman
-		Publisher teleport_h = new Publisher("jason_teleport_human", "std_msgs/Bool", bridge);	
 		logger.info("RosEnv: executing Teleport");	
-		teleport_h.publish(new Boolean(true)); //new Vector3(-15.0, -10.0, 0.0));		
+		Publisher teleport_h = new Publisher("/jason_teleport_human", "geometry_msgs/Vector3", bridge); //"std_msgs/Bool", bridge);	
+		teleport_h.publish(new Vector3(0.0, 0.0, 0.0));	// new Boolean(true)); //LB: changed from Bool to Vector3 to make work	
 	}
 
 	// Fix: Should call a service by sending a message to a topic and having a Python script reading it to send the service request

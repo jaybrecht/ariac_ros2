@@ -2,26 +2,26 @@
 // The location belief contains the location and the X,Y,Z coordinates
 // Positions of the tables are with respect of the initial position of the screen when the simulation starts
 // station1 = table bottom right, station2 = table top right, station4 = table top left, station3 = table bottom left
-location(station1, -5.75, 4.5, 1.0).   //   -5.75,  3.0, 0.0
-location(station2, -10.85, 4.5, 1.0).  //  -11.85, -3.0, 0.0
-location(station4, -10.85, -4.5, 1.0). //  -11.85, -3.0, 0.0
-location(station3, -5.75, -4.5, 1.0).
+location(station1,  -5.75,  4.5, 0.0).   //   -5.75,  3.0, 0.0
+location(station2, -10.85,  4.5, 0.0).  //  -11.85, -3.0, 0.0 
+location(station4, -10.85, -6.0, 0.0). //  -11.85, -3.0, 0.0 Y was -4.5
+location(station3,  -5.75, -4.5, 0.0).
 
 // safe zone, not being used by the agent at the moment
-location(safe, -15.29, -10.04, 0.0).
+//location(safe, -15.29, -10.04, 0.0).
 
 // Beliefs that determine where is the next location to work (second parameter) based on the current one (first parameter)
-//next_location(station1,station2).
-//next_location(station2,station4).
-//next_location(station4,station3).
-//next_location(station3,station1).
-
 next_location(station1,station2).
 next_location(station2,station4).
 next_location(station4,station3).
 next_location(station3,station1).
 
-//LB test (next 2):
+previous_location(station1,station3).
+previous_location(station2,station1).
+previous_location(station4,station2).
+previous_location(station3,station4).
+
+//LB: initial belief seems needed
 gantry_position(0.0, 0.0, 0.0).
 
 //////////////// Rules
@@ -33,9 +33,9 @@ g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == per
 
 /* Plans */
 
-+!start : indifferent <- .include("indifferent.asl"); !work(station3).
++!start : indifferent <- .include("indifferent.asl"); !work(station4).
 +!start : helpful <- .include("helpful.asl"); !work(station3).
-+!start : antagonistic <- .include("antagonistic.asl"); !work(station3).
++!start : antagonistic <- .include("antagonistic.asl"); !work(station4).
 
 // Work pattern plans
 +!work(Location) : location(Location, X, Y, Z) 
@@ -46,15 +46,15 @@ g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == per
 		move(X, Y, Z).
 
 
-+work_completed(_) : working(Location) & next_location(Location,Next) & not movingToGantry
 //+work_completed : working(Location) & next_location(Location,Next)
++work_completed(_) : working(Location) & next_location(Location,Next) & not movingToGantry
 	<-
 		.print("Work completed at ", Location);
 		!work(Next).
 
 
-+work_completed(_) : working(Location) & movingToGantry
 //+work_completed : working(Location) & next_location(Location,Next)
++work_completed(_) : working(Location) & next_location(Location,Next) & movingToGantry
 	<-
 		-movingToGantry;
 		!work(Next).
@@ -64,8 +64,9 @@ g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == per
 @disabled[atomic]
 +gantry_disabled : working(Location)
 	<-
-		stop_movement; // stops moving and cancel any navigation goals
+		//stop_movement; // stops moving and cancel any navigation goals
+		.print("Gantry disabled: teleport requested.");
 		teleport_safe; // ask to be teleported to the safe zone
 		.wait(8000); // waits for 8 seconds in the safe zone
-		!!work(Location). // resumes work pattern
+		!work(station4).  //!!work(Location). // resumes work pattern
 		

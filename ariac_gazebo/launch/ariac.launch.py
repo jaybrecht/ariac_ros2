@@ -189,10 +189,10 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # stopbase_server node
-    stopbase_server = Node(
-        package='ariac_human',
-        executable='stopbase_server.py'
-    )
+    #stopbase_server = Node(
+    #    package='ariac_human',
+    #    executable='stopbase_server.py'
+    #)
 
 
     spawn_robots_after_sensors = RegisterEventHandler(
