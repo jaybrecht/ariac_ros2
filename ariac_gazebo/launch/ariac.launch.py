@@ -98,6 +98,10 @@ def launch_setup(context, *args, **kwargs):
 
     controller_spawner_nodes = []
     for controller in controller_names:
+        if not controller == 'joint_state_broadcaster':
+            args = [controller, '--stopped']
+        else:
+            args = [controller]
         controller_spawner_nodes.append(
             Node(
                 package="controller_manager",

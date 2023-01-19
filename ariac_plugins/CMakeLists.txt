@@ -11,6 +11,8 @@ find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(ariac_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
@@ -100,6 +102,8 @@ ament_target_dependencies(TaskManagerPlugin
   "gazebo_ros"
   "ariac_msgs"
   "controller_manager_msgs"
+  "geometry_msgs"
+  "std_msgs"
 )
 ament_export_libraries(TaskManagerPlugin)
 

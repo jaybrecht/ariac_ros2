@@ -13,8 +13,10 @@
 #include <ariac_msgs/msg/order_condition.hpp>
 #include <ariac_msgs/msg/trial.hpp>
 #include <ariac_msgs/msg/challenge.hpp>
+#include <ariac_msgs/msg/parts.hpp>
 #include <ariac_msgs/msg/kitting_task.hpp>
 #include <ariac_msgs/msg/competition_state.hpp>
+#include <ariac_msgs/srv/submit_order.hpp>
 // ARIAC
 #include <ariac_plugins/ariac_common.hpp>
 
@@ -128,6 +130,10 @@ namespace ariac_plugins
             const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
             std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
+        bool SubmitOrderServiceCallback(
+            const std::shared_ptr<ariac_msgs::srv::SubmitOrder::Request> request,
+            std::shared_ptr<ariac_msgs::srv::SubmitOrder::Response> response);
+
         /**
          * @brief
          * @param request
@@ -138,6 +144,23 @@ namespace ariac_plugins
         bool EndCompetitionServiceCallback(
             const std::shared_ptr<std_srvs::srv::Trigger::Request> _request,
             std::shared_ptr<std_srvs::srv::Trigger::Response> _response);
+
+        /**
+         * @brief Build an Order ROS message from an ariac_common::Order
+         *
+         * @param _order Order to build the ROS message from
+         * @return const ariac_msgs::msg::Order& ROS message
+         */
+        const ariac_msgs::msg::Order BuildOrderMsg(std::shared_ptr<ariac_common::Order> _order);
+
+        /**
+         * @brief Build a KittinTask ROS message
+         *
+         * @param _task Pointer to ariac_common::KittingTask
+         */
+        const ariac_msgs::msg::KittingTask BuildKittingTaskMsg(std::shared_ptr<ariac_common::KittingTask> _task);
+        const ariac_msgs::msg::AssemblyTask BuildAssemblyTaskMsg(std::shared_ptr<ariac_common::AssemblyTask> _task);
+        const ariac_msgs::msg::CombinedTask BuildCombinedTaskMsg(std::shared_ptr<ariac_common::CombinedTask> _task);
         // /**
         //  * @brief Process sensor blackout challenges
         //  *
@@ -148,42 +171,31 @@ namespace ariac_plugins
         //  *
         //  */
         // void ProcessRobotBreakdownChallenge();
-        // /**
-        //  * @brief Check which order(s) should be announced
-        //  *
-        //  * @param _current_sim_time Current simulation time
-        //  */
-        // void ProcessOrdersToAnnounce(double _current_sim_time);
-        // /**
-        //  * @brief Announce temporal orders
-        //  *
-        //  * @param _current_sim_time Current simulation time
-        //  */
-        // void ProcessTemporalOrders(double _current_sim_time);
-        // /**
-        //  * @brief Announce orders during kitting
-        //  *
-        //  * @param _current_sim_time Current simulation time
-        //  */
-        // void ProcessDuringKittingOrders(double _current_sim_time);
-        // /**
-        //  * @brief Announce orders during assembly
-        //  *
-        //  * @param _current_sim_time Current simulation time
-        //  */
-        // void ProcessDuringAssemblyOrders(double _current_sim_time);
-        // /**
-        //  * @brief Announce orders after kitting
-        //  *
-        //  * @param _current_sim_time Current simulation time
-        //  */
-        // void ProcessAfterKittingOrders(double _current_sim_time);
-        // /**
-        //  * @brief Announce orders after assembly
-        //  *
-        //  * @param _current_sim_time Current simulation time
-        //  */
-        // void ProcessAfterAssemblyOrders(double _current_sim_time);
+        /**
+         * @brief Manage orders to be announced
+         *
+         * @param _current_sim_time Current simulation time
+         */
+        void ProcessOrdersToAnnounce(double _elapsed_time);
+        /**
+         * @brief Manage time-based orders to be submitted
+         *
+         * @param _current_sim_time Current simulation time
+         */
+        void ProcessTemporalOrders(double _elapsed_time);
+        /**
+         * @brief Manage on part placement orders to be submitted
+         *
+         * @param _current_sim_time Current simulation time
+         */
+        void ProcessOnPartPlacementOrders(double _elapsed_time);
+        /**
+         * @brief Manage on submission orders to be submitted
+         *
+         * @param _current_sim_time Current simulation time
+         */
+        void ProcessOnSubmissionOrders(double _elapsed_time);
+
         /**
          * @brief Callback function for the topic 'trial_config'
          *
@@ -192,6 +204,31 @@ namespace ariac_plugins
         void OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
 
         /**
+         * @brief Callback function for the topic '/ariac/agv1_tray_contents'
+         *
+         * @param _msg Shared pointer to the message
+         */
+        void OnAGV1TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
+        /**
+         * @brief Callback function for the topic '/ariac/agv2_tray_contents'
+         *
+         * @param _msg Shared pointer to the message
+         */
+        void OnAGV2TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
+        /**
+         * @brief Callback function for the topic '/ariac/agv3_tray_contents'
+         *
+         * @param _msg Shared pointer to the message
+         */
+        void OnAGV3TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
+        /**
+         * @brief Callback function for the topic '/ariac/agv4_tray_contents'
+         *
+         * @param _msg Shared pointer to the message
+         */
+        void OnAGV4TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
+
+                /**
          * @brief Build and publish an order message
          *
          * @param _order Order to be published

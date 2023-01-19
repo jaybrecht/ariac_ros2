@@ -187,6 +187,9 @@ namespace ariac_common
     public:
         Part(unsigned int _color, unsigned int _type) : color_(_color), type_(_type) {}
 
+        unsigned int GetColor() const { return color_; }
+        unsigned int GetType() const { return type_; }
+
     private:
         unsigned int color_;
         unsigned int type_;
@@ -197,6 +200,12 @@ namespace ariac_common
     {
     public:
         KittingPart(unsigned _quadrant, const Part &_part) : quadrant_(_quadrant), part_(_part) {}
+
+        //====================
+        // GETTERS & SETTERS
+        //====================
+        unsigned int GetQuadrant() const { return quadrant_; }
+        Part GetPart() const { return part_; }
 
     private:
         unsigned int quadrant_;
@@ -213,6 +222,10 @@ namespace ariac_common
                                                                                part_pose_(_part_pose),
                                                                                part_direction_(_part_direction) {}
 
+        Part GetPart() const { return part_; }
+        ignition::math::Pose3d GetPartPose() const { return part_pose_; }
+        ignition::math::Vector3<double> GetPartDirection() const { return part_direction_; }
+
     private:
         Part part_;
         ignition::math::Pose3d part_pose_;
@@ -228,6 +241,10 @@ namespace ariac_common
                      const std::vector<AssemblyPart> &_products) : agv_numbers_(_agv_numbers),
                                                                    station_(_station),
                                                                    products_(_products) {}
+
+        const std::vector<unsigned int> &GetAgvNumbers() const { return agv_numbers_; }
+        unsigned int GetStation() const { return station_; }
+        const std::vector<AssemblyPart> &GetProducts() const { return products_; }
 
     private:
         std::vector<unsigned int> agv_numbers_;
@@ -250,6 +267,11 @@ namespace ariac_common
                                                                  destination_(_destination),
                                                                  products_(_products) {}
 
+        unsigned int GetAgvNumber() const { return agv_number_; }
+        unsigned int GetTrayId() const { return tray_id_; }
+        unsigned int GetDestination() const { return destination_; }
+        const std::vector<KittingPart> &GetProducts() const { return products_; }
+
     private:
         unsigned int agv_number_;
         unsigned int tray_id_;
@@ -267,6 +289,9 @@ namespace ariac_common
         CombinedTask(unsigned int _station,
                      const std::vector<AssemblyPart> &_products) : station_(_station),
                                                                    products_(_products) {}
+
+        unsigned int GetStation() const { return station_; }
+        const std::vector<AssemblyPart> &GetProducts() const { return products_; }
 
     private:
         unsigned int station_;
@@ -513,6 +538,7 @@ namespace ariac_common
                                           type_(_type),
                                           priority_(_priority),
                                           trial_time_limit_(_trial_time_limit) {}
+        ~Order() = default;
 
         /**
          * @brief Get the Id of the order
@@ -567,6 +593,16 @@ namespace ariac_common
         std::shared_ptr<AssemblyTask> GetAssemblyTask() const
         {
             return assembly_task_;
+        }
+
+        /**
+         * @brief Get a shared pointer to a combined task
+         *
+         * @return std::shared_ptr<CombinedTask> Combined task
+         */
+        std::shared_ptr<CombinedTask> GetCombinedTask() const
+        {
+            return combined_task_;
         }
 
         /**
@@ -687,6 +723,8 @@ namespace ariac_common
          * @param _trial_time_limit Time limit for the trial
          * @param _announcement_time Time at which the order should be announced
          */
+        ~OrderTemporal() = default;
+
         OrderTemporal(std::string _id,
                       unsigned int _type,
                       bool _priority,
@@ -724,7 +762,6 @@ namespace ariac_common
          * @param _priority Priority of the order (true or false)
          * @param _trial_time_limit Time limit for the trial
          * @param _agv Announcement: AGV on which the part is placed
-         * @param _quadrant Announcement: Quadrant of the AGV on which the part is placed
          */
         OrderOnPartPlacement(std::string _id,
                              unsigned int _type,
@@ -733,6 +770,16 @@ namespace ariac_common
                              unsigned int _agv,
                              std::shared_ptr<Part> _part) : Order(_id, _type, _priority, _trial_time_limit),
                                                             agv_(_agv), part_(_part) {}
+
+        unsigned int GetAgv() const
+        {
+            return agv_;
+        }
+
+        std::shared_ptr<Part> GetPart() const
+        {
+            return part_;
+        }
 
     private:
         //! AGV on which the part is placed
@@ -764,6 +811,11 @@ namespace ariac_common
                           double _trial_time_limit,
                           std::string _order_id) : Order(_id, _type, _priority, _trial_time_limit),
                                                    order_id_(_order_id) {}
+
+    std::string GetOrderId() const
+    {
+        return order_id_;
+    }
 
     private:
         //! Id of the order submitted by the competitor
