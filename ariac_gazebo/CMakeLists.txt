@@ -93,6 +93,7 @@ ament_python_install_package(${PROJECT_NAME} SCRIPTS_DESTINATION lib/${PROJECT_N
 # Install Python executables
 install(PROGRAMS
   nodes/environment_startup_node.py
+  nodes/robot_controller_switcher_node.py
   nodes/sensor_tf_broadcaster.py
   nodes/object_tf_broadcaster.py
   nodes/part_spawner.py

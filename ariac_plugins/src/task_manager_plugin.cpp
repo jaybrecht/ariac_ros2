@@ -99,7 +99,7 @@ namespace ariac_plugins
         rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr end_competition_srv_{nullptr};
         rclcpp::Service<ariac_msgs::srv::SubmitOrder>::SharedPtr submit_order_srv_{nullptr};
         /*!< Client to start/stop robot controllers. */
-        rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr switch_controller_srv_client_;
+        // rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr switch_controller_srv_client_;
         /*!< Client to stop the competition. */
         rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr end_competition_srv_client_;
 
@@ -132,17 +132,6 @@ namespace ariac_plugins
         std::vector<std::string> submitted_orders_;
         /*!< List of trial orders. */
         std::vector<std::string> trial_orders_;
-
-        //============== LISTS OF CONTROLLERS =================
-        /*!< List of controllers for the ceiling robot. */
-        std::vector<std::string> ceiling_robot_controllers_{"ceiling_robot_controller", "linear_rail_controller"};
-        /*!< List of controllers for the floor robot. */
-        std::vector<std::string> floor_robot_controllers_{"floor_robot_controller", "linear_rail_controller"};
-        /*!< List of controllers for both robots. */
-        std::vector<std::string> all_robots_controllers_{"ceiling_robot_controller",
-                                                         "linear_rail_controller",
-                                                         "floor_robot_controller",
-                                                         "linear_rail_controller"};
     };
     //==============================================================================
     TaskManagerPlugin::TaskManagerPlugin()
@@ -225,7 +214,7 @@ namespace ariac_plugins
         impl_->competition_state_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::CompetitionState>("/ariac/competition_state", 10);
         impl_->order_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Order>("/ariac/orders", 1);
         //============== SERVICES =================
-        impl_->switch_controller_srv_client_ = impl_->ros_node_->create_client<controller_manager_msgs::srv::SwitchController>("/controller_manager/switch_controller");
+        // impl_->switch_controller_srv_client_ = impl_->ros_node_->create_client<controller_manager_msgs::srv::SwitchController>("/controller_manager/switch_controller");
         impl_->end_competition_srv_client_ = impl_->ros_node_->create_client<std_srvs::srv::Trigger>("/ariac/end_competition");
         // impl_->current_sim_time_ = impl_->ros_node_->get_clock()->now();
         // impl_->current_sim_time_ = impl_->world_->SimTime();
@@ -875,32 +864,13 @@ namespace ariac_plugins
     //==============================================================================
     int TaskManagerPlugin::StartAllRobots()
     {
-        auto request = std::make_shared<controller_manager_msgs::srv::SwitchController::Request>();
-        request->start_controllers = impl_->all_robots_controllers_;
-        request->strictness = request->BEST_EFFORT;
-
-        auto result = impl_->switch_controller_srv_client_->async_send_request(request);
-        if (rclcpp::spin_until_future_complete(impl_->ros_node_, result) != rclcpp::FutureReturnCode::SUCCESS)
-        {
-            RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Failed to call service to start robots controllers");
-            return -1;
-        }
-        else
-        {
-            if (result.get()->ok)
-            {
-                // publish on /ariac/robot_health topic
-                auto robot_health_message = ariac_msgs::msg::Robots();
-                robot_health_message.ceiling_robot = true;
-                robot_health_message.floor_robot = true;
-                impl_->robot_health_pub_->publish(robot_health_message);
-                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Started all robots");
-                return 1;
-            }
-            else
-                return -1;
-        }
-        return -1;
+        // publish on /ariac/robot_health topic
+        auto robot_health_message = ariac_msgs::msg::Robots();
+        robot_health_message.ceiling_robot = true;
+        robot_health_message.floor_robot = true;
+        impl_->robot_health_pub_->publish(robot_health_message);
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Started all robots");
+        return 1;
     }
 
     // ==================================== //
@@ -951,7 +921,7 @@ namespace ariac_plugins
             // Activate all sensors
             ActivateAllSensors();
             // Start all robot controllers
-            // StartAllRobots();
+            StartAllRobots();
 
             return true;
         }

@@ -72,6 +72,13 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
+    # Robot Controller Switcher
+    robot_controller_switcher = Node(
+        package='ariac_gazebo',
+        executable='robot_controller_switcher_node.py',
+        output='screen',
+    )
+
     # Robot State Publisher
     robbot_state_publisher = Node(
         package="robot_state_publisher",
@@ -98,17 +105,17 @@ def launch_setup(context, *args, **kwargs):
 
     controller_spawner_nodes = []
     for controller in controller_names:
-        if not controller == 'joint_state_broadcaster':
-            args = [controller, '--stopped']
-        else:
+        if controller == 'joint_state_broadcaster' or controller.count('agv') > 0:
             args = [controller]
+        else:
+            args = [controller, '--stopped']
 
         controller_spawner_nodes.append(
             Node(
                 package="controller_manager",
                 executable="spawner",
                 name=controller + "_spawner",
-                arguments=[controller],
+                arguments=args,
                 parameters=[
                     {"use_sim_time": True},
                 ],
@@ -120,6 +127,7 @@ def launch_setup(context, *args, **kwargs):
         sensor_tf_broadcaster,
         object_tf_broadcaster,
         environment_startup,
+        robot_controller_switcher,
         robbot_state_publisher,
         *controller_spawner_nodes,
     ]
