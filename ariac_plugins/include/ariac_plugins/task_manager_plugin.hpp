@@ -37,6 +37,8 @@ namespace ariac_plugins
         /// Destructor
         virtual ~TaskManagerPlugin();
 
+        
+
         /**
          * @brief Publish the competition state
          *
@@ -228,7 +230,7 @@ namespace ariac_plugins
          */
         void OnAGV4TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
 
-                /**
+        /**
          * @brief Build and publish an order message
          *
          * @param _order Order to be published

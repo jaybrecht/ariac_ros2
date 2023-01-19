@@ -15,6 +15,9 @@
 // Gazebo
 #include <gazebo/physics/World.hh>
 #include <gazebo_ros/node.hpp>
+#include <gazebo/transport/Subscriber.hh>
+#include <gazebo/transport/Node.hh>
+#include <gazebo/sensors/LogicalCameraSensor.hh>
 
 // Messages
 #include <ariac_plugins/task_manager_plugin.hpp>
@@ -51,6 +54,8 @@ namespace ariac_plugins
     class TaskManagerPluginPrivate
     {
     public:
+        gazebo::transport::NodePtr gznode_;
+
         //============== C++ =================
         /*!< A mutex to protect the current state. */
         std::mutex lock_;
@@ -91,7 +96,16 @@ namespace ariac_plugins
         rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv2_tray_sub_;
         rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv3_tray_sub_;
         rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv4_tray_sub_;
-        // / ariac / agv1_tray_contents
+
+        gazebo::transport::SubscriberPtr agv1_tray_sub_;
+        gazebo::transport::SubscriberPtr agv2_tray_sub_;
+        gazebo::transport::SubscriberPtr agv3_tray_sub_;
+        gazebo::transport::SubscriberPtr agv4_tray_sub_;
+
+        gazebo::transport::SubscriberPtr station1_sub_;
+        gazebo::transport::SubscriberPtr station2_sub_;
+        gazebo::transport::SubscriberPtr station3_sub_;
+        gazebo::transport::SubscriberPtr station4_sub_;
 
         //============== SERVICES =================
         /*!< Service that allows the user to start the competition. */
@@ -132,6 +146,18 @@ namespace ariac_plugins
         std::vector<std::string> submitted_orders_;
         /*!< List of trial orders. */
         std::vector<std::string> trial_orders_;
+        /*!< Kit tray id for agv1. */
+        int agv1_kit_tray_id_;
+
+
+        void AGV1TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
+        void AGV2TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
+        void AGV3TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
+        void AGV4TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
+        
+        // tray id + list of parts
+         void ParseTrayModels(unsigned int agv_number);
+        //  void ParseAssemblyModels();
     };
     //==============================================================================
     TaskManagerPlugin::TaskManagerPlugin()
@@ -177,6 +203,29 @@ namespace ariac_plugins
         impl_->world_ = _world;
         impl_->sdf_ = _sdf;
 
+        impl_->gznode_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
+        impl_->gznode_->Init(impl_->world_->Name());
+
+        std::string tray1_topic = "/gazebo/world/agv_tray_sensor_1/sensor_base/agv_tray_sensor/models";
+        std::string tray2_topic = "/gazebo/world/agv_tray_sensor_2/sensor_base/agv_tray_sensor/models";
+        std::string tray3_topic = "/gazebo/world/agv_tray_sensor_3/sensor_base/agv_tray_sensor/models";
+        std::string tray4_topic = "/gazebo/world/agv_tray_sensor_4/sensor_base/agv_tray_sensor/models";
+
+        impl_->agv1_tray_sub_ = impl_->gznode_->Subscribe(tray1_topic, &TaskManagerPluginPrivate::AGV1TraySensorCallback, impl_.get());
+        impl_->agv2_tray_sub_ = impl_->gznode_->Subscribe(tray2_topic, &TaskManagerPluginPrivate::AGV2TraySensorCallback, impl_.get());
+        impl_->agv3_tray_sub_ = impl_->gznode_->Subscribe(tray3_topic, &TaskManagerPluginPrivate::AGV3TraySensorCallback, impl_.get());
+        impl_->agv4_tray_sub_ = impl_->gznode_->Subscribe(tray4_topic, &TaskManagerPluginPrivate::AGV4TraySensorCallback, impl_.get());
+
+        std::string station1_topic = "/gazebo/world/assembly_station_sensor_1/sensor_base/assembly_station_sensor/models";
+        std::string station2_topic = "/gazebo/world/assembly_station_sensor_2/sensor_base/assembly_station_sensor/models";
+        std::string station3_topic = "/gazebo/world/assembly_station_sensor_3/sensor_base/assembly_station_sensor/models";
+        std::string station4_topic = "/gazebo/world/assembly_station_sensor_4/sensor_base/assembly_station_sensor/models";
+
+        // impl_->station1_sub_ = impl_->gznode_->Subscribe(station1_topic, &TaskManagerPluginPrivate::Station1SensorCallback, impl_.get());
+        // impl_->station2_sub_ = impl_->gznode_->Subscribe(station2_topic, &TaskManagerPluginPrivate::Station2SensorCallback, impl_.get());
+        // impl_->station3_sub_ = impl_->gznode_->Subscribe(station3_topic, &TaskManagerPluginPrivate::Station3SensorCallback, impl_.get());
+        // impl_->station4_sub_ = impl_->gznode_->Subscribe(station4_topic, &TaskManagerPluginPrivate::Station4SensorCallback, impl_.get());
+
         RCLCPP_INFO(impl_->ros_node_->get_logger(), "Starting ARIAC 2023");
 
         // Get QoS profiles
@@ -220,17 +269,41 @@ namespace ariac_plugins
         // impl_->current_sim_time_ = impl_->world_->SimTime();
     }
 
-    //==============================================================================
-    // void TaskManagerPlugin::AnnounceOrder(std::shared_ptr<ariac_common::Order> _order)
+    void TaskManagerPluginPrivate::AGV1TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
+    {
+    }
+
+    void TaskManagerPluginPrivate::AGV2TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
+    {
+    }
+
+    void TaskManagerPluginPrivate::AGV3TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
+    {
+    }
+
+    void TaskManagerPluginPrivate::AGV4TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
+    {
+    }
+
+    // void TaskManagerPluginPrivate::Station1SensorCallback(ConstContactsPtr &_msg)
     // {
-    //     auto message = ariac_msgs::msg::Order();
-    //     message.id = _order->GetId();
-    //     message.type = _order->GetType();
-    //     message.priority = _order->GetPriority();
+    // }
+
+    // void TaskManagerPluginPrivate::Station2SensorCallback(ConstContactsPtr &_msg)
+    // {
+    // }
+
+    // void TaskManagerPluginPrivate::Station3SensorCallback(ConstContactsPtr &_msg)
+    // {
+    // }
+
+    // void TaskManagerPluginPrivate::Station4SensorCallback(ConstContactsPtr &_msg)
+    // {
     // }
 
     //==============================================================================
-    const ariac_msgs::msg::KittingTask TaskManagerPlugin::BuildKittingTaskMsg(std::shared_ptr<ariac_common::KittingTask> _task)
+    const ariac_msgs::msg::KittingTask
+    TaskManagerPlugin::BuildKittingTaskMsg(std::shared_ptr<ariac_common::KittingTask> _task)
     {
         auto message = ariac_msgs::msg::KittingTask();
         message.agv_number = _task->GetAgvNumber();
@@ -526,7 +599,7 @@ namespace ariac_plugins
             (current_sim_time - impl_->start_competition_time_).Double() > impl_->time_limit_ && impl_->current_state_ == ariac_msgs::msg::CompetitionState::ORDER_ANNOUNCEMENTS_DONE)
         {
             RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Time limit reached. Ending competition.");
-            
+
             this->impl_->current_state_ = ariac_msgs::msg::CompetitionState::ENDED;
         }
 
@@ -890,7 +963,8 @@ namespace ariac_plugins
             response->message = "Order submitted successfully";
             impl_->trial_orders_.erase(std::remove(impl_->trial_orders_.begin(), impl_->trial_orders_.end(), request->order_id), impl_->trial_orders_.end());
         }
-        else{
+        else
+        {
             response->success = false;
             response->message = "Order is not part of the trial or has already been submitted";
         }
