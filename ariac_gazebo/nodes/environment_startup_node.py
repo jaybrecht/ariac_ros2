@@ -33,6 +33,9 @@ def main():
 
     # Read conveyor part config
     startup_node.parse_conveyor_config()
+    
+    # Parse the trial config file
+    startup_node.parse_trial_file()
 
     # startup_node.unpause_physics()
 

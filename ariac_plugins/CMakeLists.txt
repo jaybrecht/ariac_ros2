@@ -11,6 +11,9 @@ find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(ariac_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(controller_manager_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
@@ -90,6 +93,20 @@ ament_target_dependencies(AGVTrayPlugin
 )
 ament_export_libraries(AGVTrayPlugin)
 
+# Task Manager Plugin
+add_library(TaskManagerPlugin SHARED
+  src/task_manager_plugin.cpp
+)
+target_include_directories(TaskManagerPlugin PUBLIC include)
+ament_target_dependencies(TaskManagerPlugin
+  "gazebo_ros"
+  "ariac_msgs"
+  "controller_manager_msgs"
+  "geometry_msgs"
+  "std_msgs"
+)
+ament_export_libraries(TaskManagerPlugin)
+
 ament_package()
 
 install(DIRECTORY include/
@@ -103,6 +120,7 @@ install(TARGETS
     disable_shadows_plugin
     ObjectDisposalPlugin
     AGVTrayPlugin
+    TaskManagerPlugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)

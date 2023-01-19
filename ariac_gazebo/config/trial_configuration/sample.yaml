@@ -4,13 +4,11 @@
 
 # ENVIRONMENT SETUP
 
-time_limit: -1 # options: -1 (no time limit) or number of seconds (max 500)
+time_limit: 40 # options: -1 (no time limit) or number of seconds (max 500)
 
 kitting_trays: # Which kitting trays will be spawn
-  tray_ids: [1, 3, 4, 6] 
-  slots: [2, 3, 5, 6]
-
-gripper_types: ['part', 'tray'] # Possible gripper types
+  tray_ids: [1, 2, 3] 
+  slots: [2, 3, 5]
 
 parts:
   agvs:
@@ -72,49 +70,64 @@ parts:
         flipped: true
         rotation: 'pi'
         
-# GLOBAL CHALLENGE
-
-global_challenges:
-  dropped_part:
-    robot: 'ceiling_robot'
-    type: 'battery'
-    color: 'green'
-    drop_after: 1 # third part the robot successfully picks
-    delay: 1 # seconds
+# GLOBAL CHALLENGES
+challenges:
+  - dropped_part:
+      robot: 'ceiling_robot'
+      type: 'battery'
+      color: 'green'
+      drop_after: 1 # third part the robot successfully picks
+      delay: 1 # seconds
+  - robot_malfunction:
+      duration: 50.0
+      robots_to_disable: ['floor_robot']
+      part_place_condition:
+        color: 'green'
+        type: 'sensor'
+        agv: 4
+  - sensor_blackout:
+      duration: 50.0
+      sensors_to_disable: ['break_beam']
+      part_place_condition:
+        type: 'battery'
+        color: 'blue'
+        agv: 2
+  - sensor_blackout:
+      duration: 150.0
+      sensors_to_disable: ['lidar', 'break_beam']
+      part_place_condition:
+        type: 'sensor'
+        color: 'green'
+        agv: 2
+  - faulty_part:
+      order_id: 'MMB30H56'
+      quadrant1: true
+      quadrant2: true
+      
 
 # ORDER SETUP
 
 orders:
   - id: 'MMB30H56'
     type: 'kitting'
-    announcement_time: 0
+    announcement:
+      time_condition: 0
     priority: false
-    challenges:
-      flipped_part:
-        quadrant: 1
     kitting_task:
       agv_number: 2
-      tray_id: 3
+      tray_id: 2
       destination: 'warehouse'
       products:
         - type: 'battery'
           color: 'blue'
           quadrant: 1
-        - type: 'pump'
-          color: 'red'
-          quadrant: 3
-
-  - id: '1X7K29EV'
+  - id: 'MMB30H57'
     type: 'assembly'
     announcement:
-      time_condition: 100
-      order_condition:
-        id: 'MMB30H56'
-        quadrant: 3
-    priority: true
-    challenges:
+      time_condition: 10
+    priority: false
     assembly_task:
-      agv_number: 4
+      agv_number: [4]
       station: 'as4'
       products:
         - type: 'sensor'
@@ -122,28 +135,74 @@ orders:
           assembled_pose: # relative to breifcase frame
             xyz: [0.405, 0.164, 0.110]
             rpy: ['pi/2', 0, 0]
-          assembly_direction: [-1, 0, 0] # unit vector in breifcase frame
-
-  - id: 'MMB30G34'
+          assembly_direction: [-1, 0, 0] # unit vector in briefcase frame
+  - id: 'MMB30H58'
     type: 'combined'
-    announcement_time: 0
+    announcement:
+      time_condition: 20
     priority: false
-    challenges:
-    kitting_task:
-      agv_number: 1
-      tray_id: 6
-      destination: 'as2'
+    combined_task:
+      station: 'as4'
       products:
-        - type: 'pump'
-          color: 'red'
-          quadrant: 3
-    assembly_task:
-      agv_number: 1
-      station: 'as2'
-      products:
-        - type: 'pump'
-          color: 'red'
+        - type: 'sensor'
+          color: 'green'
           assembled_pose: # relative to breifcase frame
-            xyz: [0.032, -0.153, 0.076]
-            rpy: [0, 0, 0]
-          assembly_direction: [0, 0, -1] # unit vector in breifcase frame
+            xyz: [0.405, 0.164, 0.110]
+            rpy: ['pi/2', 0, 0]
+          assembly_direction: [-1, 0, 0] # unit vector in briefcase frame
+  # - id: '1X7K29EV'
+  #   type: 'assembly'
+  #   announcement:
+  #     part_place_condition:
+  #       color: 'green'
+  #       type: 'sensor'
+  #       agv: 4
+  #   priority: true
+  #   assembly_task:
+  #     agv_number: [4]
+  #     station: 'as4'
+  #     products:
+  #       - type: 'sensor'
+  #         color: 'green'
+  #         assembled_pose: # relative to breifcase frame
+  #           xyz: [0.405, 0.164, 0.110]
+  #           rpy: ['pi/2', 0, 0]
+  #         assembly_direction: [-1, 0, 0] # unit vector in briefcase frame
+  # - id: '2Y7K29EV'
+  #   type: 'combined'
+  #   announcement:
+  #     submission_condition:
+  #       order_id: '1X7K29EV'
+  #   priority: false
+  #   combined_task:
+  #     station: 'as2'
+  #     products:
+  #       - type: 'sensor'
+  #         color: 'blue'
+  #         assembled_pose: # relative to briefcase frame
+  #           xyz: [0.405, 0.164, 0.110]
+  #           rpy: ['pi/2', 0, 0]
+  #         assembly_direction: [-1, 0, 0] # unit vector in briefcase frame
+  # # - id: 'MMB30G34'
+  # #   type: 'combined'
+  # #   announcement_time: 0
+  # #   priority: false
+  # #   challenges:
+  # #   kitting_task:
+  # #     agv_number: 1
+  # #     tray_id: 6
+  # #     destination: 'as2'
+  # #     products:
+  # #       - type: 'pump'
+  # #         color: 'red'
+  # #         quadrant: 3
+  # #   assembly_task:
+  # #     agv_number: 1
+  # #     station: 'as2'
+  # #     products:
+  # #       - type: 'pump'
+  # #         color: 'red'
+  # #         assembled_pose: # relative to breifcase frame
+  # #           xyz: [0.032, -0.153, 0.076]
+  # #           rpy: [0, 0, 0]
+  # #         assembly_direction: [0, 0, -1] # unit vector in breifcase frame

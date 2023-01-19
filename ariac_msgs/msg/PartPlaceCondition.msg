@@ -1,2 +1,2 @@
 ariac_msgs/Part part
-string agv
+uint8 agv # tray content topic
