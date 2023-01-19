@@ -85,7 +85,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Robot Controller Spawners
     controller_names = [
-        'joint_state_broadcaster', # skip argument
+        'joint_state_broadcaster',
         'floor_robot_controller',
         'ceiling_robot_controller',
         'linear_rail_controller',
@@ -102,6 +102,7 @@ def launch_setup(context, *args, **kwargs):
             args = [controller, '--stopped']
         else:
             args = [controller]
+
         controller_spawner_nodes.append(
             Node(
                 package="controller_manager",

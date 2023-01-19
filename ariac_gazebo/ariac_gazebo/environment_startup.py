@@ -83,10 +83,12 @@ class EnvironmentStartup(Node):
         self.declare_parameter('user_config_path', '',
                                ParameterDescriptor(description='Path of the user\'s configuration yaml file'))
 
+
         self.trial_config = self.read_yaml(
             self.get_parameter('trial_config_path').get_parameter_value().string_value)
         self.user_config = self.read_yaml(
             self.get_parameter('user_config_path').get_parameter_value().string_value)
+
 
         # Conveyor
         self.conveyor_spawn_rate = None
@@ -712,6 +714,24 @@ class EnvironmentStartup(Node):
                 sensor_name, sensor_type, visualize=vis, xyz=xyz)
             params.reference_frame = "agv" + str(i) + "_tray"
             self.spawn_entity(params)
+        
+        # Spawn assembly station sensors
+        for i in range(1, 5):
+            sensor_name = "assembly_station_sensor_" + str(i)
+            sensor_type = "assembly_station_sensor"
+            vis = False
+
+            try:
+                t = self.tf_buffer.lookup_transform('world', "as" + str(i) + "_insert_frame", rclpy.time.Time())
+            except TransformException as ex:
+                self.get_logger().info(f'Could not transform assembly station {i} to world: {ex}')
+                return
+            
+            xyz = [t.transform.translation.x, t.transform.translation.y, t.transform.translation.z + 0.989]
+
+            params = SensorSpawnParams(sensor_name, sensor_type, visualize=vis, xyz=xyz)
+
+            self.spawn_entity(params)
 
         # Spawn assembly station sensors
         for i in range(1, 5):
@@ -972,8 +992,10 @@ class EnvironmentStartup(Node):
 
     def spawn_robots(self):
         urdf = ET.fromstring(self.get_parameter('robot_description').value)
+
         params = RobotSpawnParams(
             "ariac_robots", ET.tostring(urdf, encoding="unicode"))
+
         self.spawn_entity(params)
 
     def spawn_parts_on_agvs(self):
