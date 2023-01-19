@@ -64,7 +64,7 @@ def generate_launch_description():
 
     # RVIZ 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("test_competitor"), "rviz", "moveit_test.rviz"]
+        [FindPackageShare("test_competitor"), "rviz", "test_competitor.rviz"]
     )
 
     rviz = Node(
@@ -81,7 +81,7 @@ def generate_launch_description():
 
     nodes_to_start = [
         moveit_test, 
-        # rviz
+        rviz
     ]
 
     return LaunchDescription(nodes_to_start)

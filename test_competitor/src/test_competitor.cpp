@@ -13,12 +13,15 @@ TestCompetitor::TestCompetitor()
   ceiling_robot_.setMaxAccelerationScalingFactor(1.0);
   ceiling_robot_.setMaxVelocityScalingFactor(1.0);
 
-  // Subscribe to Logical Cameras 
+  // Subscribe to topics
   rclcpp::SubscriptionOptions options;
 
   topic_cb_group_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   options.callback_group = topic_cb_group_;
+
+  orders_sub_ = this->create_subscription<ariac_msgs::msg::Order>("/ariac/orders", 1, 
+    std::bind(&TestCompetitor::orders_cb, this, std::placeholders::_1), options);
 
   kts1_camera_sub_ = this->create_subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>(
     "/ariac/sensors/kts1_camera/image", rclcpp::SensorDataQoS(), 
@@ -53,6 +56,12 @@ TestCompetitor::~TestCompetitor()
 {
   floor_robot_.~MoveGroupInterface();
   ceiling_robot_.~MoveGroupInterface();
+}
+
+void TestCompetitor::orders_cb(
+  const ariac_msgs::msg::Order::ConstSharedPtr msg) 
+{
+  orders_.push_back(*msg);
 }
 
 void TestCompetitor::kts1_camera_cb(
@@ -314,8 +323,19 @@ geometry_msgs::msg::Quaternion TestCompetitor::FloorRobotSetOrientation(double r
 void TestCompetitor::FloorRobotWaitForAttach(double timeout){
   // Wait for part to be attached
   rclcpp::Time start = now();
+  std::vector<geometry_msgs::msg::Pose> waypoints;
+  geometry_msgs::msg::Pose starting_pose = floor_robot_.getCurrentPose().pose;
+
   while (!floor_gripper_state_.attached) {
     RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000, "Waiting for gripper attach");
+
+    waypoints.clear();
+    starting_pose.position.z -= 0.001;
+    waypoints.push_back(starting_pose);
+
+    FloorRobotMoveCartesian(waypoints, 0.1, 0.1);
+
+    usleep(200);
 
     if (now() - start > rclcpp::Duration::from_seconds(timeout)){
       RCLCPP_ERROR(get_logger(), "Unable to pick up object");
@@ -450,7 +470,7 @@ bool TestCompetitor::FloorRobotPickandPlaceTray(int tray_id, int agv_num)
   waypoints.push_back(BuildPose(tray_pose.position.x, tray_pose.position.y, 
     tray_pose.position.z + 0.2, FloorRobotSetOrientation(tray_rotation)));
   waypoints.push_back(BuildPose(tray_pose.position.x, tray_pose.position.y, 
-    tray_pose.position.z, FloorRobotSetOrientation(tray_rotation)));
+    tray_pose.position.z + pick_offset_, FloorRobotSetOrientation(tray_rotation)));
   FloorRobotMoveCartesian(waypoints, 0.3, 0.3);
 
   FloorRobotSetGripperState(true);
@@ -502,6 +522,9 @@ bool TestCompetitor::FloorRobotPickandPlaceTray(int tray_id, int agv_num)
 
 bool TestCompetitor::FloorRobotPickBinPart(ariac_msgs::msg::Part part_to_pick)
 {
+  RCLCPP_INFO_STREAM(get_logger(), "Attempting to pick a " <<
+    part_colors_[part_to_pick.color] << " " << part_types_[part_to_pick.type]);
+
   // Check if part is in one of the bins
   geometry_msgs::msg::Pose part_pose;
   bool found_part = false;
@@ -516,7 +539,7 @@ bool TestCompetitor::FloorRobotPickBinPart(ariac_msgs::msg::Part part_to_pick)
       break;
     }
   }
-  // Check table 2
+  // Check right bins
   if (!found_part) {
     for (auto part: right_bins_parts_) {
       if (part.part.type == part_to_pick.type && part.part.color == part_to_pick.color) {
@@ -563,7 +586,7 @@ bool TestCompetitor::FloorRobotPickBinPart(ariac_msgs::msg::Part part_to_pick)
     part_pose.position.z + 0.5, FloorRobotSetOrientation(part_rotation)));
   
   waypoints.push_back(BuildPose(part_pose.position.x, part_pose.position.y, 
-    part_pose.position.z + part_heights_[part_to_pick.type], FloorRobotSetOrientation(part_rotation)));
+    part_pose.position.z + part_heights_[part_to_pick.type] + pick_offset_, FloorRobotSetOrientation(part_rotation)));
   
   FloorRobotMoveCartesian(waypoints, 0.3, 0.3);
 
@@ -635,6 +658,105 @@ bool TestCompetitor::FloorRobotPlacePartOnKitTray(int agv_num, int quadrant)
 
   return true;
 
+}
+
+void TestCompetitor::CeilingRobotSendHome()
+{
+  // Move floor robot to home joint state
+  ceiling_robot_.setNamedTarget("home");
+  CeilingRobotMovetoTarget();
+}
+
+bool TestCompetitor::CeilingRobotMovetoTarget()
+{
+  moveit::planning_interface::MoveGroupInterface::Plan plan;
+  bool success = static_cast<bool>(ceiling_robot_.plan(plan));
+
+  if (success) {
+    return static_cast<bool>(ceiling_robot_.execute(plan));
+  } else {
+    RCLCPP_ERROR(get_logger(), "Unable to generate plan");
+    return false;
+  }
+
+}
+
+
+bool TestCompetitor::CompleteOrders(){
+  // Wait for orders to be published
+  while (orders_.size() == 0) {}
+
+  ariac_msgs::msg::Order current_order = orders_.front();
+  orders_.erase(orders_.begin());
+
+  bool result;
+
+  if (current_order.type == ariac_msgs::msg::Order::KITTING) {
+    result = TestCompetitor::CompleteKittingTask(current_order.kitting_task);
+  } else if (current_order.type == ariac_msgs::msg::Order::ASSEMBLY) {
+    result = TestCompetitor::CompleteAssemblyTask(current_order.assembly_task);
+  } else if (current_order.type == ariac_msgs::msg::Order::COMBINED) {
+    result = TestCompetitor::CompleteCombinedTask(current_order.combined_task);
+  } else {
+    result = false;
+  }
+
+  return result;
+}
+
+bool TestCompetitor::CompleteKittingTask(ariac_msgs::msg::KittingTask task)
+{
+  FloorRobotSendHome();
+
+  FloorRobotPickandPlaceTray(task.tray_id, task.agv_number);
+
+  for (auto kit_part: task.parts) {
+    FloorRobotPickBinPart(kit_part.part);
+    FloorRobotPlacePartOnKitTray(task.agv_number, kit_part.quadrant);
+  }
+
+  // Check quality 
+
+  MoveAGV(task.agv_number, task.destination);
+
+  // Submit order
+
+  return true;
+}
+
+bool TestCompetitor::CompleteAssemblyTask(ariac_msgs::msg::AssemblyTask task)
+{
+  if (task.agv_numbers.front() == 1){
+
+  }
+
+  RCLCPP_WARN(get_logger(), "Assembly tasks not yet implemented");
+  return false;
+}
+
+bool TestCompetitor::CompleteCombinedTask(ariac_msgs::msg::CombinedTask task)
+{
+  if (task.station == 1){
+
+  }
+  RCLCPP_WARN(get_logger(), "Combined tasks not yet implemented");
+  return false;
+}
+
+bool TestCompetitor::StartCompetition()
+{
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client;
+
+  std::string srv_name = "/ariac/start_competition";
+
+  client = this->create_client<std_srvs::srv::Trigger>(srv_name);
+
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+
+  auto result =client->async_send_request(request);
+  result.wait();
+
+  return result.get()->success;
 }
 
 bool TestCompetitor::LockAGVTray(int agv_num)

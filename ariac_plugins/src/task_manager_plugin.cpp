@@ -526,9 +526,8 @@ namespace ariac_plugins
             (current_sim_time - impl_->start_competition_time_).Double() > impl_->time_limit_ && impl_->current_state_ == ariac_msgs::msg::CompetitionState::ORDER_ANNOUNCEMENTS_DONE)
         {
             RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Time limit reached. Ending competition.");
-            // Call the end competition service
-            auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-            auto future = impl_->end_competition_srv_client_->async_send_request(request);
+            
+            this->impl_->current_state_ = ariac_msgs::msg::CompetitionState::ENDED;
         }
 
         // current state is set to UNSTARTED in start competition service callback
@@ -653,7 +652,7 @@ namespace ariac_plugins
             auto quadrant = product.quadrant;
             auto part_type = product.part.type;
             auto part_color = product.part.color;
-            auto part = ariac_common::Part(part_type, part_color);
+            auto part = ariac_common::Part(part_color, part_type);
             kitting_parts.emplace_back(ariac_common::KittingPart(quadrant, part));
         }
         return std::make_shared<ariac_common::KittingTask>(agv_number, tray_id, destination, kitting_parts);
@@ -674,7 +673,7 @@ namespace ariac_plugins
         {
             auto part_type = product.part.type;
             auto part_color = product.part.color;
-            auto part = ariac_common::Part(part_type, part_color);
+            auto part = ariac_common::Part(part_color, part_type);
 
             ignition::math::Pose3d assembled_pose;
             assembled_pose.Pos().X() = product.assembled_pose.pose.position.x;
@@ -705,7 +704,7 @@ namespace ariac_plugins
         {
             auto part_type = product.part.type;
             auto part_color = product.part.color;
-            auto part = ariac_common::Part(part_type, part_color);
+            auto part = ariac_common::Part(part_color, part_type);
 
             ignition::math::Pose3d assembled_pose;
             assembled_pose.Pos().X() = product.assembled_pose.pose.position.x;

@@ -2,19 +2,29 @@
 <sdf version="1.6">
   <model name="pump">
     <static>false</static>
+    <allow_auto_disable>false</allow_auto_disable>
 
     <link name="pump_link">
       <inertial>
         <pose>0 0 0.06 0 0 0</pose>
         
-        <mass>4.67</mass>
+        <!-- <mass>4.67</mass>
         
         <ixx>0.01120</ixx>
         <ixy>0</ixy>
         <ixz>0</ixz>
         <iyy>0.01120</iyy>
         <iyz>0</iyz>
-        <izz>0.01120</izz>
+        <izz>0.01120</izz> -->
+
+        <mass>0.70</mass>
+        
+        <ixx>0.00108</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.00024</iyy>
+        <iyz>0</iyz>
+        <izz>0.00113</izz>
       </inertial>
       
       <visual name="base">
@@ -120,7 +130,7 @@
             <size>0.12 0.12 0.12</size>
           </box>
         </geometry>
-        <max_contacts>10</max_contacts>
+
         <surface>
           <contact>
             <ode>

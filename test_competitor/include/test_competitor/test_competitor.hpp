@@ -1,6 +1,8 @@
 #include <rclcpp/qos.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <unistd.h>
+
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
 #include <moveit/move_group_interface/move_group_interface.h>
@@ -21,6 +23,7 @@
 
 #include <std_srvs/srv/trigger.hpp>
 
+#include <ariac_msgs/msg/order.hpp>
 #include <ariac_msgs/msg/advanced_logical_camera_image.hpp>
 #include <ariac_msgs/msg/kitting_task.hpp>
 #include <ariac_msgs/msg/kit_tray_pose.hpp>
@@ -49,16 +52,28 @@ public:
   bool FloorRobotPickConveyorPart(ariac_msgs::msg::Part part_to_pick);
   bool FloorRobotPlacePartOnKitTray(int agv_num, int quadrant);
 
+  // Ceiling Robot Public Functions
+  void CeilingRobotSendHome();
+
   // ARIAC Functions
+  bool StartCompetition();
   bool LockAGVTray(int agv_num);
   bool MoveAGV(int agv_num, int destination);
+
+  bool CompleteOrders();
+  bool CompleteKittingTask(ariac_msgs::msg::KittingTask task);
+  bool CompleteAssemblyTask(ariac_msgs::msg::AssemblyTask task);
+  bool CompleteCombinedTask(ariac_msgs::msg::CombinedTask task);
 
 private:
   // Robot Move Functions
   bool FloorRobotMovetoTarget();
+  bool CeilingRobotMovetoTarget();
   bool FloorRobotMoveCartesian(std::vector<geometry_msgs::msg::Pose> waypoints, double vsf, double asf);
   geometry_msgs::msg::Quaternion FloorRobotSetOrientation(double rotation);
   void FloorRobotWaitForAttach(double timeout);
+
+  
 
   // Helper Functions
   geometry_msgs::msg::Pose MultiplyPose(geometry_msgs::msg::Pose p1, geometry_msgs::msg::Pose p2);
@@ -87,12 +102,17 @@ private:
   std::shared_ptr<tf2_ros::TransformListener> tf_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
 
   // Subscriptions
+  rclcpp::Subscription<ariac_msgs::msg::Order>::SharedPtr orders_sub_;
+
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr kts1_camera_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr kts2_camera_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr left_bins_camera_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr right_bins_camera_sub_;
 
   rclcpp::Subscription<ariac_msgs::msg::VacuumGripperState>::SharedPtr floor_gripper_state_sub_;
+
+  // Orders List
+  std::vector<ariac_msgs::msg::Order> orders_;
 
   // Gripper State
   ariac_msgs::msg::VacuumGripperState floor_gripper_state_;
@@ -126,6 +146,9 @@ private:
   // Gripper State Callback
   void floor_gripper_state_cb(const ariac_msgs::msg::VacuumGripperState::ConstSharedPtr msg);
 
+  // Orders Callback
+  void orders_cb(const ariac_msgs::msg::Order::ConstSharedPtr msg);
+
   // ARIAC Services 
   rclcpp::Client<ariac_msgs::srv::ChangeGripper>::SharedPtr floor_robot_tool_changer_;
   rclcpp::Client<ariac_msgs::srv::VacuumGripperControl>::SharedPtr floor_robot_gripper_enable_;
@@ -133,6 +156,7 @@ private:
   // Constants
   double kit_tray_thickness_ = 0.01;
   double drop_height_ = 0.002;
+  double pick_offset_ = 0.003;
 
   std::map<int, std::string> part_types_ = {
     {ariac_msgs::msg::Part::BATTERY, "battery"},

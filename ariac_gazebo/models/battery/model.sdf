@@ -2,13 +2,14 @@
 <sdf version="1.6">
   <model name="battery">
     <static>false</static>
+    <allow_auto_disable>false</allow_auto_disable>
 
     <link name="battery_link">
       <inertial>
         <pose>0 0 0.02 0 0 0</pose>
         
         <mass>0.70</mass>
-        <mass>3</mass>
+        <!-- <mass>3</mass> -->
         
         <ixx>0.00108</ixx>
         <ixy>0</ixy>

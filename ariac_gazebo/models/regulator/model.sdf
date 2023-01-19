@@ -2,6 +2,7 @@
 <sdf version="1.6">
   <model name="regulator">
     <static>false</static>
+    <allow_auto_disable>false</allow_auto_disable>
 
     <link name="regulator_link">
       <inertial>

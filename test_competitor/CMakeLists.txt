@@ -29,21 +29,34 @@ add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-add_executable(kitting_task src/kitting_task.cpp)
-target_include_directories(kitting_task PRIVATE include)
-target_link_libraries(kitting_task
+# Add main competitor executable
+add_executable(competitor src/competitor.cpp)
+target_include_directories(competitor PRIVATE include)
+target_link_libraries(competitor
   ${PROJECT_NAME}
 )
-ament_target_dependencies(kitting_task ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(competitor ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+install(TARGETS competitor
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+# Add moveit test executable
+add_executable(moveit_test src/moveit_test.cpp)
+target_include_directories(moveit_test PRIVATE include)
+target_link_libraries(moveit_test
+  ${PROJECT_NAME}
+)
+ament_target_dependencies(moveit_test ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+install(TARGETS moveit_test
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
 
 install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-)
-
-install(TARGETS kitting_task
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY include/
