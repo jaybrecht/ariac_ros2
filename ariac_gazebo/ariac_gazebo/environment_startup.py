@@ -684,8 +684,11 @@ class EnvironmentStartup(Node):
     def spawn_sensors(self):
         try:
             user_sensors = self.user_config['sensors']
-        except KeyError:
+        except (TypeError, KeyError):
             self.get_logger().warn("No sensors found in config")
+            user_sensors = []
+
+        if not user_sensors:
             user_sensors = []
 
         # Spawn user sensors
@@ -1012,7 +1015,7 @@ class EnvironmentStartup(Node):
         try:
             agv_parts = self.trial_config["parts"]["agvs"]
         except KeyError:
-            self.get_logger().log("No agv parts found in configuration")
+            # self.get_logger().warn("No agv parts found in configuration")
             return
 
         part_count = 0

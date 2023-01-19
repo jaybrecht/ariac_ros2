@@ -16,18 +16,12 @@ parts:
     agv4:
       tray_id: 3
       parts:
-        - type: 'sensor'
+        - type: 'battery'
           color: 'blue'
           quadrant: 3
-          rotation: 'pi'
-          flipped: true
-        - type: 'sensor'
-          color: 'green'
-          quadrant: 4
         - type: 'pump'
           color: 'green'
-          quadrant: 1
-          rotation: 0
+          quadrant: 4
   
   bins: # bin params - 8 total bins each bin has nine total slots (1-9)
 

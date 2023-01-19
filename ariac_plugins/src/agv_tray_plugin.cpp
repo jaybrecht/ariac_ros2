@@ -118,7 +118,7 @@ void AGVTrayPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   std::string link_name = sdf->GetElement("agv_tray_link")->Get<std::string>();
   impl_->agv_tray_link_ = impl_->model_->GetLink(link_name);
   
-  std::string topic = "/gazebo/world/" + impl_->agv_number_ + "/" + link_name + "/bumper/contacts";
+  std::string topic = "/gazebo/world/ariac_robots/" + link_name + "/bumper/contacts";
   impl_->contact_sub_ = impl_->gznode_->Subscribe(topic, &AGVTrayPlugin::OnContact, this);
 
   // Register services

@@ -10,35 +10,60 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  rclcpp 
+  moveit_ros_planning_interface
+  ariac_msgs
+  shape_msgs
+)
+
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclpy REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(ariac_msgs REQUIRED)
-find_package(shape_msgs REQUIRED)
-find_package(moveit_msgs REQUIRED)
-find_package(moveit_ros_planning_interface REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
-add_executable(moveit_test src/moveit_test.cpp)
-ament_target_dependencies(moveit_test 
-  rclcpp 
-  moveit_ros_planning_interface
-  )
+add_library(${PROJECT_NAME} SHARED
+  src/test_competitor.cpp
+)
+target_include_directories(${PROJECT_NAME} PRIVATE include)
+ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-add_executable(gripper_change src/gripper_change.cpp)
-ament_target_dependencies(gripper_change 
-  rclcpp 
-  moveit_ros_planning_interface
-  ariac_msgs)
+add_executable(kitting_task src/kitting_task.cpp)
+target_include_directories(kitting_task PRIVATE include)
+target_link_libraries(kitting_task
+  ${PROJECT_NAME}
+)
+ament_target_dependencies(kitting_task ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-install(TARGETS
-  moveit_test
-  gripper_change
-  DESTINATION lib/${PROJECT_NAME})
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
 
-install(DIRECTORY launch meshes rviz
+install(TARGETS kitting_task
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include
+)
+
+install(DIRECTORY 
+  launch
+  meshes
+  rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
+ament_export_libraries(
+  ${PROJECT_NAME}
+)
+ament_export_include_directories(
+  include
+)
+ament_export_dependencies(
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
 ament_package()
