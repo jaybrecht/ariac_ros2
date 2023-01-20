@@ -66,6 +66,22 @@ namespace ariac_plugins
         double time_limit_{-1};
         /*!< Name of the trial file. */
         std::string trial_name_;
+        /*< Health status for the break beam*/
+        bool break_beam_sensor_health_;
+        /*< Health status for the proximity sensor*/
+        bool proximity_sensor_health_;
+        /*< Health status for the laser profiler sensor*/
+        bool laser_profiler_sensor_health_;
+        /*< Health status for the laser profiler sensor*/
+        bool lidar_sensor_health_;
+        /*< Health status for the camera sensor*/
+        bool camera_sensor_health_;
+        /*< Health status for the logical camera sensor*/
+        bool logical_camera_sensor_health_;
+        /*< Health status for the ceiling robot*/
+        bool ceiling_robot_health_;
+        /*< Health status for the floor robot*/
+        bool floor_robot_health_;
 
         //============== GAZEBO =================
         /*!< Connection to world update event. Callback is called while this is alive. */
@@ -122,13 +138,6 @@ namespace ariac_plugins
 
         //============== PUBLISHERS =================
 
-        bool break_beam_sensor_health_;
-        bool proximity_sensor_health_;
-        bool laser_profiler_sensor_health_;
-        bool lidar_sensor_health_;
-        bool camera_sensor_health_;
-        bool logical_camera_sensor_health_;
-
         /*!< Publisher to the topic /ariac/orders */
         rclcpp::Publisher<ariac_msgs::msg::Order>::SharedPtr order_pub_;
         /*!< Publisher to the topic /ariac/sensor_health */
@@ -140,9 +149,13 @@ namespace ariac_plugins
 
         //============== LISTS FOR ORDERS AND CHALLENGES =================
 
+        /*!< List of sensor blackout challenges that have been started. */
         std::vector<std::shared_ptr<ariac_common::SensorBlackout>> in_progress_sensor_blackouts_;
+        /*!< List of robot malfunction challenges that have been started. */
+        std::vector<std::shared_ptr<ariac_common::RobotMalfunction>> in_progress_robot_malfunctions_;
         /*!< List of orders that are announced based on time. */
-        std::vector<std::shared_ptr<ariac_common::OrderTemporal>> time_based_orders_;
+        std::vector<std::shared_ptr<ariac_common::OrderTemporal>>
+            time_based_orders_;
         /*!< List of orders that are announced based on part placement. */
         std::vector<std::shared_ptr<ariac_common::OrderOnPartPlacement>> on_part_placement_orders_;
         /*!< List of orders that are announced based on submission. */
@@ -284,6 +297,9 @@ namespace ariac_plugins
         impl_->lidar_sensor_health_ = true;
         impl_->camera_sensor_health_ = true;
         impl_->logical_camera_sensor_health_ = true;
+
+        impl_->ceiling_robot_health_ = true;
+        impl_->floor_robot_health_ = true;
 
         impl_->elapsed_time_ = 0.0;
     }
@@ -451,7 +467,7 @@ namespace ariac_plugins
             if (impl_->elapsed_time_ >= order->GetAnnouncementTime() && !order->IsAnnounced())
             {
                 auto order_message = BuildOrderMsg(order);
-                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Publishing order: " << order_message.id);
+                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order: " << order_message.id);
                 impl_->order_pub_->publish(order_message);
                 impl_->announced_orders_.push_back(order_message.id);
                 order->SetAnnouncedTime(impl_->elapsed_time_);
@@ -525,7 +541,7 @@ namespace ariac_plugins
                 if (!order_ins->IsAnnounced())
                 {
                     auto order_message = BuildOrderMsg(order_ins);
-                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Publishing order: " << order_message.id);
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order: " << order_message.id);
                     impl_->order_pub_->publish(order_message);
                     order_ins->SetAnnouncedTime(impl_->elapsed_time_);
                     order_ins->SetIsAnnounced();
@@ -553,6 +569,33 @@ namespace ariac_plugins
         }
     }
 
+    //==============================================================================
+    void TaskManagerPlugin::ProcessInProgressRobotMalfunctions()
+    {
+        for (const auto &robot_malfunction : impl_->in_progress_robot_malfunctions_)
+        {
+            if (robot_malfunction->HasStarted() && !robot_malfunction->HasCompleted())
+            {
+                auto duration = robot_malfunction->GetDuration();
+                auto start_time = robot_malfunction->GetStartTime();
+
+                if (impl_->elapsed_time_ >= start_time + duration)
+                {
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Stopping robot malfunction challenge at time: " << impl_->elapsed_time_);
+                    robot_malfunction->SetCompleted();
+
+                    impl_->ceiling_robot_health_ = true;
+                    impl_->floor_robot_health_ = true;
+                    // remove the challenge from the list
+                    impl_->in_progress_robot_malfunctions_.erase(std::remove(impl_->in_progress_robot_malfunctions_.begin(),
+                                                                             impl_->in_progress_robot_malfunctions_.end(), robot_malfunction),
+                                                                 impl_->in_progress_robot_malfunctions_.end());
+                }
+            }
+        }
+    }
+
+    //==============================================================================
     void TaskManagerPlugin::ProcessInProgressSensorBlackouts()
     {
         for (const auto &sensor_blackout : impl_->in_progress_sensor_blackouts_)
@@ -562,12 +605,12 @@ namespace ariac_plugins
                 auto duration = sensor_blackout->GetDuration();
                 auto start_time = sensor_blackout->GetStartTime();
                 // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Sensor blackout challenge in progress");
-                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), start_time);
-                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), duration);
+                // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), start_time);
+                // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), duration);
 
                 if (impl_->elapsed_time_ >= start_time + duration)
                 {
-                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Stopping sensor blackout challenge");
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Stopping sensor blackout challenge at time: " << impl_->elapsed_time_);
                     sensor_blackout->SetCompleted();
                     impl_->break_beam_sensor_health_ = true;
                     impl_->proximity_sensor_health_ = true;
@@ -580,23 +623,47 @@ namespace ariac_plugins
                                                                            impl_->in_progress_sensor_blackouts_.end(), sensor_blackout),
                                                                impl_->in_progress_sensor_blackouts_.end());
                 }
-
-                
             }
         }
     }
 
-    void TaskManagerPlugin::ProcessTemporalSensorBlackouts()
+    //==============================================================================
+    void TaskManagerPlugin::ProcessTemporalRobotMalfunctions()
     {
-        // RCLCPP_INFO_STREAM_ONCE(impl_->ros_node_->get_logger(), "Size temporal blackouts: " << impl_->time_based_sensor_blackouts_.size());
+        for (const auto &robot_malfunction : impl_->time_based_robot_malfunctions_)
+        {
+            if (impl_->elapsed_time_ >= robot_malfunction->GetTriggerTime() && !robot_malfunction->HasStarted())
+            {
+                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Starting robot malfunction challenge at time: " << impl_->elapsed_time_);
+                // Duration of the challenge
+                auto duration = robot_malfunction->GetDuration();
+                // Get the list of robots to disable for the challenge
+                auto robots_to_disable = robot_malfunction->GetRobotsToDisable();
+
+                for (const auto &robot : robots_to_disable)
+                {
+                    if (robot == "ceiling_robot")
+                        impl_->ceiling_robot_health_ = false;
+                    if (robot == "floor_robot")
+                        impl_->floor_robot_health_ = false;
+                }
+
+                robot_malfunction->SetStartTime(impl_->elapsed_time_);
+                robot_malfunction->SetStarted();
+                impl_->in_progress_robot_malfunctions_.push_back(robot_malfunction);
+            }
+        }
+    }
+
+    //==============================================================================
+    void
+    TaskManagerPlugin::ProcessTemporalSensorBlackouts()
+    {
         for (const auto &sensor_blackout : impl_->time_based_sensor_blackouts_)
         {
-            
-            // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcement time: " << sensor_blackout->GetAnnouncementTime());
-            if (impl_->elapsed_time_ >= sensor_blackout->GetAnnouncementTime() && !sensor_blackout->IsStarted())
+            if (impl_->elapsed_time_ >= sensor_blackout->GetTriggerTime() && !sensor_blackout->IsStarted())
             {
-                // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Elapsed time: " << impl_->elapsed_time_);
-                // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Starting sensor blackout challenge");
+                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Starting sensor blackout challenge at time: " << impl_->elapsed_time_);
                 auto duration = sensor_blackout->GetDuration();
                 auto sensors_to_disable = sensor_blackout->GetSensorsToDisable();
 
@@ -636,6 +703,7 @@ namespace ariac_plugins
         }
         if (!impl_->time_based_robot_malfunctions_.empty())
         {
+            ProcessTemporalRobotMalfunctions();
         }
         if (!impl_->on_part_placement_robot_malfunctions_.empty())
         {
@@ -702,8 +770,6 @@ namespace ariac_plugins
             impl_->last_sim_time_ = current_sim_time;
         }
 
-        
-
         // End the competition if:
         // The time limit was set to a positive value
         // The elapsed time since the start of the competition is greater than the time limit
@@ -734,9 +800,9 @@ namespace ariac_plugins
             ProcessOrdersToAnnounce();
             ProcessChallengesToAnnounce();
             ProcessInProgressSensorBlackouts();
+            ProcessInProgressRobotMalfunctions();
             UpdateSensorsHealth();
-            // ProcessInProgressRobotMalfunctions();
-            // UpdateRobotsHealth();
+            UpdateRobotsHealth();
         }
 
         impl_->last_on_update_time_ = current_sim_time;
@@ -1025,34 +1091,29 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    //==============================================================================
-    void TaskManagerPlugin::BuildRobotMalfunctionChallenge(const ariac_msgs::msg::RobotMalfunctionChallenge &_challenge)
+    void TaskManagerPlugin::StoreRobotMalfunctionChallenges(const ariac_msgs::msg::RobotMalfunctionChallenge &_challenge)
     {
-        std::shared_ptr<ariac_common::RobotMalfunction> robot_malfunction{nullptr};
+        // Get the duration of the current challenge
         auto duration = _challenge.duration;
-        // Get the condition
+        // Get the announcement condition of the current challenge
         auto condition = _challenge.condition;
-        // Get the robots to disable
+        // Get the list of robots to disable
         auto robots_to_disable = _challenge.robots_to_disable;
 
-        // Vector with only the robots to disable
+        // List of robots to disable
         std::vector<std::string> robots_to_disable_vect;
 
         // Check which robots to disable
         if (robots_to_disable.ceiling_robot)
-        {
             robots_to_disable_vect.push_back("ceiling_robot");
-        }
         if (robots_to_disable.floor_robot)
-        {
             robots_to_disable_vect.push_back("floor_robot");
-        }
 
         // Check the announcement condition for the current challenge
         if (condition.type == ariac_msgs::msg::Condition::TIME)
         {
-            auto announcement_time = condition.time_condition.seconds;
-            auto robot_malfunction = std::make_shared<ariac_common::RobotMalfunctionTemporal>(duration, robots_to_disable_vect, announcement_time);
+            auto trigger_time = condition.time_condition.seconds;
+            auto robot_malfunction = std::make_shared<ariac_common::RobotMalfunctionTemporal>(duration, robots_to_disable_vect, trigger_time);
             impl_->time_based_robot_malfunctions_.push_back(robot_malfunction);
         }
         else if (condition.type == ariac_msgs::msg::Condition::PART_PLACE)
@@ -1071,49 +1132,37 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    void TaskManagerPlugin::BuildSensorBlackoutChallenge(const ariac_msgs::msg::SensorBlackoutChallenge &_challenge)
+    void TaskManagerPlugin::StoreSensorBlackoutChallenges(const ariac_msgs::msg::SensorBlackoutChallenge &_challenge)
     {
-
-        // Get the duration
+        // Get the duration of the current challenge
         auto duration = _challenge.duration;
-        // Get the condition
+        // Get the announcement condition for the current challenge
         auto condition = _challenge.condition;
-        // Get the sensors to disable
+        // Get the sensors to disable for the current challenge
         auto sensors_to_disable = _challenge.sensors_to_disable;
 
         // Vector with only the sensors to disable
         std::vector<std::string> sensors_to_disable_vect;
 
+        // Check which sensors to disable and add them to the vector
         if (sensors_to_disable.break_beam)
-        {
             sensors_to_disable_vect.push_back("break_beam");
-        }
         if (sensors_to_disable.proximity)
-        {
             sensors_to_disable_vect.push_back("proximity");
-        }
         if (sensors_to_disable.laser_profiler)
-        {
             sensors_to_disable_vect.push_back("laser_profiler");
-        }
         if (sensors_to_disable.lidar)
-        {
             sensors_to_disable_vect.push_back("lidar");
-        }
         if (sensors_to_disable.camera)
-        {
             sensors_to_disable_vect.push_back("camera");
-        }
         if (sensors_to_disable.logical_camera)
-        {
             sensors_to_disable_vect.push_back("logical_camera");
-        }
 
         // Check condition
         if (condition.type == ariac_msgs::msg::Condition::TIME)
         {
-            auto announcement_time = condition.time_condition.seconds;
-            auto sensor_blackout = std::make_shared<ariac_common::SensorBlackoutTemporal>(duration, sensors_to_disable_vect, announcement_time);
+            auto trigger_time = condition.time_condition.seconds;
+            auto sensor_blackout = std::make_shared<ariac_common::SensorBlackoutTemporal>(duration, sensors_to_disable_vect, trigger_time);
             impl_->time_based_sensor_blackouts_.push_back(sensor_blackout);
         }
         else if (condition.type == ariac_msgs::msg::Condition::PART_PLACE)
@@ -1139,20 +1188,10 @@ namespace ariac_plugins
         {
             auto challenge_type = challenge->type;
 
-            // std::shared_ptr<ariac_common::KittingTask> faulty_part_challenge = nullptr;
-            // std::shared_ptr<ariac_common::AssemblyTask> dropped_part_challenge = nullptr;
-            std::shared_ptr<ariac_common::SensorBlackout> sensor_blackout_challenge = nullptr;
-            std::shared_ptr<ariac_common::RobotMalfunction> robot_malfunction_challenge = nullptr;
-            // std::shared_ptr<ariac_common::CombinedTask> human_challenge = nullptr;
-
             if (challenge_type == ariac_msgs::msg::Challenge::SENSOR_BLACKOUT)
-            {
-                BuildSensorBlackoutChallenge(challenge->sensor_blackout_challenge);
-            }
+                StoreSensorBlackoutChallenges(challenge->sensor_blackout_challenge);
             else if (challenge_type == ariac_msgs::msg::Challenge::ROBOT_MALFUNCTION)
-            {
-                BuildRobotMalfunctionChallenge(challenge->robot_malfunction_challenge);
-            }
+                StoreRobotMalfunctionChallenges(challenge->robot_malfunction_challenge);
             else
             {
                 RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown challenge type: " << int(challenge_type));
@@ -1163,7 +1202,6 @@ namespace ariac_plugins
     //==============================================================================
     void TaskManagerPlugin::UpdateSensorsHealth()
     {
-        // publish on /ariac/sensor_health topic
         auto sensor_message = ariac_msgs::msg::Sensors();
         sensor_message.break_beam = impl_->break_beam_sensor_health_;
         sensor_message.proximity = impl_->proximity_sensor_health_;
@@ -1176,33 +1214,13 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    void TaskManagerPlugin::ActivateAllSensors()
+    void TaskManagerPlugin::UpdateRobotsHealth()
     {
-        // publish on /ariac/sensor_health topic
-        auto sensor_message = ariac_msgs::msg::Sensors();
-        sensor_message.break_beam = impl_->break_beam_sensor_health_;
-        sensor_message.proximity = impl_->proximity_sensor_health_;
-        sensor_message.laser_profiler = impl_->laser_profiler_sensor_health_;
-        sensor_message.lidar = impl_->lidar_sensor_health_;
-        sensor_message.camera = impl_->camera_sensor_health_;
-        sensor_message.logical_camera = impl_->logical_camera_sensor_health_;
-        impl_->sensor_health_pub_->publish(sensor_message);
-        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Activated all sensors");
-    }
+        auto robots_message = ariac_msgs::msg::Robots();
+        robots_message.ceiling_robot = impl_->ceiling_robot_health_;
+        robots_message.floor_robot = impl_->floor_robot_health_;
 
-    //==============================================================================
-    void TaskManagerPlugin::DeactivateAllSensors()
-    {
-        // publish on /ariac/sensor_health topic
-        auto sensor_message = ariac_msgs::msg::Sensors();
-        sensor_message.break_beam = false;
-        sensor_message.proximity = false;
-        sensor_message.laser_profiler = false;
-        sensor_message.lidar = false;
-        sensor_message.camera = false;
-        sensor_message.logical_camera = false;
-        impl_->sensor_health_pub_->publish(sensor_message);
-        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Deactivated all sensors");
+        impl_->robot_health_pub_->publish(robots_message);
     }
 
     //==============================================================================

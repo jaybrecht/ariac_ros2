@@ -44,47 +44,10 @@ namespace ariac_plugins
          */
         void PublishCompetitionState(unsigned int _state);
         /**
-         * @brief Activate all sensor types
-         */
-        void ActivateAllSensors();
-        /**
-         * @brief Deactivate all sensor types
-         */
-        void DeactivateAllSensors();
-        /**
-         * @brief Deactivate some sensor types
-         * @param _sensor_types List of sensor types to deactivate
-         */
-        void DeactivateSensors(std::vector<std::string> _sensor_types);
-        /**
-         * @brief Activate some sensor types
-         * @param _sensor_types List of sensor types to activate
-         */
-        void ActivateSensors(std::vector<std::string> _sensor_types);
-        /**
          * @brief Start the controllers for all robots
          */
         int StartAllRobots();
-        /**
-         * @brief Stop the controllers for all robots
-         */
-        void StopAllRobots();
-        /**
-         * @brief Start the controllers for the floor robot
-         */
-        void StartFloorRobot();
-        /**
-         * @brief Start the controllers for the ceiling robot
-         */
-        void StartCeilingRobot();
-        /**
-         * @brief Stop the controllers for the ceiling robot
-         */
-        void StopFloorRobot();
-        /**
-         * @brief Stop the controllers for the floor robot
-         */
-        void StopCeilingRobot();
+      
         /**
          * @brief Build a kitting task from ROS message
          *
@@ -157,13 +120,13 @@ namespace ariac_plugins
          *
          * @param _challenge  SensorBlackoutChallenge ROS message
          */
-        void BuildSensorBlackoutChallenge(const ariac_msgs::msg::SensorBlackoutChallenge &_challenge);
+        void StoreSensorBlackoutChallenges(const ariac_msgs::msg::SensorBlackoutChallenge &_challenge);
         /**
          * @brief Build ariac_common::RobotMalfunctionChallenge from ROS message and store them in a list.
          *
          * @param _challenge  RobotMalfunctionChallenge ROS message
          */
-        void BuildRobotMalfunctionChallenge(const ariac_msgs::msg::RobotMalfunctionChallenge &_challenge);
+        void StoreRobotMalfunctionChallenges(const ariac_msgs::msg::RobotMalfunctionChallenge &_challenge);
 
         /**
          * @brief Build a KittinTask ROS message from ariac_common::KittingTask
@@ -217,7 +180,10 @@ namespace ariac_plugins
         void ProcessTemporalSensorBlackouts();
 
         void UpdateSensorsHealth();
+        void UpdateRobotsHealth();
         void ProcessInProgressSensorBlackouts();
+        void ProcessInProgressRobotMalfunctions();
+        void ProcessTemporalRobotMalfunctions();
         /**
          * @brief Callback function for the topic 'trial_config'
          *

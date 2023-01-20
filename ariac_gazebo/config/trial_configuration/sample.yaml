@@ -78,17 +78,37 @@ challenges:
       color: 'green'
       drop_after: 1 # third part the robot successfully picks
       delay: 1 # seconds
+  - human:
+      behavior: 'antagonistic'
+      time_condition: 10.0
   - robot_malfunction:
-      duration: 50.0
+      duration: 5.0
       robots_to_disable: ['floor_robot']
-      part_place_condition:
-        color: 'green'
-        type: 'sensor'
-        agv: 4
+      time_condition: 40.0
+      # part_place_condition:
+      #   color: 'green'
+      #   type: 'sensor'
+      #   agv: 4
+  - robot_malfunction:
+      duration: 5.0
+      robots_to_disable: ['ceiling_robot']
+      time_condition: 60.0
+      # part_place_condition:
+      #   color: 'green'
+      #   type: 'sensor'
+      #   agv: 4
+  - robot_malfunction:
+      duration: 5.0
+      robots_to_disable: ['floor_robot','ceiling_robot']
+      time_condition: 80.0
+      # part_place_condition:
+      #   color: 'green'
+      #   type: 'sensor'
+      #   agv: 4
   - sensor_blackout:
       duration: 5.0
       sensors_to_disable: ['break_beam']
-      time_condition: 5
+      time_condition: 10
         
       # part_place_condition:
       #   type: 'battery'
@@ -97,7 +117,7 @@ challenges:
   - sensor_blackout:
       duration: 5.0
       sensors_to_disable: ['lidar', 'logical_camera']
-      time_condition: 25
+      time_condition: 20
       # part_place_condition:
       #   type: 'sensor'
       #   color: 'green'

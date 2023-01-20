@@ -355,18 +355,23 @@ namespace ariac_common
          * @brief Construct a new SensorBlackoutTemporal object
          *
          * @param _duration Duration of the blackout
-         * @param _time Time to trigger the challenge
          * @param _sensors_to_disable List of sensors to disable
+         * @param _trigger_time Time at which the challenge should be triggered
          */
         SensorBlackoutTemporal(double _duration,
                                const std::vector<std::string> &_sensors_to_disable,
-                               double _announcement_time) : SensorBlackout(_duration, _sensors_to_disable),
-                                                            announcement_time_(_announcement_time) {}
-        double GetAnnouncementTime() const { return announcement_time_; }
+                               double _trigger_time) : SensorBlackout(_duration, _sensors_to_disable),
+                                                       trigger_time_(_trigger_time) {}
+        
+        /**
+         * @brief Get the time at which the challenge should be triggered
+         * @return double Time at which the challenge should be triggered
+         */
+        double GetTriggerTime() const { return trigger_time_; }
 
     private:
-        //! Simulation time at which the challenge is triggered
-        double announcement_time_;
+        //! Simulation time at which the challenge should be triggered
+        double trigger_time_;
     };
 
     //==============================================================================
@@ -744,7 +749,7 @@ namespace ariac_common
     {
     public:
         /**
-         * @brief Construct a new Robot Malfunction object
+         * @brief Construct a new RobotMalfunction object
          *
          * @param _duration Duration of the challenge
          * @param _robots_to_disable  List of robots to disable
@@ -752,19 +757,97 @@ namespace ariac_common
         RobotMalfunction(double _duration,
                          const std::vector<std::string> &_robots_to_disable) : duration_(_duration),
                                                                                robots_to_disable_(_robots_to_disable) {}
+
+        //===================
+        //--- Getters ---
+        //===================
+
+        /**
+         * @brief Get the duration of the challenge
+         * @return double Duration of the challenge
+         */
         double GetDuration() const { return duration_; }
-        const std::vector<std::string> &GetRobotsToDisable() const { return robots_to_disable_; }
+
+        /**
+         * @brief Get the type of the challenge
+         * @return unsigned int Type of the challenge
+         */
         unsigned int GetType() const { return type_; }
-        void SetStartTime(double _start_time) { start_time_ = _start_time; }
+
+        /**
+         * @brief Get a list of robots to disable
+         * @return const std::vector<std::string>& List of robots to disable
+         */
+        const std::vector<std::string> &GetRobotsToDisable() const { return robots_to_disable_; }
+
+        /**
+         * @brief Get the sim time at which the challenge was started
+         * @return double Sim time at which the challenge was started
+         */
         double GetStartTime() const { return start_time_; }
 
+        /**
+         * @brief Get the sim time at which the challenge was stopped
+         * @return double Sim time at which the challenge was stopped
+         */
+        double GetStopTime() const { return stop_time_; }
+
+        /**
+         * @brief Check if the challenge has started
+         * @return true If the challenge has started
+         * @return false If the challenge has not started
+         */
+        bool HasStarted() const { return started_; }
+
+        /**
+         * @brief Check if the challenge has completed
+         * @return true If the challenge has completed
+         * @return false If the challenge has not completed
+         */
+        bool HasCompleted() const { return completed_; }
+
+        //===================
+        //--- Setters ---
+        //===================
+
+        /**
+         * @brief Set the sim time at which the challenge was started
+         * @param _start_time Sim time at which the challenge was started
+         */
+        void SetStartTime(double _start_time) { start_time_ = _start_time; }
+
+        /**
+         * @brief Set the sim time at which the challenge was stopped
+         * @param _stop_time Sim time at which the challenge was stopped
+         */
+        void SetStopTime(double _stop_time) { stop_time_ = _stop_time; }
+
+        /**
+         * @brief Set the flag to indicate if the challenge has started
+         */
+        void SetStarted() { started_ = true; }
+
+        /**
+         * @brief Set the flag to indicate if the challenge has completed
+         */
+        void SetCompleted() { completed_ = true; }
+        
+
     protected:
+        //! Type of the challenge
         const unsigned int type_ = ariac_msgs::msg::Challenge::ROBOT_MALFUNCTION;
         //! Duration of the challenge
         double duration_;
         //! List of robots to disable
         std::vector<std::string> robots_to_disable_;
+        //! Sim time at which the challenge was started
         double start_time_;
+        //! Sim time at which the challenge was stopped
+        double stop_time_;
+        //! Flag to indicate if the challenge has started
+        bool started_ = false;
+        //! Flag to indicate if the challenge has completed
+        bool completed_ = false;
     };
 
     //==============================================================================
@@ -781,17 +864,27 @@ namespace ariac_common
          *
          * @param _duration Duration of the challenge
          * @param _robots_to_disable  List of robots to disable
-         * @param _time Competition time at which the challenge is triggered
+         * @param _trigger_time Competition time at which the challenge is triggered
          */
         RobotMalfunctionTemporal(double _duration,
                                  const std::vector<std::string> &_robots_to_disable,
-                                 double _time) : RobotMalfunction(_duration, _robots_to_disable),
-                                                 time_(_time) {}
-        double GetTime() const { return time_; }
+                                 double _trigger_time) : RobotMalfunction(_duration, _robots_to_disable),
+                                                         trigger_time_(_trigger_time) {}
+        /**
+         * @brief Get the time at which the challenge should be triggered
+         * @return double Time at which the challenge should be triggered
+         */
+        double GetTriggerTime() const { return trigger_time_; }
+
+        /**
+         * @brief Set the time at which the challenge should be triggered
+         * @param _trigger_time Time at which the challenge should be triggered
+         */
+        void SetTriggerTime(double _trigger_time) { trigger_time_ = _trigger_time; }
 
     private:
         //! Simulation time at which the challenge is triggered
-        double time_;
+        double trigger_time_;
     }; // class RobotMalfunctionTemporal
 
     //==============================================================================

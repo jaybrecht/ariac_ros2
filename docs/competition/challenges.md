@@ -6,9 +6,9 @@
 
 ## Dropped Parts
 
-## Robot Breakdown
+## Robot Malfunction
 
-## Sensor Breakdown
+## Sensor Blackout
 
 ## High Priority Orders
 
