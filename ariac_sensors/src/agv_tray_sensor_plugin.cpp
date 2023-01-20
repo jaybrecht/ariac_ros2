@@ -256,7 +256,8 @@ void AGVTraySensorPluginPrivate::TrialConfigCallback(const ariac_msgs::msg::Tria
   orders_ = msg->orders;
 
   for (auto &challenge : msg->challenges) {
-    if (challenge.type == "faulty_part") {
+    if (challenge.type == ariac_msgs::msg::Challenge::FAULTY_PART)
+    {
       std::map<int, bool> faulty_info;
       faulty_info[ariac_msgs::msg::KittingPart::QUADRANT1] = challenge.faulty_part_challenge.quandrant1;
       faulty_info[ariac_msgs::msg::KittingPart::QUADRANT2] = challenge.faulty_part_challenge.quandrant2;
@@ -264,7 +265,6 @@ void AGVTraySensorPluginPrivate::TrialConfigCallback(const ariac_msgs::msg::Tria
       faulty_info[ariac_msgs::msg::KittingPart::QUADRANT4] = challenge.faulty_part_challenge.quandrant4;
 
       order_faulty_info_[challenge.faulty_part_challenge.order_id] = faulty_info;
-      
     }
   }
 }

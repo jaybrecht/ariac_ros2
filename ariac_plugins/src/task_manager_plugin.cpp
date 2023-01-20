@@ -83,19 +83,22 @@ namespace ariac_plugins
 
         //============== FLAGS =================
         bool competition_time_set_{false};
+        /*< Counter to keep track of the total number of orders in the current trial. */
         int total_orders_{-1};
 
         //============== ROS =================
         /*!< Time when this plugin is loaded. */
         rclcpp::Time current_sim_time_;
+        /*!< Elapsed time since the competition started. */
+        double elapsed_time_;
 
         //============== SUBSCRIBERS =================
         /*!< Subscriber to topic: "trial_config"*/
         rclcpp::Subscription<ariac_msgs::msg::Trial>::SharedPtr trial_config_sub_;
-        rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv1_tray_sub_;
-        rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv2_tray_sub_;
-        rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv3_tray_sub_;
-        rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv4_tray_sub_;
+        // rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv1_tray_sub_;
+        // rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv2_tray_sub_;
+        // rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv3_tray_sub_;
+        // rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv4_tray_sub_;
 
         gazebo::transport::SubscriberPtr agv1_tray_sub_;
         gazebo::transport::SubscriberPtr agv2_tray_sub_;
@@ -118,6 +121,14 @@ namespace ariac_plugins
         rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr end_competition_srv_client_;
 
         //============== PUBLISHERS =================
+
+        bool break_beam_sensor_health_;
+        bool proximity_sensor_health_;
+        bool laser_profiler_sensor_health_;
+        bool lidar_sensor_health_;
+        bool camera_sensor_health_;
+        bool logical_camera_sensor_health_;
+
         /*!< Publisher to the topic /ariac/orders */
         rclcpp::Publisher<ariac_msgs::msg::Order>::SharedPtr order_pub_;
         /*!< Publisher to the topic /ariac/sensor_health */
@@ -127,13 +138,32 @@ namespace ariac_plugins
         /*!< Publisher to the topic /ariac/robot_health */
         rclcpp::Publisher<ariac_msgs::msg::Robots>::SharedPtr robot_health_pub_;
 
-        //============== LISTS OF ORDERS AND CHALLENGES =================
+        //============== LISTS FOR ORDERS AND CHALLENGES =================
+
+        std::vector<std::shared_ptr<ariac_common::SensorBlackout>> in_progress_sensor_blackouts_;
         /*!< List of orders that are announced based on time. */
         std::vector<std::shared_ptr<ariac_common::OrderTemporal>> time_based_orders_;
         /*!< List of orders that are announced based on part placement. */
         std::vector<std::shared_ptr<ariac_common::OrderOnPartPlacement>> on_part_placement_orders_;
         /*!< List of orders that are announced based on submission. */
         std::vector<std::shared_ptr<ariac_common::OrderOnSubmission>> on_order_submission_orders_;
+        /*!< List of all orders in the trial. */
+        std::vector<std::shared_ptr<ariac_common::Order>> all_orders_;
+
+        /*!< List of sensor blackout challenges that are announced based on time. */
+        std::vector<std::shared_ptr<ariac_common::SensorBlackoutTemporal>> time_based_sensor_blackouts_;
+        /*!< List of sensor blackout challenges that are announced based on part placement. */
+        std::vector<std::shared_ptr<ariac_common::SensorBlackoutOnPartPlacement>> on_part_placement_sensor_blackouts_;
+        /*!< List of sensor blackout challenges that are announced based on submission. */
+        std::vector<std::shared_ptr<ariac_common::SensorBlackoutOnSubmission>> on_submission_sensor_blackouts_;
+
+        /*!< List of sensor blackout challenges that are announced based on time. */
+        std::vector<std::shared_ptr<ariac_common::RobotMalfunctionTemporal>> time_based_robot_malfunctions_;
+        /*!< List of sensor blackout challenges that are announced based on part placement. */
+        std::vector<std::shared_ptr<ariac_common::RobotMalfunctionOnPartPlacement>> on_part_placement_robot_malfunctions_;
+        /*!< List of sensor blackout challenges that are announced based on submission. */
+        std::vector<std::shared_ptr<ariac_common::RobotMalfunctionOnSubmission>> on_submission_robot_malfunctions_;
+
         /*!< List of parts on AGV1. */
         std::vector<ariac_common::Part> agv1_tray_contents_;
         /*!< List of parts on AGV2. */
@@ -142,21 +172,22 @@ namespace ariac_plugins
         std::vector<ariac_common::Part> agv3_tray_contents_;
         /*!< List of parts on AGV4. */
         std::vector<ariac_common::Part> agv4_tray_contents_;
-        /*!< List of submitted orders. */
+        /*!< List of orders. that have already been submitted*/
         std::vector<std::string> submitted_orders_;
+        /*!< List of orders. that have already been announced*/
+        std::vector<std::string> announced_orders_;
         /*!< List of trial orders. */
         std::vector<std::string> trial_orders_;
         /*!< Kit tray id for agv1. */
         int agv1_kit_tray_id_;
 
-
         void AGV1TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
         void AGV2TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
         void AGV3TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
         void AGV4TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
-        
+
         // tray id + list of parts
-         void ParseTrayModels(unsigned int agv_number);
+        void ParseTrayModels(unsigned int agv_number);
         //  void ParseAssemblyModels();
     };
     //==============================================================================
@@ -169,25 +200,7 @@ namespace ariac_plugins
     {
         impl_->ros_node_.reset();
     }
-    //==============================================================================
-    // void TaskManagerPlugin::ManageOrders(std::vector<ariac_msgs::msg::Order> _orders)
-    // {
-    // for (auto order : _orders)
-    // {
-    //     ariac_common::Order new_order;
-    //     new_order.order_id_ = order.id;
-    //     new_order.order_type_ = order.type;
-    //     new_order.high_priority_ = order.priority;
-    //     new_order.announced_condition_ = order.announcement_condition;
-    //     new_order.announced_value_ = order.announcement_value;
 
-    //     // KittingTask
-
-    //     // AssemblyTask
-
-    //     impl_->time_based_orders_.push_back(new_order);
-    // }
-    // }
     //==============================================================================
     void
     TaskManagerPlugin::Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf)
@@ -241,21 +254,21 @@ namespace ariac_plugins
             "/ariac/trial_config", qos.get_subscription_qos("/ariac/trial_config", rclcpp::QoS(1)),
             std::bind(&TaskManagerPlugin::OnTrialCallback, this, std::placeholders::_1));
 
-        impl_->agv1_tray_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Parts>(
-            "/ariac/agv1_tray_contents", qos.get_subscription_qos("/ariac/agv1_tray_contents", rclcpp::QoS(1)),
-            std::bind(&TaskManagerPlugin::OnAGV1TrayContentsCallback, this, std::placeholders::_1));
+        // impl_->agv1_tray_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Parts>(
+        //     "/ariac/agv1_tray_contents", qos.get_subscription_qos("/ariac/agv1_tray_contents", rclcpp::QoS(1)),
+        //     std::bind(&TaskManagerPlugin::OnAGV1TrayContentsCallback, this, std::placeholders::_1));
 
-        impl_->agv2_tray_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Parts>(
-            "/ariac/agv2_tray_contents", qos.get_subscription_qos("/ariac/agv2_tray_contents", rclcpp::QoS(1)),
-            std::bind(&TaskManagerPlugin::OnAGV2TrayContentsCallback, this, std::placeholders::_1));
+        // impl_->agv2_tray_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Parts>(
+        //     "/ariac/agv2_tray_contents", qos.get_subscription_qos("/ariac/agv2_tray_contents", rclcpp::QoS(1)),
+        //     std::bind(&TaskManagerPlugin::OnAGV2TrayContentsCallback, this, std::placeholders::_1));
 
-        impl_->agv3_tray_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Parts>(
-            "/ariac/agv3_tray_contents", qos.get_subscription_qos("/ariac/agv3_tray_contents", rclcpp::QoS(1)),
-            std::bind(&TaskManagerPlugin::OnAGV3TrayContentsCallback, this, std::placeholders::_1));
+        // impl_->agv3_tray_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Parts>(
+        //     "/ariac/agv3_tray_contents", qos.get_subscription_qos("/ariac/agv3_tray_contents", rclcpp::QoS(1)),
+        //     std::bind(&TaskManagerPlugin::OnAGV3TrayContentsCallback, this, std::placeholders::_1));
 
-        impl_->agv4_tray_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Parts>(
-            "/ariac/agv4_tray_contents", qos.get_subscription_qos("/ariac/agv4_tray_contents", rclcpp::QoS(1)),
-            std::bind(&TaskManagerPlugin::OnAGV4TrayContentsCallback, this, std::placeholders::_1));
+        // impl_->agv4_tray_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Parts>(
+        //     "/ariac/agv4_tray_contents", qos.get_subscription_qos("/ariac/agv4_tray_contents", rclcpp::QoS(1)),
+        //     std::bind(&TaskManagerPlugin::OnAGV4TrayContentsCallback, this, std::placeholders::_1));
 
         //============== PUBLISHERS =================
         impl_->sensor_health_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Sensors>("/ariac/sensor_health", 10);
@@ -263,14 +276,21 @@ namespace ariac_plugins
         impl_->competition_state_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::CompetitionState>("/ariac/competition_state", 10);
         impl_->order_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Order>("/ariac/orders", 1);
         //============== SERVICES =================
-        // impl_->switch_controller_srv_client_ = impl_->ros_node_->create_client<controller_manager_msgs::srv::SwitchController>("/controller_manager/switch_controller");
         impl_->end_competition_srv_client_ = impl_->ros_node_->create_client<std_srvs::srv::Trigger>("/ariac/end_competition");
-        // impl_->current_sim_time_ = impl_->ros_node_->get_clock()->now();
-        // impl_->current_sim_time_ = impl_->world_->SimTime();
+
+        impl_->break_beam_sensor_health_ = true;
+        impl_->proximity_sensor_health_ = true;
+        impl_->laser_profiler_sensor_health_ = true;
+        impl_->lidar_sensor_health_ = true;
+        impl_->camera_sensor_health_ = true;
+        impl_->logical_camera_sensor_health_ = true;
+
+        impl_->elapsed_time_ = 0.0;
     }
 
     void TaskManagerPluginPrivate::AGV1TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
+        // RCLCPP_INFO_STREAM(ros_node_->get_logger(), _msg->);
     }
 
     void TaskManagerPluginPrivate::AGV2TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
@@ -399,12 +419,13 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    const ariac_msgs::msg::Order TaskManagerPlugin::BuildOrderMsg(std::shared_ptr<ariac_common::Order> _order)
+    const ariac_msgs::msg::Order
+    TaskManagerPlugin::BuildOrderMsg(std::shared_ptr<ariac_common::Order> _order)
     {
         auto order_message = ariac_msgs::msg::Order();
         order_message.id = _order->GetId();
         order_message.type = _order->GetType();
-        order_message.priority = _order->GetPriority();
+        order_message.priority = _order->IsPriority();
         if (_order->GetKittingTask())
         {
             order_message.kitting_task = BuildKittingTaskMsg(_order->GetKittingTask());
@@ -423,16 +444,17 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    void TaskManagerPlugin::ProcessTemporalOrders(double _elapsed_time)
+    void TaskManagerPlugin::ProcessTemporalOrders()
     {
         for (const auto &order : impl_->time_based_orders_)
         {
-            if (_elapsed_time >= order->GetAnnouncementTime() && !order->IsAnnounced())
+            if (impl_->elapsed_time_ >= order->GetAnnouncementTime() && !order->IsAnnounced())
             {
                 auto order_message = BuildOrderMsg(order);
                 RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Publishing order: " << order_message.id);
                 impl_->order_pub_->publish(order_message);
-                impl_->submitted_orders_.push_back(order_message.id);
+                impl_->announced_orders_.push_back(order_message.id);
+                order->SetAnnouncedTime(impl_->elapsed_time_);
                 order->SetIsAnnounced();
                 impl_->total_orders_--;
             }
@@ -440,7 +462,7 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    void TaskManagerPlugin::ProcessOnPartPlacementOrders(double _elapsed_time)
+    void TaskManagerPlugin::ProcessOnPartPlacementOrders()
     {
         // for (const auto &order : impl_->on_part_placement_orders_)
         // {
@@ -490,38 +512,136 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    void TaskManagerPlugin::ProcessOnSubmissionOrders(double _elapsed_time)
+    void TaskManagerPlugin::ProcessOnSubmissionOrders()
     {
-
-        for (const auto &order : impl_->on_order_submission_orders_)
+        for (const auto &order_ins : impl_->on_order_submission_orders_)
         {
-            auto submitted_order = order->GetOrderId();
+            // Get the id of the order which will trigger the annoucement of order_ins
+            auto trigger_order = order_ins->GetOrderId();
 
-            if (std::find(impl_->submitted_orders_.begin(), impl_->submitted_orders_.end(), submitted_order) != impl_->submitted_orders_.end())
+            // parse the list of submitted orders to see if the trigger order has been submitted
+            if (std::find(impl_->submitted_orders_.begin(), impl_->submitted_orders_.end(), trigger_order) != impl_->submitted_orders_.end())
             {
-                auto order_message = BuildOrderMsg(order);
-                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Publishing order: " << order_message.id);
-                impl_->order_pub_->publish(order_message);
-                order->SetIsAnnounced();
-                impl_->total_orders_--;
+                if (!order_ins->IsAnnounced())
+                {
+                    auto order_message = BuildOrderMsg(order_ins);
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Publishing order: " << order_message.id);
+                    impl_->order_pub_->publish(order_message);
+                    order_ins->SetAnnouncedTime(impl_->elapsed_time_);
+                    order_ins->SetIsAnnounced();
+                    impl_->total_orders_--;
+                }
             }
         }
     }
 
     //==============================================================================
-    void TaskManagerPlugin::ProcessOrdersToAnnounce(double _elapsed_time)
+    void TaskManagerPlugin::ProcessOrdersToAnnounce()
     {
         if (!impl_->time_based_orders_.empty())
         {
-            ProcessTemporalOrders(_elapsed_time);
+            ProcessTemporalOrders();
         }
+        // TODO: Implement on part placement and on submission orders
         if (!impl_->on_part_placement_orders_.empty())
         {
-            ProcessOnPartPlacementOrders(_elapsed_time);
+            ProcessOnPartPlacementOrders();
         }
         if (!impl_->on_order_submission_orders_.empty())
         {
-            ProcessOnSubmissionOrders(_elapsed_time);
+            ProcessOnSubmissionOrders();
+        }
+    }
+
+    void TaskManagerPlugin::ProcessInProgressSensorBlackouts()
+    {
+        for (const auto &sensor_blackout : impl_->in_progress_sensor_blackouts_)
+        {
+            if (sensor_blackout->IsStarted() && !sensor_blackout->IsCompleted())
+            {
+                auto duration = sensor_blackout->GetDuration();
+                auto start_time = sensor_blackout->GetStartTime();
+                // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Sensor blackout challenge in progress");
+                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), start_time);
+                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), duration);
+
+                if (impl_->elapsed_time_ >= start_time + duration)
+                {
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Stopping sensor blackout challenge");
+                    sensor_blackout->SetCompleted();
+                    impl_->break_beam_sensor_health_ = true;
+                    impl_->proximity_sensor_health_ = true;
+                    impl_->laser_profiler_sensor_health_ = true;
+                    impl_->lidar_sensor_health_ = true;
+                    impl_->camera_sensor_health_ = true;
+                    impl_->logical_camera_sensor_health_ = true;
+                    // remove the sensor blackout from the list
+                    impl_->in_progress_sensor_blackouts_.erase(std::remove(impl_->in_progress_sensor_blackouts_.begin(),
+                                                                           impl_->in_progress_sensor_blackouts_.end(), sensor_blackout),
+                                                               impl_->in_progress_sensor_blackouts_.end());
+                }
+
+                
+            }
+        }
+    }
+
+    void TaskManagerPlugin::ProcessTemporalSensorBlackouts()
+    {
+        // RCLCPP_INFO_STREAM_ONCE(impl_->ros_node_->get_logger(), "Size temporal blackouts: " << impl_->time_based_sensor_blackouts_.size());
+        for (const auto &sensor_blackout : impl_->time_based_sensor_blackouts_)
+        {
+            
+            // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcement time: " << sensor_blackout->GetAnnouncementTime());
+            if (impl_->elapsed_time_ >= sensor_blackout->GetAnnouncementTime() && !sensor_blackout->IsStarted())
+            {
+                // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Elapsed time: " << impl_->elapsed_time_);
+                // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Starting sensor blackout challenge");
+                auto duration = sensor_blackout->GetDuration();
+                auto sensors_to_disable = sensor_blackout->GetSensorsToDisable();
+
+                for (const auto &sensor : sensors_to_disable)
+                {
+                    if (sensor == "break_beam")
+                        impl_->break_beam_sensor_health_ = false;
+                    if (sensor == "proximity")
+                        impl_->proximity_sensor_health_ = false;
+                    if (sensor == "laser_profiler")
+                        impl_->laser_profiler_sensor_health_ = false;
+                    if (sensor == "lidar")
+                        impl_->lidar_sensor_health_ = false;
+                    if (sensor == "camera")
+                        impl_->camera_sensor_health_ = false;
+                    if (sensor == "logical_camera")
+                        impl_->logical_camera_sensor_health_ = false;
+                }
+                sensor_blackout->SetStartTime(impl_->elapsed_time_);
+                sensor_blackout->SetStarted();
+                impl_->in_progress_sensor_blackouts_.push_back(sensor_blackout);
+            }
+        }
+    }
+    //==============================================================================
+    void TaskManagerPlugin::ProcessChallengesToAnnounce()
+    {
+        if (!impl_->time_based_sensor_blackouts_.empty())
+        {
+            ProcessTemporalSensorBlackouts();
+        }
+        if (!impl_->on_part_placement_sensor_blackouts_.empty())
+        {
+        }
+        if (!impl_->on_submission_sensor_blackouts_.empty())
+        {
+        }
+        if (!impl_->time_based_robot_malfunctions_.empty())
+        {
+        }
+        if (!impl_->on_part_placement_robot_malfunctions_.empty())
+        {
+        }
+        if (!impl_->on_submission_robot_malfunctions_.empty())
+        {
         }
     }
 
@@ -543,12 +663,6 @@ namespace ariac_plugins
             RCLCPP_INFO_STREAM_ONCE(impl_->ros_node_->get_logger(), "All orders have been announced.");
             impl_->current_state_ = ariac_msgs::msg::CompetitionState::ORDER_ANNOUNCEMENTS_DONE;
         }
-
-        // Debugging: Print the competition time
-        // if (impl_->competition_time_set_)
-        // {
-        //     RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Competition has been running for: " << (current_sim_time - impl_->start_competition_time_).Double());
-        // }
 
         // publish the competition state
         PublishCompetitionState(impl_->current_state_);
@@ -588,32 +702,41 @@ namespace ariac_plugins
             impl_->last_sim_time_ = current_sim_time;
         }
 
-        // Elapsed time since the last update
-        auto elapsed_time = (current_sim_time - impl_->last_on_update_time_).Double();
+        
 
-        // Check if need to end the competition
-        // If the time limit was set to a positive value
-        // If the elapsed time since the start of the competition is greater than the time limit
-        //
+        // End the competition if:
+        // The time limit was set to a positive value
+        // The elapsed time since the start of the competition is greater than the time limit
+        // The current state is ORDER_ANNOUNCEMENTS_DONE
         if (impl_->time_limit_ >= 0 &&
             (current_sim_time - impl_->start_competition_time_).Double() > impl_->time_limit_ && impl_->current_state_ == ariac_msgs::msg::CompetitionState::ORDER_ANNOUNCEMENTS_DONE)
         {
             RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Time limit reached. Ending competition.");
-
             this->impl_->current_state_ = ariac_msgs::msg::CompetitionState::ENDED;
         }
 
-        // current state is set to UNSTARTED in start competition service callback
+        // current state was set to STARTED in start competition service callback
         if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::STARTED && !impl_->competition_time_set_)
         {
             impl_->start_competition_time_ = current_sim_time;
             impl_->competition_time_set_ = true;
         }
 
+        // Elapsed time since the competition started
+        if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::STARTED)
+            impl_->elapsed_time_ = (current_sim_time - impl_->start_competition_time_).Double();
+        else
+            impl_->elapsed_time_ = 0.0;
+
+        // If the competition has started, do the main work
         if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::STARTED)
         {
-            // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Competition has been running for: " << (current_sim_time - impl_->start_competition_time_).Double());
-            ProcessOrdersToAnnounce((current_sim_time - impl_->start_competition_time_).Double());
+            ProcessOrdersToAnnounce();
+            ProcessChallengesToAnnounce();
+            ProcessInProgressSensorBlackouts();
+            UpdateSensorsHealth();
+            // ProcessInProgressRobotMalfunctions();
+            // UpdateRobotsHealth();
         }
 
         impl_->last_on_update_time_ = current_sim_time;
@@ -696,6 +819,9 @@ namespace ariac_plugins
             order_conditions.push_back(std::make_shared<ariac_msgs::msg::OrderCondition>(order_condition));
         }
         StoreOrders(order_conditions);
+        // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Number of orders in the trial: " << impl_->all_orders_.size());
+
+        // This attribute is used to keep track of the total number of orders
         impl_->total_orders_ = impl_->time_based_orders_.size() + impl_->on_part_placement_orders_.size() + impl_->on_order_submission_orders_.size();
         // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Number of temporal orders: " << impl_->time_based_orders_.size());
         // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Number of part place orders: " << impl_->on_part_placement_orders_.size());
@@ -708,6 +834,10 @@ namespace ariac_plugins
             for (auto challenge : _msg->challenges)
             {
                 challenges.push_back(std::make_shared<ariac_msgs::msg::Challenge>(challenge));
+            }
+            if (challenges.size() > 0)
+            {
+                StoreChallenges(challenges);
             }
         }
     }
@@ -835,8 +965,6 @@ namespace ariac_plugins
                 RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown order type: " << int(order_type));
             }
 
-            // std::vector<std::shared_ptr<ariac_common::OrderOnSubmission>> on_order_submission_orders_;
-
             // Get the condition
             if (order->condition.type == ariac_msgs::msg::Condition::TIME)
             {
@@ -854,6 +982,7 @@ namespace ariac_plugins
 
                 // Add to the list of time based orders
                 impl_->time_based_orders_.push_back(order_instance);
+                impl_->all_orders_.push_back(order_instance);
             }
             else if (order->condition.type == ariac_msgs::msg::Condition::PART_PLACE)
             {
@@ -870,6 +999,7 @@ namespace ariac_plugins
 
                 // Add to the list of part placement orders
                 impl_->on_part_placement_orders_.push_back(order_instance);
+                impl_->all_orders_.push_back(order_instance);
             }
             else if (order->condition.type == ariac_msgs::msg::Condition::SUBMISSION)
             {
@@ -885,22 +1015,164 @@ namespace ariac_plugins
 
                 // Add to the list of submission orders
                 impl_->on_order_submission_orders_.push_back(order_instance);
+                impl_->all_orders_.push_back(order_instance);
             }
             else
             {
                 RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown condition type: " << int(order->condition.type));
             }
         }
-        // for (auto &order_instance : impl_->time_based_orders_)
-        // {
-        //     RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Orders ID: " << order_instance->GetId());
-        //     RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcements time: " << order_instance->GetAnnouncementTime());
-        // }
     }
 
     //==============================================================================
-    void TaskManagerPlugin::StoreChallenges(const std::vector<ariac_msgs::msg::Challenge::SharedPtr> &challenges)
+    //==============================================================================
+    void TaskManagerPlugin::BuildRobotMalfunctionChallenge(const ariac_msgs::msg::RobotMalfunctionChallenge &_challenge)
     {
+        std::shared_ptr<ariac_common::RobotMalfunction> robot_malfunction{nullptr};
+        auto duration = _challenge.duration;
+        // Get the condition
+        auto condition = _challenge.condition;
+        // Get the robots to disable
+        auto robots_to_disable = _challenge.robots_to_disable;
+
+        // Vector with only the robots to disable
+        std::vector<std::string> robots_to_disable_vect;
+
+        // Check which robots to disable
+        if (robots_to_disable.ceiling_robot)
+        {
+            robots_to_disable_vect.push_back("ceiling_robot");
+        }
+        if (robots_to_disable.floor_robot)
+        {
+            robots_to_disable_vect.push_back("floor_robot");
+        }
+
+        // Check the announcement condition for the current challenge
+        if (condition.type == ariac_msgs::msg::Condition::TIME)
+        {
+            auto announcement_time = condition.time_condition.seconds;
+            auto robot_malfunction = std::make_shared<ariac_common::RobotMalfunctionTemporal>(duration, robots_to_disable_vect, announcement_time);
+            impl_->time_based_robot_malfunctions_.push_back(robot_malfunction);
+        }
+        else if (condition.type == ariac_msgs::msg::Condition::PART_PLACE)
+        {
+            auto agv = condition.part_place_condition.agv;
+            auto part = std::make_shared<ariac_common::Part>(condition.part_place_condition.part.color, condition.part_place_condition.part.type);
+            auto robot_malfunction = std::make_shared<ariac_common::RobotMalfunctionOnPartPlacement>(duration, robots_to_disable_vect, part, agv);
+            impl_->on_part_placement_robot_malfunctions_.push_back(robot_malfunction);
+        }
+        else if (condition.type == ariac_msgs::msg::Condition::SUBMISSION)
+        {
+            auto submitted_order_id = condition.submission_condition.order_id;
+            auto robot_malfunction = std::make_shared<ariac_common::RobotMalfunctionOnSubmission>(duration, robots_to_disable_vect, submitted_order_id);
+            impl_->on_submission_robot_malfunctions_.push_back(robot_malfunction);
+        }
+    }
+
+    //==============================================================================
+    void TaskManagerPlugin::BuildSensorBlackoutChallenge(const ariac_msgs::msg::SensorBlackoutChallenge &_challenge)
+    {
+
+        // Get the duration
+        auto duration = _challenge.duration;
+        // Get the condition
+        auto condition = _challenge.condition;
+        // Get the sensors to disable
+        auto sensors_to_disable = _challenge.sensors_to_disable;
+
+        // Vector with only the sensors to disable
+        std::vector<std::string> sensors_to_disable_vect;
+
+        if (sensors_to_disable.break_beam)
+        {
+            sensors_to_disable_vect.push_back("break_beam");
+        }
+        if (sensors_to_disable.proximity)
+        {
+            sensors_to_disable_vect.push_back("proximity");
+        }
+        if (sensors_to_disable.laser_profiler)
+        {
+            sensors_to_disable_vect.push_back("laser_profiler");
+        }
+        if (sensors_to_disable.lidar)
+        {
+            sensors_to_disable_vect.push_back("lidar");
+        }
+        if (sensors_to_disable.camera)
+        {
+            sensors_to_disable_vect.push_back("camera");
+        }
+        if (sensors_to_disable.logical_camera)
+        {
+            sensors_to_disable_vect.push_back("logical_camera");
+        }
+
+        // Check condition
+        if (condition.type == ariac_msgs::msg::Condition::TIME)
+        {
+            auto announcement_time = condition.time_condition.seconds;
+            auto sensor_blackout = std::make_shared<ariac_common::SensorBlackoutTemporal>(duration, sensors_to_disable_vect, announcement_time);
+            impl_->time_based_sensor_blackouts_.push_back(sensor_blackout);
+        }
+        else if (condition.type == ariac_msgs::msg::Condition::PART_PLACE)
+        {
+            auto agv = condition.part_place_condition.agv;
+            auto part = std::make_shared<ariac_common::Part>(condition.part_place_condition.part.color, condition.part_place_condition.part.type);
+            auto sensor_blackout = std::make_shared<ariac_common::SensorBlackoutOnPartPlacement>(duration, sensors_to_disable_vect, part, agv);
+            impl_->on_part_placement_sensor_blackouts_.push_back(sensor_blackout);
+        }
+        else if (condition.type == ariac_msgs::msg::Condition::SUBMISSION)
+        {
+            auto submitted_order_id = condition.submission_condition.order_id;
+            auto sensor_blackout = std::make_shared<ariac_common::SensorBlackoutOnSubmission>(duration, sensors_to_disable_vect, submitted_order_id);
+            impl_->on_submission_sensor_blackouts_.push_back(sensor_blackout);
+        }
+    }
+
+    //==============================================================================
+    void
+    TaskManagerPlugin::StoreChallenges(const std::vector<ariac_msgs::msg::Challenge::SharedPtr> &challenges)
+    {
+        for (auto challenge : challenges)
+        {
+            auto challenge_type = challenge->type;
+
+            // std::shared_ptr<ariac_common::KittingTask> faulty_part_challenge = nullptr;
+            // std::shared_ptr<ariac_common::AssemblyTask> dropped_part_challenge = nullptr;
+            std::shared_ptr<ariac_common::SensorBlackout> sensor_blackout_challenge = nullptr;
+            std::shared_ptr<ariac_common::RobotMalfunction> robot_malfunction_challenge = nullptr;
+            // std::shared_ptr<ariac_common::CombinedTask> human_challenge = nullptr;
+
+            if (challenge_type == ariac_msgs::msg::Challenge::SENSOR_BLACKOUT)
+            {
+                BuildSensorBlackoutChallenge(challenge->sensor_blackout_challenge);
+            }
+            else if (challenge_type == ariac_msgs::msg::Challenge::ROBOT_MALFUNCTION)
+            {
+                BuildRobotMalfunctionChallenge(challenge->robot_malfunction_challenge);
+            }
+            else
+            {
+                RCLCPP_ERROR_STREAM(impl_->ros_node_->get_logger(), "Unknown challenge type: " << int(challenge_type));
+            }
+        }
+    }
+
+    //==============================================================================
+    void TaskManagerPlugin::UpdateSensorsHealth()
+    {
+        // publish on /ariac/sensor_health topic
+        auto sensor_message = ariac_msgs::msg::Sensors();
+        sensor_message.break_beam = impl_->break_beam_sensor_health_;
+        sensor_message.proximity = impl_->proximity_sensor_health_;
+        sensor_message.laser_profiler = impl_->laser_profiler_sensor_health_;
+        sensor_message.lidar = impl_->lidar_sensor_health_;
+        sensor_message.camera = impl_->camera_sensor_health_;
+        sensor_message.logical_camera = impl_->logical_camera_sensor_health_;
+
+        impl_->sensor_health_pub_->publish(sensor_message);
     }
 
     //==============================================================================
@@ -908,12 +1180,12 @@ namespace ariac_plugins
     {
         // publish on /ariac/sensor_health topic
         auto sensor_message = ariac_msgs::msg::Sensors();
-        sensor_message.break_beam = true;
-        sensor_message.proximity = true;
-        sensor_message.laser_profiler = true;
-        sensor_message.lidar = true;
-        sensor_message.camera = true;
-        sensor_message.logical_camera = true;
+        sensor_message.break_beam = impl_->break_beam_sensor_health_;
+        sensor_message.proximity = impl_->proximity_sensor_health_;
+        sensor_message.laser_profiler = impl_->laser_profiler_sensor_health_;
+        sensor_message.lidar = impl_->lidar_sensor_health_;
+        sensor_message.camera = impl_->camera_sensor_health_;
+        sensor_message.logical_camera = impl_->logical_camera_sensor_health_;
         impl_->sensor_health_pub_->publish(sensor_message);
         RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Activated all sensors");
     }
@@ -956,12 +1228,25 @@ namespace ariac_plugins
     {
         std::lock_guard<std::mutex> lock(impl_->lock_);
 
-        if (std::find(impl_->trial_orders_.begin(), impl_->trial_orders_.end(), request->order_id) != impl_->trial_orders_.end())
+        auto submitted_order_id = request->order_id;
+
+        // If the order id is part of the trial orders, then it is submitted
+        if (std::find(impl_->trial_orders_.begin(), impl_->trial_orders_.end(), submitted_order_id) != impl_->trial_orders_.end())
         {
-            impl_->submitted_orders_.push_back(request->order_id);
+            // We need to set the submission time to be able to calculate the score
+            for (auto &order : impl_->all_orders_)
+            {
+                if (order->GetId() == submitted_order_id)
+                {
+                    order->SetIsSubmitted();
+                    order->SetSubmittedTime(impl_->elapsed_time_);
+                }
+            }
+            // Push the order id to the list of submitted orders
+            impl_->submitted_orders_.push_back(submitted_order_id);
             response->success = true;
             response->message = "Order submitted successfully";
-            impl_->trial_orders_.erase(std::remove(impl_->trial_orders_.begin(), impl_->trial_orders_.end(), request->order_id), impl_->trial_orders_.end());
+            impl_->trial_orders_.erase(std::remove(impl_->trial_orders_.begin(), impl_->trial_orders_.end(), submitted_order_id), impl_->trial_orders_.end());
         }
         else
         {
@@ -992,7 +1277,7 @@ namespace ariac_plugins
             response->message = "Competition started successfully!";
 
             // Activate all sensors
-            ActivateAllSensors();
+            // ActivateAllSensors();
             // Start all robot controllers
             StartAllRobots();
 
@@ -1009,7 +1294,6 @@ namespace ariac_plugins
         std::shared_ptr<std_srvs::srv::Trigger::Response> response)
     {
         std::lock_guard<std::mutex> lock(this->impl_->lock_);
-        // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), " in EndCompetitionServiceCallback");
 
         (void)request;
 

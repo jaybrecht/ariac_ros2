@@ -388,7 +388,7 @@ class EnvironmentStartup(Node):
             RobotMalfunctionChallenge: Object containing robot malfunction information
         """
         msg = RobotMalfunctionChallenge()
-        msg.duration = challenge_dict['duration']
+        msg.duration = float(challenge_dict['duration'])
 
         if "floor_robot" in challenge_dict['robots_to_disable']:
             msg.robots_to_disable.floor_robot = True
@@ -411,14 +411,14 @@ class EnvironmentStartup(Node):
                         challenge_dict['part_place_condition']['as'])
         elif challenge_dict.get('time_condition'):
             msg.condition.type = self.convert_condition_to_int("time_condition")
-            msg.condition.time_condition.seconds = challenge_dict['time_condition']
+            msg.condition.time_condition.seconds = float(challenge_dict['time_condition'])
         elif challenge_dict.get('submission_condition'):
             msg.condition.type = self.convert_condition_to_int("submission_condition")
             msg.condition.submission_condition.order_id = challenge_dict[
                 'submission_condition']['order_id']
 
         challenge_msg = Challenge()
-        challenge_msg.type = "robot_malfunction"
+        challenge_msg.type = Challenge.ROBOT_MALFUNCTION
         challenge_msg.robot_malfunction_challenge = msg
         return challenge_msg
 
@@ -433,7 +433,7 @@ class EnvironmentStartup(Node):
             SensorBlackoutChallenge: Object containing sensor blackout information
         """
         msg = SensorBlackoutChallenge()
-        msg.duration = challenge_dict['duration']
+        msg.duration = float(challenge_dict['duration'])
 
         if "break_beam" in challenge_dict['sensors_to_disable']:
             msg.sensors_to_disable.break_beam = True
@@ -466,14 +466,14 @@ class EnvironmentStartup(Node):
 
         elif challenge_dict.get('time_condition'):
             msg.condition.type = self.convert_condition_to_int("time_condition")
-            msg.condition.time_condition.seconds = challenge_dict['time_condition']
+            msg.condition.time_condition.seconds = float(challenge_dict['time_condition'])
         elif challenge_dict.get('submission_condition'):
             msg.condition.type = self.convert_condition_to_int("submission_condition")
             msg.condition.submission_condition.order_id = challenge_dict[
                 'submission_condition']['order_id']
 
         challenge_msg = Challenge()
-        challenge_msg.type = "sensor_blackout"
+        challenge_msg.type = Challenge.SENSOR_BLACKOUT
         challenge_msg.sensor_blackout_challenge = msg
         return challenge_msg
 

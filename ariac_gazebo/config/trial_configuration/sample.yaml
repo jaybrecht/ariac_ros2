@@ -4,7 +4,7 @@
 
 # ENVIRONMENT SETUP
 
-time_limit: 40 # options: -1 (no time limit) or number of seconds (max 500)
+time_limit: 400 # options: -1 (no time limit) or number of seconds (max 500)
 
 kitting_trays: # Which kitting trays will be spawn
   tray_ids: [1, 2, 3] 
@@ -86,19 +86,22 @@ challenges:
         type: 'sensor'
         agv: 4
   - sensor_blackout:
-      duration: 50.0
+      duration: 5.0
       sensors_to_disable: ['break_beam']
-      part_place_condition:
-        type: 'battery'
-        color: 'blue'
-        agv: 2
+      time_condition: 5
+        
+      # part_place_condition:
+      #   type: 'battery'
+      #   color: 'blue'
+      #   agv: 2
   - sensor_blackout:
-      duration: 150.0
-      sensors_to_disable: ['lidar', 'break_beam']
-      part_place_condition:
-        type: 'sensor'
-        color: 'green'
-        agv: 2
+      duration: 5.0
+      sensors_to_disable: ['lidar', 'logical_camera']
+      time_condition: 25
+      # part_place_condition:
+      #   type: 'sensor'
+      #   color: 'green'
+      #   agv: 2
   - faulty_part:
       order_id: 'MMB30H56'
       quadrant1: true
@@ -124,7 +127,10 @@ orders:
   - id: 'MMB30H57'
     type: 'assembly'
     announcement:
-      time_condition: 10
+      submission_condition:
+        order_id: 'MMB30H56'
+    # announcement:
+    #   time_condition: 10
     priority: false
     assembly_task:
       agv_number: [4]
@@ -138,8 +144,11 @@ orders:
           assembly_direction: [-1, 0, 0] # unit vector in briefcase frame
   - id: 'MMB30H58'
     type: 'combined'
+    # announcement:
+    #   time_condition: 20
     announcement:
-      time_condition: 20
+      submission_condition:
+        order_id: 'MMB30H57'
     priority: false
     combined_task:
       station: 'as4'

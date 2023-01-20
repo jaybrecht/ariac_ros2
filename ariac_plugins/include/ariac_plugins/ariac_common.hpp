@@ -16,6 +16,7 @@
 // Messages
 #include <ariac_msgs/msg/order.hpp>
 #include <ariac_msgs/msg/condition.hpp>
+#include <ariac_msgs/msg/challenge.hpp>
 
 namespace ariac_common
 {
@@ -309,12 +310,36 @@ namespace ariac_common
         SensorBlackout(double _duration,
                        const std::vector<std::string> &_sensors_to_disable) : duration_(_duration),
                                                                               sensors_to_disable_(_sensors_to_disable) {}
+        
+        
+        double GetDuration() const { return duration_; }
+        const std::vector<std::string> &GetSensorsToDisable() const { return sensors_to_disable_; }
+        unsigned int GetType() const { return type_; }
+        
+        double GetStartTime() const { return start_time_; }
+        void SetStartTime(double _start_time) { start_time_ = _start_time; }
+        
+        bool IsStarted() const { return started_; }
+        void SetStarted() { started_ = true; }
+        
+        bool IsCompleted() const { return completed_; }
+        void SetCompleted() { completed_ = true; }
+        
+        void SetStopTime(double _stop_time) { stop_time_ = _stop_time; }
+        double GetStopTime() const { return stop_time_; }
 
     protected:
+        const unsigned int type_ = ariac_msgs::msg::Challenge::SENSOR_BLACKOUT;
         //! Duration of the challenge
         double duration_;
         //! List of sensors to disable
         std::vector<std::string> sensors_to_disable_;
+
+        bool started_ = false;
+        bool completed_ = false;
+
+        double start_time_;
+        double stop_time_;
     };
 
     //==============================================================================
@@ -335,12 +360,13 @@ namespace ariac_common
          */
         SensorBlackoutTemporal(double _duration,
                                const std::vector<std::string> &_sensors_to_disable,
-                               double _time) : SensorBlackout(_duration, _sensors_to_disable),
-                                               time_(_time) {}
+                               double _announcement_time) : SensorBlackout(_duration, _sensors_to_disable),
+                                                            announcement_time_(_announcement_time) {}
+        double GetAnnouncementTime() const { return announcement_time_; }
 
     private:
         //! Simulation time at which the challenge is triggered
-        double time_;
+        double announcement_time_;
     };
 
     //==============================================================================
@@ -349,174 +375,63 @@ namespace ariac_common
      *
      * This challenge is triggered during kitting
      */
-    class SensorBlackoutKittingAction : public SensorBlackout
+    class SensorBlackoutOnPartPlacement : public SensorBlackout
     {
     public:
         /**
          * @brief Construct a new SensorBlackoutKittingAction object
          *
          * @param _duration Duration of the blackout
-         * @param _part_type Type of part to trigger the challenge
-         * @param _part_color Color of part to trigger the challenge
-         * @param _agv AGV on which the part is placed
          * @param _sensors_to_disable List of sensors to disable
+         * @param _part Part to trigger the challenge
+         * @param _agv AGV on which the part is placed
          */
 
-        SensorBlackoutKittingAction(double _duration,
-                                    const std::vector<std::string> &_sensors_to_disable,
-                                    std::string _part_type,
-                                    std::string _part_color,
-                                    unsigned int _agv) : SensorBlackout(_duration, _sensors_to_disable),
-                                                         part_type_(_part_type),
-                                                         part_color_(_part_color),
-                                                         agv_(_agv) {}
+        SensorBlackoutOnPartPlacement(double _duration,
+                                      const std::vector<std::string> &_sensors_to_disable,
+                                      std::shared_ptr<Part> _part,
+                                      unsigned int _agv) : SensorBlackout(_duration, _sensors_to_disable),
+                                                           part_(_part),
+                                                           agv_(_agv) {}
+
+        std::shared_ptr<Part> GetPart() const { return part_; }
+        unsigned int GetAgv() const { return agv_; }
 
     private:
-        //! Type of part to trigger the challenge
-        std::string part_type_;
-        //! Color of part to trigger the challenge
-        std::string part_color_;
+        //! Part to trigger the challenge
+        std::shared_ptr<Part> part_;
         //! AGV on which the part is placed
         unsigned int agv_;
-    }; // class SensorBlackoutKittingAction
+    }; // class SensorBlackoutOnPartPlacement
 
     //==============================================================================
     /**
      * @brief Class to represent the fields for the sensor blackout challenge
      *
-     * This challenge is triggered when a kit is submitted
+     * This challenge is triggered when an order is submitted
      */
-    class SensorBlackoutKittingSubmission : public SensorBlackout
+    class SensorBlackoutOnSubmission : public SensorBlackout
     {
     public:
         /**
          * @brief Construct a new SensorBlackoutKittingSubmission object
          *
          * @param _duration Duration of the blackout
-         * @param _agv AGV on which the part is placed
-         * @param _destination Destination of the kit
          * @param _sensors_to_disable List of sensors to disable
+         * @param _order_id ID of a submitted order
          */
 
-        SensorBlackoutKittingSubmission(double _duration,
-                                        const std::vector<std::string> &_sensors_to_disable,
-                                        unsigned int _agv,
-                                        std::string _destination) : SensorBlackout(_duration, _sensors_to_disable),
-                                                                    agv_(_agv),
-                                                                    destination_(_destination) {}
+        SensorBlackoutOnSubmission(double _duration,
+                                   const std::vector<std::string> &_sensors_to_disable,
+                                   std::string _order_id) : SensorBlackout(_duration, _sensors_to_disable),
+                                                            order_id_(_order_id) {}
+
+        std::string GetOrderId() const { return order_id_; }
 
     private:
-        //! AGV on which the part is placed
-        unsigned int agv_;
-        //! Destination of the kit
-        std::string destination_;
+        //! ID of a submitted order
+        std::string order_id_;
     }; // class SensorBlackoutKittingAction
-
-    //==============================================================================
-    /**
-     * @brief Class to represent the fields for the sensor blackout challenge
-     *
-     * This challenge is triggered during assembly
-     */
-    class SensorBlackoutAssemblyAction : public SensorBlackout
-    {
-    public:
-        /**
-         * @brief Construct a new SensorBlackoutAssemblyActionn object
-         *
-         * @param _duration Duration of the blackout
-         * @param _part_type Type of part to trigger the challenge
-         * @param _part_color Color of part to trigger the challenge
-         * @param _station Assembly station where the part is placed
-         * @param _sensors_to_disable List of sensors to disable
-         */
-
-        SensorBlackoutAssemblyAction(double _duration,
-                                     const std::vector<std::string> &_sensors_to_disable,
-                                     std::string _part_type,
-                                     std::string _part_color,
-                                     std::string _station) : SensorBlackout(_duration, _sensors_to_disable), part_type_(_part_type),
-                                                             part_color_(_part_color),
-                                                             station_(_station)
-        {
-        }
-
-    private:
-        //! Type of part to trigger the blackout
-        std::string part_type_;
-        //! Color of part to trigger the blackout
-        std::string part_color_;
-        //! Assembly station where the part is placed
-        std::string station_;
-    }; // class SensorBlackoutAssemblyAction
-
-    //==============================================================================
-    /**
-     * @brief Class to represent the fields for the sensor blackout challenge
-     *
-     * This challenge is triggered when an assembly is submitted
-     */
-    class SensorBlackoutAssemblySubmission : public SensorBlackout
-    {
-    public:
-        /**
-         * @brief Construct a new SensorBlackoutAssemblySubmission object
-         *
-         * @param _duration Duration of the blackout
-         * @param _station Assembly station where the assembly is completed
-         * @param _sensors_to_disable List of sensors to disable
-         */
-
-        SensorBlackoutAssemblySubmission(double _duration,
-                                         std::vector<std::string> _sensors_to_disable,
-                                         std::string _station) : SensorBlackout(_duration, _sensors_to_disable),
-                                                                 station_(_station)
-        {
-        }
-
-    private:
-        //! Assembly station where the assembly is completed
-        std::string station_;
-    }; // class SensorBlackoutAssemblySubmission
-
-    //==============================================================================
-    /**
-     * @brief Class to represent the fields for the robot malfunction challenge
-     */
-    class RobotMalfunction
-    {
-    public:
-        /**
-         * @brief Construct a new Robot Malfunction object
-         *
-         * @param _duration Time during which the robot(s) is (are) disabled
-         * @param _robot_to_disable Robot(s) to disable
-         * @param _part_type Type of part to trigger the challenge
-         * @param _part_color Color of part to trigger the challenge
-         * @param _agv AGV on which the part is placed
-         */
-        RobotMalfunction(double _duration,
-                         std::string _part_type,
-                         std::string _part_color,
-                         unsigned int _agv,
-                         std::vector<std::string> _robot_to_disable) : duration_(_duration),
-                                                                       part_type_(_part_type),
-                                                                       part_color_(_part_color),
-                                                                       agv_(_agv),
-                                                                       robot_to_disable_(_robot_to_disable) {}
-
-    private:
-        //! Time during which the robot(s) is(are) disabled
-        double duration_;
-        //! Type of part to trigger the challenge
-        std::string part_type_;
-        //! Color of part to trigger the challenge
-        std::string part_color_;
-        //! AGV on which the part is placed
-        unsigned int agv_;
-        //! List of robot(s) to disable
-        std::vector<std::string> robot_to_disable_;
-    }; // class RobotMalfunction
 
     //==============================================================================
     class Order
@@ -534,6 +449,7 @@ namespace ariac_common
               unsigned int _type,
               bool _priority,
               double _trial_time_limit) : announced_(false),
+                                          submitted_(false),
                                           id_(_id),
                                           type_(_type),
                                           priority_(_priority),
@@ -542,122 +458,118 @@ namespace ariac_common
 
         /**
          * @brief Get the Id of the order
-         *
          * @return std::string Id of the order
          */
-        std::string GetId() const
-        {
-            return id_;
-        }
+        std::string GetId() const { return id_; }
+
         /**
          * @brief Get the type of the order
-         *
-         * @return std::string Type of the order
+         * @return unsigned int Type of the order
          */
-        unsigned int GetType() const
-        {
-            return type_;
-        }
-
-        bool GetPriority() const
-        {
-            return priority_;
-        }
+        unsigned int GetType() const { return type_; }
 
         /**
          * @brief Get the priority of the order
          *
-         * @return true High priority
-         * @return false Normal priority
+         * @return true High-priority order
+         * @return false Regular-priority order
          */
-        bool IsPriority() const
-        {
-            return priority_;
-        }
+        bool IsPriority() const { return priority_; }
 
         /**
          * @brief Get a shared pointer to a kitting task
-         *
          * @return std::shared_ptr<KittingTask> Pointer to a kitting task
          */
-        std::shared_ptr<KittingTask> GetKittingTask() const
-        {
-            return kitting_task_;
-        }
+        std::shared_ptr<KittingTask> GetKittingTask() const { return kitting_task_; }
 
         /**
          * @brief Get a shared pointer to an assembly task
-         *
          * @return std::shared_ptr<AssemblyTask> Assembly task
          */
-        std::shared_ptr<AssemblyTask> GetAssemblyTask() const
-        {
-            return assembly_task_;
-        }
+        std::shared_ptr<AssemblyTask> GetAssemblyTask() const { return assembly_task_; }
 
         /**
          * @brief Get a shared pointer to a combined task
-         *
          * @return std::shared_ptr<CombinedTask> Combined task
          */
-        std::shared_ptr<CombinedTask> GetCombinedTask() const
-        {
-            return combined_task_;
-        }
+        std::shared_ptr<CombinedTask> GetCombinedTask() const { return combined_task_; }
 
         /**
          * @brief Set the Kitting Task object for the order
-         *
          * @param _kitting_task  Shared pointer to the kitting task for the order
          */
-        virtual void SetKittingTask(std::shared_ptr<KittingTask> _kitting_task)
-        {
-            kitting_task_ = _kitting_task;
-        }
+        virtual void SetKittingTask(std::shared_ptr<KittingTask> _kitting_task) { kitting_task_ = _kitting_task; }
+
         /**
          * @brief Set the Assembly Task object for the order
-         *
-         * @param _kitting_task  Shared pointer to the assembly task for the order
+         * @param _assembly_task  Shared pointer to the assembly task for the order
          */
-        virtual void SetAssemblyTask(std::shared_ptr<AssemblyTask> _assembly_task)
-        {
-            assembly_task_ = _assembly_task;
-        }
+        virtual void SetAssemblyTask(std::shared_ptr<AssemblyTask> _assembly_task) { assembly_task_ = _assembly_task; }
 
         /**
          * @brief Set the Combined Task object for the order
-         *
          * @param _combined_task  Shared pointer to the combined task for the order
          */
-        virtual void SetCombinedTask(std::shared_ptr<CombinedTask> _combined_task)
-        {
-            combined_task_ = _combined_task;
-        }
+        virtual void SetCombinedTask(std::shared_ptr<CombinedTask> _combined_task) { combined_task_ = _combined_task; }
 
         /**
          * @brief Check whether or not the order has been announced
-         *
          * @return true Order has already been announced
          * @return false Order has not been announced yet
          */
-        virtual bool IsAnnounced() const
-        {
-            return announced_;
-        }
+        virtual bool IsAnnounced() const { return announced_; }
 
         /**
-         * @brief Set the order as announced
+         * @brief Set this order as announced
          */
-        virtual void SetIsAnnounced()
-        {
-            announced_ = true;
-        }
+        virtual void SetIsAnnounced() { announced_ = true; }
+
+        /**
+         * @brief Set the time at which the order was announced
+         * @param _announced_time  Time at which the order was announced
+         */
+        void SetAnnouncedTime(double _announced_time) { announced_time_ = _announced_time; }
+
+        /**
+         * @brief Get the time at which the order was announced
+         * @return double Time at which the order was announced
+         */
+        double GetAnnouncedTime() const { return announced_time_; }
+
+        /**
+         * @brief Check whether or not the order has been submitted
+         * @return true  Order has already been submitted
+         * @return false  Order has not been submitted yet
+         */
+        virtual bool IsSubmitted() const { return submitted_; }
+
+        /**
+         * @brief Set this order as submitted
+         */
+        virtual void SetIsSubmitted() { submitted_ = true; }
+        /**
+         * @brief Set the time the order was submitted
+         * @param _submitted_time
+         */
+        virtual void SetSubmittedTime(double _submitted_time) { submitted_time_ = _submitted_time; }
+
+        /**
+         * @brief Get the time the order was submitted
+         * @return double Time the order was submitted
+         */
+        double GetSubmittedTime() const { return submitted_time_; }
 
     protected:
         /**
          * @brief Whether or not this order has already been announced
          */
         bool announced_;
+
+        /**
+         * @brief Whether or not this order has already been submitted
+         */
+        bool submitted_;
+
         /**
          * @brief id of the order
          */
@@ -680,15 +592,16 @@ namespace ariac_common
          */
         double trial_time_limit_;
         /**
-         * @brief Time at which the order is submitted since it was announced
+         * @brief Time at which the order is submitted since the start of the competition
          */
         double submitted_time_;
 
         /**
-         * @brief A pointer to the next order for the current order.
+         * @brief Time at which the order is announced since the start of the competition
          *
          */
-        std::shared_ptr<Order> next_order_ = nullptr;
+        double announced_time_;
+
         /**
          * @brief A pointer to the kitting task for this order.
          *
@@ -812,10 +725,10 @@ namespace ariac_common
                           std::string _order_id) : Order(_id, _type, _priority, _trial_time_limit),
                                                    order_id_(_order_id) {}
 
-    std::string GetOrderId() const
-    {
-        return order_id_;
-    }
+        std::string GetOrderId() const
+        {
+            return order_id_;
+        }
 
     private:
         //! Id of the order submitted by the competitor
@@ -824,71 +737,126 @@ namespace ariac_common
 
     //==============================================================================
     /**
-     * @brief Class to represent the fields for an order announced during assembly
+     * @brief Base class for the robot malfunction challenges.
      *
      */
-    class OrderDuringAssembly : public Order
+    class RobotMalfunction
     {
     public:
         /**
-         * @brief Construct a new OrderDuringAssembly object
+         * @brief Construct a new Robot Malfunction object
          *
-         * @param _id  Unique id of the order
-         * @param _type  Type of the order
-         * @param _priority  Priority of the order (true or false)
-         * @param _trial_time_limit Time limit for the trial
-         * @param _order_id Id of an order competitors started working on
-         * @param _part_type Type of the part used in assembly
-         * @param _part_color Color of the part used in assembly
+         * @param _duration Duration of the challenge
+         * @param _robots_to_disable  List of robots to disable
          */
-        OrderDuringAssembly(std::string _id,
-                            unsigned int _type,
-                            bool _priority,
-                            double _trial_time_limit,
-                            std::string _order_id,
-                            std::string _part_type,
-                            std::string _part_color) : Order(_id, _type, _priority, _trial_time_limit),
-                                                       order_id_(_order_id),
-                                                       part_type_(_part_type),
-                                                       part_color_(_part_color) {}
+        RobotMalfunction(double _duration,
+                         const std::vector<std::string> &_robots_to_disable) : duration_(_duration),
+                                                                               robots_to_disable_(_robots_to_disable) {}
+        double GetDuration() const { return duration_; }
+        const std::vector<std::string> &GetRobotsToDisable() const { return robots_to_disable_; }
+        unsigned int GetType() const { return type_; }
+        void SetStartTime(double _start_time) { start_time_ = _start_time; }
+        double GetStartTime() const { return start_time_; }
 
-    private:
-        //! Id of an order competitors started working on
-        std::string order_id_;
-        //! Type of the part used in assembly
-        std::string part_type_;
-        //! Color of the part used in assembly
-        std::string part_color_;
-    }; // class OrderDuringAssembly
+    protected:
+        const unsigned int type_ = ariac_msgs::msg::Challenge::ROBOT_MALFUNCTION;
+        //! Duration of the challenge
+        double duration_;
+        //! List of robots to disable
+        std::vector<std::string> robots_to_disable_;
+        double start_time_;
+    };
 
     //==============================================================================
     /**
-     * @brief Class to represent the fields for an order announced after assembly
+     * @brief Derived class for the robot malfunction challenge.
      *
+     * This challenge is triggered at a specific simulation time.
      */
-    class OrderAfterAssembly : public Order
+    class RobotMalfunctionTemporal : public RobotMalfunction
     {
     public:
         /**
-         * @brief Construct a new OrderAfterAssembly object
+         * @brief Construct a new RobotMalfunctionTemporal object
          *
-         * @param _id Unique id of the order
-         * @param _type Type of the order
-         * @param _priority Priority of the order (true or false)
-         * @param _trial_time_limit Time limit for the trial
-         * @param _order_id Id of an order competitors submitted
+         * @param _duration Duration of the challenge
+         * @param _robots_to_disable  List of robots to disable
+         * @param _time Competition time at which the challenge is triggered
          */
-        OrderAfterAssembly(std::string _id,
-                           unsigned int _type,
-                           bool _priority,
-                           double _trial_time_limit,
-                           std::string _order_id) : Order(_id, _type, _priority, _trial_time_limit),
-                                                    order_id_(_order_id) {}
+        RobotMalfunctionTemporal(double _duration,
+                                 const std::vector<std::string> &_robots_to_disable,
+                                 double _time) : RobotMalfunction(_duration, _robots_to_disable),
+                                                 time_(_time) {}
+        double GetTime() const { return time_; }
 
     private:
-        //! Id of an order competitors submitted
+        //! Simulation time at which the challenge is triggered
+        double time_;
+    }; // class RobotMalfunctionTemporal
+
+    //==============================================================================
+    /**
+     * @brief Class to represent the fields for the robot malfunction challenge
+     *
+     * This challenge is triggered during part placement
+     */
+    class RobotMalfunctionOnPartPlacement : public RobotMalfunction
+    {
+    public:
+        /**
+         * @brief Construct a new RobotMalfunctionOnPartPlacement object
+         *
+         * @param _duration Duration of the blackout
+         * @param _robots_to_disable  List of robots to disable
+         * @param _part Part to trigger the challenge
+         * @param _agv AGV on which the part is placed
+         */
+
+        RobotMalfunctionOnPartPlacement(double _duration,
+                                        const std::vector<std::string> &_robots_to_disable,
+                                        std::shared_ptr<Part> _part,
+                                        unsigned int _agv) : RobotMalfunction(_duration, _robots_to_disable),
+                                                             part_(_part),
+                                                             agv_(_agv) {}
+
+        std::shared_ptr<Part> GetPart() const { return part_; }
+        unsigned int GetAgv() const { return agv_; }
+
+    private:
+        //! Part to trigger the challenge
+        std::shared_ptr<Part> part_;
+        //! AGV on which the part is placed
+        unsigned int agv_;
+    }; // class RobotMalfunctionOnPartPlacement
+
+    //==============================================================================
+    /**
+     * @brief Class to represent the fields for the sensor blackout challenge
+     *
+     * This challenge is triggered when an order is submitted
+     */
+    class RobotMalfunctionOnSubmission : public RobotMalfunction
+    {
+    public:
+        /**
+         * @brief Construct a new RobotMalfunctionOnSubmission object
+         *
+         * @param _duration Duration of the challenge
+         * @param _robots_to_disable  List of robots to disable
+         * @param _order_id ID of a submitted order
+         */
+
+        RobotMalfunctionOnSubmission(double _duration,
+                                     const std::vector<std::string> &_sensors_to_disable,
+                                     std::string _order_id) : RobotMalfunction(_duration, _sensors_to_disable),
+                                                              order_id_(_order_id) {}
+
+        std::string GetOrderId() const { return order_id_; }
+
+    private:
+        //! ID of a submitted order
         std::string order_id_;
-    }; // class OrderAfterAssembly
+    }; // class RobotMalfunctionOnSubmission
 
 } // namespace ariac_common
 

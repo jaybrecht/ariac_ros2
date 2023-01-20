@@ -37,8 +37,6 @@ namespace ariac_plugins
         /// Destructor
         virtual ~TaskManagerPlugin();
 
-        
-
         /**
          * @brief Publish the competition state
          *
@@ -154,56 +152,79 @@ namespace ariac_plugins
          * @return const ariac_msgs::msg::Order& ROS message
          */
         const ariac_msgs::msg::Order BuildOrderMsg(std::shared_ptr<ariac_common::Order> _order);
+        /**
+         * @brief Build ariac_common::SensorBlackoutChallenge from ROS message and store them in a list.
+         *
+         * @param _challenge  SensorBlackoutChallenge ROS message
+         */
+        void BuildSensorBlackoutChallenge(const ariac_msgs::msg::SensorBlackoutChallenge &_challenge);
+        /**
+         * @brief Build ariac_common::RobotMalfunctionChallenge from ROS message and store them in a list.
+         *
+         * @param _challenge  RobotMalfunctionChallenge ROS message
+         */
+        void BuildRobotMalfunctionChallenge(const ariac_msgs::msg::RobotMalfunctionChallenge &_challenge);
 
         /**
-         * @brief Build a KittinTask ROS message
+         * @brief Build a KittinTask ROS message from ariac_common::KittingTask
          *
          * @param _task Pointer to ariac_common::KittingTask
          */
         const ariac_msgs::msg::KittingTask BuildKittingTaskMsg(std::shared_ptr<ariac_common::KittingTask> _task);
+        /**
+         * @brief Build a AssemblyTask ROS message from ariac_common::AssemblyTask
+         *
+         * @param _task Pointer to ariac_common::AssemblyTask
+         */
         const ariac_msgs::msg::AssemblyTask BuildAssemblyTaskMsg(std::shared_ptr<ariac_common::AssemblyTask> _task);
+        /**
+         * @brief Build a CombinedTask ROS message from ariac_common::CombinedTask
+         *
+         * @param _task Pointer to ariac_common::CombinedTask
+         */
         const ariac_msgs::msg::CombinedTask BuildCombinedTaskMsg(std::shared_ptr<ariac_common::CombinedTask> _task);
-        // /**
-        //  * @brief Process sensor blackout challenges
-        //  *
-        //  */
-        // void ProcessSensorBlackoutChallenge();
-        // /**
-        //  * @brief Process robot breakdown challenges
-        //  *
-        //  */
-        // void ProcessRobotBreakdownChallenge();
         /**
          * @brief Manage orders to be announced
          *
          * @param _current_sim_time Current simulation time
          */
-        void ProcessOrdersToAnnounce(double _elapsed_time);
+        void ProcessOrdersToAnnounce();
+        /**
+         * @brief Process the challenges to be announced
+         *
+         * @param _elapsed_time Elapsed time since the start of the competition
+         */
+        void ProcessChallengesToAnnounce();
         /**
          * @brief Manage time-based orders to be submitted
          *
          * @param _current_sim_time Current simulation time
          */
-        void ProcessTemporalOrders(double _elapsed_time);
+        void ProcessTemporalOrders();
         /**
          * @brief Manage on part placement orders to be submitted
          *
          * @param _current_sim_time Current simulation time
          */
-        void ProcessOnPartPlacementOrders(double _elapsed_time);
+        void ProcessOnPartPlacementOrders();
         /**
          * @brief Manage on submission orders to be submitted
          *
          * @param _current_sim_time Current simulation time
          */
-        void ProcessOnSubmissionOrders(double _elapsed_time);
+        void ProcessOnSubmissionOrders();
 
+        void ProcessTemporalSensorBlackouts();
+
+        void UpdateSensorsHealth();
+        void ProcessInProgressSensorBlackouts();
         /**
          * @brief Callback function for the topic 'trial_config'
          *
          * @param _msg Shared pointer to the message
          */
-        void OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
+        void
+        OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
 
         /**
          * @brief Callback function for the topic '/ariac/agv1_tray_contents'
