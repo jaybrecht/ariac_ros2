@@ -24,8 +24,9 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
-mathjax_path = [
-    'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/startup.js']
+mathjax_path = 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+
+
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
