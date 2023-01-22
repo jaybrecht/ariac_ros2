@@ -203,7 +203,7 @@ void AGVTraySensorPluginPrivate::PerformQualityCheck(
 
   ariac_msgs::msg::Order req_order;
   for (const ariac_msgs::msg::Order order: orders_){
-    if (request->task_id == order.id){
+    if (request->order_id == order.id){
       response->valid_id = true;
       req_order = order;
       break;
@@ -233,7 +233,7 @@ void AGVTraySensorPluginPrivate::PerformQualityCheck(
   response->all_passed = true;
   // Check each quadrant with a part for issue
   for (ariac_msgs::msg::KittingPart part : req_order.kitting_task.parts) {    
-    ariac_msgs::msg::QualityIssue issue = CheckQuadrantQuality(request->task_id, part);
+    ariac_msgs::msg::QualityIssue issue = CheckQuadrantQuality(request->order_id, part);
 
     if (part.quadrant == ariac_msgs::msg::KittingPart::QUADRANT1)
       response->quadrant1 = issue;

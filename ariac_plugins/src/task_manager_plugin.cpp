@@ -18,6 +18,8 @@
 #include <gazebo/transport/Subscriber.hh>
 #include <gazebo/transport/Node.hh>
 #include <gazebo/sensors/LogicalCameraSensor.hh>
+#include <gazebo_ros/conversions/builtin_interfaces.hpp>
+#include <gazebo_ros/conversions/geometry_msgs.hpp>
 
 // Messages
 #include <ariac_plugins/task_manager_plugin.hpp>
@@ -36,7 +38,9 @@
 #include <ariac_msgs/msg/parts.hpp>
 #include <ariac_msgs/msg/robots.hpp>
 #include <ariac_msgs/msg/competition_state.hpp>
+#include <ariac_msgs/msg/quality_issue.hpp>
 #include <ariac_msgs/srv/submit_order.hpp>
+#include <ariac_msgs/srv/perform_quality_check.hpp>
 // ROS
 #include <rclcpp/rclcpp.hpp>
 #include <controller_manager_msgs/srv/switch_controller.hpp>
@@ -111,10 +115,6 @@ namespace ariac_plugins
         //============== SUBSCRIBERS =================
         /*!< Subscriber to topic: "trial_config"*/
         rclcpp::Subscription<ariac_msgs::msg::Trial>::SharedPtr trial_config_sub_;
-        // rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv1_tray_sub_;
-        // rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv2_tray_sub_;
-        // rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv3_tray_sub_;
-        // rclcpp::Subscription<ariac_msgs::msg::Parts>::SharedPtr agv4_tray_sub_;
 
         gazebo::transport::SubscriberPtr agv1_tray_sub_;
         gazebo::transport::SubscriberPtr agv2_tray_sub_;
@@ -131,10 +131,12 @@ namespace ariac_plugins
         rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr start_competition_srv_{nullptr};
         rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr end_competition_srv_{nullptr};
         rclcpp::Service<ariac_msgs::srv::SubmitOrder>::SharedPtr submit_order_srv_{nullptr};
+        rclcpp::Service<ariac_msgs::srv::PerformQualityCheck>::SharedPtr quality_check_service_;
         /*!< Client to start/stop robot controllers. */
         // rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr switch_controller_srv_client_;
         /*!< Client to stop the competition. */
         rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr end_competition_srv_client_;
+        
 
         //============== PUBLISHERS =================
 
@@ -177,31 +179,40 @@ namespace ariac_plugins
         /*!< List of sensor blackout challenges that are announced based on submission. */
         std::vector<std::shared_ptr<ariac_common::RobotMalfunctionOnSubmission>> on_submission_robot_malfunctions_;
 
-        /*!< List of parts on AGV1. */
-        std::vector<ariac_common::Part> agv1_tray_contents_;
-        /*!< List of parts on AGV2. */
-        std::vector<ariac_common::Part> agv2_tray_contents_;
-        /*!< List of parts on AGV3. */
-        std::vector<ariac_common::Part> agv3_tray_contents_;
-        /*!< List of parts on AGV4. */
-        std::vector<ariac_common::Part> agv4_tray_contents_;
         /*!< List of orders. that have already been submitted*/
         std::vector<std::string> submitted_orders_;
         /*!< List of orders. that have already been announced*/
         std::vector<std::string> announced_orders_;
         /*!< List of trial orders. */
         std::vector<std::string> trial_orders_;
-        /*!< Kit tray id for agv1. */
-        int agv1_kit_tray_id_;
+
+        std::map<int, ConstLogicalCameraImagePtr> agv_tray_images_;
 
         void AGV1TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
         void AGV2TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
         void AGV3TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
         void AGV4TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
 
-        // tray id + list of parts
-        void ParseTrayModels(unsigned int agv_number);
-        //  void ParseAssemblyModels();
+        // Kitting Methods
+        ariac_common::KittingShipment ParseAGVTraySensorImage(ConstLogicalCameraImagePtr &_msg);
+        ariac_msgs::msg::QualityIssue CheckQuadrantQuality(int quadrant,
+                                                           ariac_common::KittingTask task,
+                                                           ariac_common::KittingShipment shipment);
+
+        void PerformQualityCheck(ariac_msgs::srv::PerformQualityCheck::Request::SharedPtr request,
+                                 ariac_msgs::srv::PerformQualityCheck::Response::SharedPtr response);
+
+        std::map<std::string, int> part_types_ = {{"battery", ariac_msgs::msg::Part::BATTERY},
+                                                  {"pump", ariac_msgs::msg::Part::PUMP}, 
+                                                  {"sensor", ariac_msgs::msg::Part::SENSOR}, 
+                                                  {"regulator", ariac_msgs::msg::Part::REGULATOR}}; 
+
+        std::map<std::string, int> part_colors_ = {{"red",  ariac_msgs::msg::Part::RED}, 
+                                                   {"green", ariac_msgs::msg::Part::GREEN}, 
+                                                   {"blue", ariac_msgs::msg::Part::BLUE}, 
+                                                   {"orange", ariac_msgs::msg::Part::ORANGE}, 
+                                                   {"purple", ariac_msgs::msg::Part::PURPLE}};
+        
     };
     //==============================================================================
     TaskManagerPlugin::TaskManagerPlugin()
@@ -306,19 +317,22 @@ namespace ariac_plugins
 
     void TaskManagerPluginPrivate::AGV1TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
-        // RCLCPP_INFO_STREAM(ros_node_->get_logger(), _msg->);
+        agv_tray_images_.insert(std::make_pair(1, _msg));
     }
 
     void TaskManagerPluginPrivate::AGV2TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
+        agv_tray_images_.insert(std::make_pair(2, _msg));
     }
 
     void TaskManagerPluginPrivate::AGV3TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
+        agv_tray_images_.insert(std::make_pair(3, _msg));
     }
 
     void TaskManagerPluginPrivate::AGV4TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
+        agv_tray_images_.insert(std::make_pair(4, _msg));
     }
 
     // void TaskManagerPluginPrivate::Station1SensorCallback(ConstContactsPtr &_msg)
@@ -763,6 +777,12 @@ namespace ariac_plugins
                                                                                                                 this,
                                                                                                                 std::placeholders::_1,
                                                                                                                 std::placeholders::_2));
+
+            impl_->quality_check_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::PerformQualityCheck>("/ariac/perform_quality_check", 
+                                                                                                                   std::bind(&TaskManagerPluginPrivate::PerformQualityCheck, 
+                                                                                                                   this->impl_.get(),
+                                                                                                                   std::placeholders::_1, 
+                                                                                                                   std::placeholders::_2));
         }
 
         if ((current_sim_time - impl_->last_sim_time_).Double() >= 1.0)
@@ -806,67 +826,6 @@ namespace ariac_plugins
         }
 
         impl_->last_on_update_time_ = current_sim_time;
-    }
-
-    //==============================================================================
-    void TaskManagerPlugin::OnAGV1TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg)
-    {
-        std::lock_guard<std::mutex> scoped_lock(impl_->lock_);
-        if (_msg->parts.size() == 0)
-        {
-            impl_->agv1_tray_contents_.clear();
-            return;
-        }
-
-        for (auto &part : _msg->parts)
-        {
-            impl_->agv1_tray_contents_.emplace_back(ariac_common::Part(part.color, part.type));
-        }
-    }
-
-    //==============================================================================
-    void TaskManagerPlugin::OnAGV2TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg)
-    {
-        std::lock_guard<std::mutex> scoped_lock(impl_->lock_);
-        if (_msg->parts.size() == 0)
-        {
-            impl_->agv2_tray_contents_.clear();
-            return;
-        }
-        for (auto &part : _msg->parts)
-        {
-            impl_->agv2_tray_contents_.emplace_back(ariac_common::Part(part.color, part.type));
-        }
-    }
-
-    //==============================================================================
-    void TaskManagerPlugin::OnAGV3TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg)
-    {
-        std::lock_guard<std::mutex> scoped_lock(impl_->lock_);
-        if (_msg->parts.size() == 0)
-        {
-            impl_->agv3_tray_contents_.clear();
-            return;
-        }
-        for (auto &part : _msg->parts)
-        {
-            impl_->agv3_tray_contents_.emplace_back(ariac_common::Part(part.color, part.type));
-        }
-    }
-
-    //==============================================================================
-    void TaskManagerPlugin::OnAGV4TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg)
-    {
-        std::lock_guard<std::mutex> scoped_lock(impl_->lock_);
-        if (_msg->parts.size() == 0)
-        {
-            impl_->agv4_tray_contents_.clear();
-            return;
-        }
-        for (auto &part : _msg->parts)
-        {
-            impl_->agv4_tray_contents_.emplace_back(ariac_common::Part(part.color, part.type));
-        }
     }
 
     //==============================================================================
@@ -1321,6 +1280,158 @@ namespace ariac_plugins
         response->message = "Competition ended successfully!";
         return true;
     }
+
+    void TaskManagerPluginPrivate::PerformQualityCheck(
+        ariac_msgs::srv::PerformQualityCheck::Request::SharedPtr request,
+        ariac_msgs::srv::PerformQualityCheck::Response::SharedPtr response)
+    {
+        response->valid_id = false;
+        int idx;
+
+        // Check if order id matches any of the orders
+        for (int i = 0; i < all_orders_.size(); i++) {
+            if (request->order_id == all_orders_[i]->GetId()) {
+                // Check if that order is kitting
+                if (all_orders_[i]->GetType() == ariac_msgs::msg::Order::KITTING) {
+                    // Retrieve the kitting task
+                    idx = i;
+                    response->valid_id = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!response->valid_id)
+            return;
+
+        auto task = all_orders_[idx]->GetKittingTask();
+
+        // Instantiate a KittingShipment from the agv_tray_sensor data
+        auto shipment = ParseAGVTraySensorImage(agv_tray_images_[task->GetAgvNumber()]);
+
+        if (task->GetTrayId() != shipment.GetTrayId())
+            response->incorrect_tray = true;
+
+        // Fill a quality msg for the shipment given a task
+        response->quadrant1 = CheckQuadrantQuality(1, *task, shipment);
+        response->quadrant2 = CheckQuadrantQuality(2, *task, shipment);
+        response->quadrant3 = CheckQuadrantQuality(3, *task, shipment);
+        response->quadrant4 = CheckQuadrantQuality(4, *task, shipment);
+
+        // TODO: Check if the order has a faulty part challenge 
+
+            // See if the faulty part has already been checked
+    
+                // Modify the quality issue for the given quadrants and change the name of that part and set checked to true
+
+    }
+
+    ariac_common::KittingShipment TaskManagerPluginPrivate::ParseAGVTraySensorImage(ConstLogicalCameraImagePtr &_msg)
+    {
+        // Create a kitting shipment from data in the msg
+        KDL::Frame sensor_to_tray;
+        int kit_tray_id = -1;
+        geometry_msgs::msg::Pose kit_tray_pose;
+        std::vector<ariac_common::KitTrayPart> tray_parts;
+        
+        // Find Kit Tray
+        for (int i = 0; i < _msg->model_size(); i++) {
+            const auto & lc_model = _msg->model(i);
+
+            std::string model_name = lc_model.name();
+
+            // name of kit tray model is "kit_tray_XX_YY" where XX indicates 
+            // the marker_id for the tray
+            if (model_name.find("kit_tray") != std::string::npos){
+                std::string id_string = model_name.substr(9, 2);
+                kit_tray_id = std::stoi(id_string);
+                auto pose = gazebo_ros::Convert<geometry_msgs::msg::Pose>(gazebo::msgs::ConvertIgn(lc_model.pose()));
+
+                tf2::fromMsg(pose, sensor_to_tray);
+            }
+        }
+        
+        // If no kit tray is detected return an empty shipment
+        if (kit_tray_id == -1)
+            return ariac_common::KittingShipment(kit_tray_id, tray_parts);
+        
+        // Fill vector of KitTrayParts
+        for (int i = 0; i < _msg->model_size(); i++) {
+            const auto & lc_model = _msg->model(i);
+            std::string model_name = lc_model.name();
+
+            int part_type;
+            int part_color;
+
+            // Determine part type
+            for ( const auto &type : part_types_ ) {
+                if (model_name.find(type.first) != std::string::npos)
+                    part_type = type.second;
+
+                // Determine part color
+                for ( const auto &color : part_colors_ ) {
+                    if (model_name.find(color.first) != std::string::npos) {
+                        part_color = color.second;
+
+                        ariac_common::Part part(part_color, part_type);
+                        
+                        // Get pose on tray
+                        KDL::Frame sensor_to_part;
+                        tf2::fromMsg(gazebo_ros::Convert<geometry_msgs::msg::Pose>(
+                            gazebo::msgs::ConvertIgn(lc_model.pose())), sensor_to_part);
+
+                        KDL::Frame tray_to_part;
+                        tray_to_part = sensor_to_tray.Inverse() * sensor_to_part;
+
+                        geometry_msgs::msg::Pose pose_on_tray = tf2::toMsg(tray_to_part);
+
+                        // Create KitTrayPart 
+                        ariac_common::KitTrayPart tray_part(part, model_name, pose_on_tray);
+
+                        tray_parts.push_back(tray_part);
+                    }
+                }
+            } 
+        }
+
+        return ariac_common::KittingShipment(kit_tray_id, tray_parts); 
+    }
+
+    ariac_msgs::msg::QualityIssue TaskManagerPluginPrivate::CheckQuadrantQuality(int quadrant,
+                                                                                 ariac_common::KittingTask task,
+                                                                                 ariac_common::KittingShipment shipment)
+    {
+        ariac_msgs::msg::QualityIssue issue;
+
+        for (auto product: task.GetProducts()) {
+            if (product.GetQuadrant() == quadrant) {
+                bool part_in_quadrant;
+                for (auto tray_part: shipment.GetTrayParts()) {
+                    if (tray_part.GetQuadrant() == quadrant) {
+                        part_in_quadrant = true;
+
+                        issue.incorrect_part_type = !tray_part.isCorrectType(product.GetPart().GetType());
+                        issue.incorrect_part_color = !tray_part.isCorrectColor(product.GetPart().GetColor());
+                        issue.faulty_part = tray_part.isFaulty();
+                        issue.flipped_part = tray_part.isFlipped();
+
+                        if (issue.incorrect_part_type || issue.incorrect_part_color || issue.faulty_part || issue.flipped_part)
+                            issue.all_passed = false;
+                        else
+                            issue.all_passed = true;
+                    
+                         
+                    }
+                }
+
+                if (!part_in_quadrant)
+                    issue.incorrect_part_type = true;
+            }
+        }
+
+        return issue;
+    }
+
 
     // Register this plugin with the simulator
     GZ_REGISTER_WORLD_PLUGIN(TaskManagerPlugin)

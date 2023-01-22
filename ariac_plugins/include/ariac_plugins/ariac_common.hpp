@@ -13,6 +13,10 @@
 #include <gazebo/gazebo.hh>
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Vector3.hh>
+// KDL and TF2
+#include <tf2_kdl/tf2_kdl.h>
+#include <tf2/convert.h>
+#include <kdl/frames.hpp>
 // Messages
 #include <ariac_msgs/msg/order.hpp>
 #include <ariac_msgs/msg/condition.hpp>
@@ -986,14 +990,43 @@ namespace ariac_common
                     std::string _model_name,
                     geometry_msgs::msg::Pose _pose_on_tray) : part_(_part),
                                                               model_name_(_model_name),
-                                                              pose_on_tray_(_pose_on_tray) {}
+                                                              pose_on_tray_(_pose_on_tray) 
+        {
+            // Determine which quadrant based on pose
+            double x = pose_on_tray_.position.x;
+            double y = pose_on_tray_.position.y;
+            if (x < 0.0 && y >= 0.0) 
+                quadrant_ = 1;
+            else if (x >= 0.0 && y >= 0.0) 
+                quadrant_ = 2;
+            else if (x < 0.0 && y < 0.0) 
+                quadrant_ = 3;
+            else if (x >= 0.0 && y < 0.0) 
+                quadrant_ = 4;
+        }
   
         unsigned int GetQuadrant() const { return quadrant_; }
         Part GetPart() const { return part_; }
         std::string GetModelName() const { return model_name_; }
 
-        bool IsFaulty() {return model_name_.find("faulty") != std::string::npos;}
-        bool IsFlipped() {return false;}
+        bool isCorrectType(unsigned int type) {return type == part_.GetType();}
+        bool isCorrectColor(unsigned int color) {return color == part_.GetColor();}
+        bool isFaulty() {return model_name_.find("faulty") != std::string::npos;}
+        bool isFlipped() {
+            KDL::Frame part_on_tray;
+            tf2::fromMsg(pose_on_tray_, part_on_tray);
+            KDL::Vector part_z = part_on_tray * KDL::Vector(0, 0, 1);
+
+            // Calculate the angle between the two vectors
+            double angle = KDL::acos(KDL::dot(KDL::Vector(0, 0, 1), part_z)/(part_z.Norm()));
+
+            // Return that the part is flipped if angle is greater than ~10deg
+            if (angle > -0.2 && angle < 0.2){
+                return false;
+            } else {
+                return true;
+            }
+        }
 
     private:
         unsigned int quadrant_;
