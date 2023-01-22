@@ -88,12 +88,12 @@ It can happen that both robots malfunction at the same time. In this case, compe
 
 The robot malfunction challenge is specified in the trial configuration file using the following fields:
 
-  * `duration`: The duration of the robot malfunction in seconds.
-  * `robots_to_disable`: A list of robots that malfunction. It can be either `floor_robot` or `ceiling_robot` or both.
-  * Conditions that can trigger the robot malfunction:
-    * `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
-    * `time_condition`: The challenge starts after a specific time.
-    * `submission_condition`: The challenge starts when a specific order is submitted.
+* `duration`: The duration of the robot malfunction in seconds.
+* `robots_to_disable`: A list of robots that malfunction. It can be either `floor_robot` or `ceiling_robot` or both.
+* Conditions that can trigger the robot malfunction:
+  * `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
+  * `time_condition`: The challenge starts after a specific time.
+  * `submission_condition`: The challenge starts when a specific order is submitted.
 
 Robot malfunctions can occur multiple times in the same trial. The example below shows a robot malfunction challenge occurring four times.
 
@@ -121,37 +121,30 @@ challenges:
         agv: 4
 ```
 
-
-
-
 ## Sensor Blackout
 
 The sensor blackout challenge simulates a sensor blackout. The sensor can black out in some conditions (time, part placement, or submission) during the trial. When a sensor blacks out, it stops publishing data. The sensor will remain in the same state until the sensor blackout is resolved (after a duration). To specify how long a sensor blacks out, a time duration  is specified in the trial configuration file. Sensor blackouts can occur on any sensor type and multiple times during the same challenge. 
 
 The goal of this challenge is to test the ability of the competitors' control system to use the other sensors or use a stored world model to continue the tasks that were being performed before the blackout.
 
-### Example
+### Sensor Blackout Example
 
 The sensor blackout challenge is specified in the trial configuration file using the following fields:
 
-- `duration`: The duration of the sensor blackout in seconds.
-- `sensors_to_disable`: A list of sensor types that are disabled:
-    - `break_beam`
-    - `proximity`
-    - `laser_profiler`
-    - `lidar`
-    - `camera`
-    - `logical_camera`
-
-- Conditions that can trigger the sensor blackout:
-  - `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
-  - `time_condition`: The challenge starts after a specific time.
-  - `submission_condition`: The challenge starts when a specific order is submitted.
-
+* `duration`: The duration of the sensor blackout in seconds.
+* `sensors_to_disable`: A list of sensor types that are disabled:
+  * 'break_beam'
+  * 'proximity'
+  * 'laser_profiler'
+  * 'lidar'
+  * 'camera'
+  * 'logical_camera'
+* Conditions that can trigger the sensor blackout:
+  * `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
+  * `time_condition`: The challenge starts after a specific time.
+  * `submission_condition`: The challenge starts when a specific order is submitted.
 
 The sensor blackout challenge can occur multiple times in the same trial. The example below shows the challenge occurring twice in the same trial.
-
-
 
 ```yaml
 challenges:
@@ -166,16 +159,15 @@ challenges:
         order_id: 'MMB30H57'
 ```
 
+## High-priority Orders
 
-## High Priority Orders
+The high-priority orders challenge simulates an order that must be completed before a low-priority order. The high-priority order must be completed and  submitted before the low-priority order.
 
-The high priority orders challenge simulates a high priority order that must be completed before a low priority order. The high priority order must be completed and  submitted before the low priority order.
+The goal of this challenge is to test the ability of the competitors' control system to prioritize  high-priority orders over low-priority orders. This may require switching from kitting to assembly or vice versa. This may also require switching from one kitting task to another kitting task or switching from one assembly task to another assembly task.
 
-The goal of this challenge is to test the ability of the competitors' control system to prioritize the high priority order over the low priority order. This may require switching from kitting to assembly or vice versa. This may also require switching from one kitting task to another kitting task or switching from one assembly task to another assembly task.
+### High-priority Orders Example
 
-### Example
-
-To specify a high priority order, the `priority` field is set to `true` in the order configuration file. The example below shows a high priority order with the order ID `MMB30H57` and a low priority order with the order ID `MMB30H58`.
+To specify a high-priority order, the `priority` field is set to `true` in the order configuration file. The example below shows a high priority order with the order ID `MMB30H57` and a low priority order with the order ID `MMB30H58`.
 
 ```yaml
 orders:
@@ -206,14 +198,14 @@ orders:
           color: 'orange'
           quadrant: 4
 ```
+
 ## Insufficient Parts
 
 The insufficient parts challenge simulates a situation where the competitors' control system does not have enough parts to complete an order. This challenge is set up by not providing enough parts in the workcell. The competitors' control system must be able to detect that it does not have enough parts to complete the order and submit incomplete orders.
 
-### Example
+### Insufficient Parts Example
 
 There is no specific field in the trial configuration file to specify this challenge. The example below shows a trial configuration file where the competitors' control system does not have enough parts to complete the order with the order ID `MMB30H58`: `bin1` has only two `battery` parts of color `blue` but  order `MMB30H58` requires 4.
-
 
 ```yaml
 parts: 
@@ -258,34 +250,32 @@ orders:
 
 The human operator challenge consists of a simulated human operator navigating the workcell. The simulated human operator will have one of the three following behaviors in a
 given trial and the selected behavior will stay the same during the trial.
-- Indifferent: The human operator follows a scripted path, regardless of the location of the robots in the environment.
-- Antagonistic: During an arbitrary period of time, the human operator purposefully moves towards the ceiling robot to interfere with the robot’s current task.
-- Helpful: The human operator will stop moving once the ceiling robot is at a certain distance away from him.
 
-The goal of this challenge is to test the ability of the competitors' control system to avoid collisions with the human operator. The pose of the human operator is published to a Topic and this information can also be retrieved from the `/tf` Topic. 
+* **Indifferent**: The human operator follows a scripted path, regardless of the location of the robots in the environment.
+* **Antagonistic**: During an arbitrary period of time, the human operator purposefully moves towards the ceiling robot to interfere with the robot’s current task.
+* **Helpful**: The human operator will stop moving once the ceiling robot is at a certain distance away from him.
 
-### Example
+The goal of this challenge is to test the ability of the competitors' control system to avoid collisions with the human operator. The pose of the human operator is published to a Topic and this information can also be retrieved from the `/tf` Topic.
+
+### Human Operator Example
 
 The human operator challenge is specified in the trial configuration file using the following fields:
 
-- `behavior`: The behavior of the human operator:
-    - `'indifferent'`
-    - `'antagonistic'`
-    - `'helpful'`
-- Conditions that can trigger the human operator behavior:
-  - `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
-  - `time_condition`: The challenge starts after a specific time.
-  - `submission_condition`: The challenge starts when a specific order is submitted.
+* `behavior`: The behavior of the human operator:
+  * `'indifferent'`
+  * `'antagonistic'`
+  * `'helpful'`
+* Conditions that can trigger the human operator behavior:
+  * `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
+  * `time_condition`: The challenge starts after a specific time.
+  * `submission_condition`: The challenge starts when a specific order is submitted.
 
   Below is an example of the human operator challenge with the behavior set to `'antagonistic'` and the challenge starting when the order with the order ID `MMB30H57` is submitted.
 
 ```yaml
-
 challenges:
   - human_operator:
       behavior: 'antagonistic'
       submission_condition:
         order_id: 'MMB30H57'
 ```
-
-
