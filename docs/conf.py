@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
@@ -23,6 +24,7 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
+mathjax_path = ['https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
