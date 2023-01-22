@@ -10,7 +10,7 @@ There are three major components of the Trial Score in ARIAC 2023.
 Cost Factor
 -----------
 
-The Cost Factor :math:`CF` compares the cost of the sensors chosen by the team to the average of all sensor configurations across all teams.
+The Cost Factor ``CF`` compares the cost of the sensors chosen by the team to the average of all sensor configurations across all teams.
 
   * ``TC`` is the total cost of the sensors in the team's configuration.
   * ``TC_{avg}`` is the average sensor cost across all teams.
