@@ -4,31 +4,24 @@ There are eight possible agility challenges in ARIAC 2023. A description of each
 <!-- The number of times a challenge can occur is specified in the trial configuration file. The `Human Operator` challenge can only occur once in a trial. The `Human Operator` challenge is triggered when the `Human Operator` field in the trial configuration file is set to `true`. -->
 
 *Note*: A trial may have only some challenges, may not have any challenge at all, or may have all the challenges.
+
 ## Faulty Parts
 
-
-Faulty parts are parts that are not in good condition. They are not suitable for use in the competition. If an order is submitted with faulty parts, these parts are not considered for scorring. Faulty parts are identified by quality control sensors, which are attached to AGVs.
-
-Parts that are faulty can only be found in bins. They cannot be found on AGVs or on the conveyor belt.
-
-To set parts faulty, the `faulty` field in the trial configuration file must provide a list of slots where faulty parts can be found.
+Faulty parts are parts that are not in good condition. They are not suitable for use in the competition. If an order is submitted with faulty parts, these parts are not considered for scoring. Faulty parts are identified by quality control sensors, which are attached to AGVs.
 
 ### Example
 
-The example below describes `bin6` with two faulty blue batteries. The faulty parts are located in slots 3 and 7.
+Parts are set to faulty through the `faulty_part` challenge in the trial configuration file. Only the first parts placed in a tray are faulty. In the example below, the first parts placed in quadrants 1 and 2 in the tray required by order `MMB30H56` are always faulty. If these parts are removed and replaced with new parts, the new parts are not faulty.
 
 ```yaml
-bin6:
-    - type: 'battery'
-      color: 'blue'
-      slots: [1, 3, 5, 7]
-      rotation: 'pi/3'
-      flipped: false
-      faulty: [3, 7]
+challenges:
+  - faulty_part:
+    order_id: 'MMB30H56'
+    quadrant1: true
+    quadrant2: true
 ```
 
 ## Flipped Parts
-
 
 The environment can be started with parts that are flipped. Flipped parts are parts that are upside down. When a part is spawned as flipped, competitors will need to flip those parts again so they end up with the correct orientation. If an order is submitted with flipped parts, these parts are not considered for scorring. Flipped parts are identified by quality control sensors, which are attached to AGVs.
 
@@ -40,27 +33,27 @@ The example below describes all purple regulators as flipped in `bin3`.
 
 ```yaml
 bin3:
-    - type: 'regulator'
-      color: 'purple'
-      slots: [2, 3]
-      rotation: 'pi/6'
-      flipped: true
+  - type: 'regulator'
+    color: 'purple'
+    slots: [2, 3]
+    rotation: 'pi/6'
+    flipped: true
 ```
 
 The example below describes all orange batteries as flipped on the conveyor belt.
 
 ```yaml
 conveyor_belt: 
-    active: true
-    spawn_rate: 3.0 
-    order: 'sequential' 
-    parts_to_spawn:
-      - type: 'battery'
-        color: 'orange'
-        number: 5
-        offset: 0.5 # between -1 and 1
-        flipped: true
-        rotation: 'pi/6'
+  active: true
+  spawn_rate: 3.0 
+  order: 'sequential' 
+  parts_to_spawn:
+    - type: 'battery'
+      color: 'orange'
+      number: 5
+      offset: 0.5 # between -1 and 1
+      flipped: true
+      rotation: 'pi/6'
 ```
 
 ## Faulty Gripper
@@ -76,12 +69,13 @@ The example below describes a faulty gripper occuring 5 seconds after the ceilin
 ```yaml
 challenges:
   - dropped_part:
-      robot: 'ceiling_robot'
-      type: 'pump'
-      color: 'red'
-      drop_after: 1
-      delay: 5
+    robot: 'ceiling_robot'
+    type: 'pump'
+    color: 'red'
+    drop_after: 1
+    delay: 5
 ```
+
 ## Robot Malfunction
 
 The robot malfunction challenge simulates a robot malfunction. The robot can malfunction in some conditions (time, part placement, or submission) during the trial. The robot can malfunction even if it is not moving. When a robot malfunctions, it stops moving and cannot be controlled by the competitors' control system. The robot will remain in the same position until the malfunction is resolved. To specify how long a robot malfunctions, a time duration of the malfunction is specified in the trial configuration file.
@@ -102,7 +96,6 @@ The robot malfunction challenge is specified in the trial configuration file usi
     - `submission_condition`: The challenge starts when a specific order is submitted.
 
 Robot malfunctions can occur multiple times in the same trial. The example below shows a robot malfunction challenge occurring four times.
-
 
 
 ```yaml
