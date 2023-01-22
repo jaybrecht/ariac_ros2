@@ -16,13 +16,13 @@ part locations, orders, and challenges.
 
 ## Part
 
-Parts are used during pick-and-place operations. There are four available parts (battery, pump, regulator, and sensor) and each part 
-can be one of five possible colors (red, green, blue, orange, and purple).
+Parts are used during pick-and-place operations. There are four available parts (battery, pump, regulator, and sensor) and each part can be one of five possible colors (red, green, blue, orange, and purple).
 
 At the start of the environment, parts can be located in 3 different locations:
-- Bins
-- AGVs
-- Conveyor belt
+
+* Bins.
+* AGVs.
+* Conveyor belt.
 
 ## Order
 
