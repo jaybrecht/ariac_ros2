@@ -29,8 +29,7 @@ pygments_style = 'sphinx'
 
 # -- Options for HTML output
 
-# html_theme = 'sphinx_rtd_theme'
-html_theme = 'nature'
+html_theme = 'sphinx_rtd_theme'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
