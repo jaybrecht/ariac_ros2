@@ -26,19 +26,18 @@ At the start of the environment, parts can be located in 3 different locations:
 
 ## Order
 
-An order consists of one of the following tasks:
-- [Kitting Task](#kitting-task)
-- [Assembly Task](#assembly-task)
-- [Combined Task](#combined-task)
+An order is an intruction containing information on a task ([kitting task](#kitting-task), [assembly task](#assembly-task), or [combined task](#combined-task)). Each task consists of at least one part of a specific color and type. 
 
 ## Kitting Task
 
-Kitting is the process which groups separate but related parts (parts in ARIAC) as 
-one unit. For a kitting task, competitors are expected to: 
+Kitting is the process which groups separate but related [parts](#part) as one unit. For a kitting task, competitors are expected to: 
 
-1. Place a kit tray onto one of the four AGVs
-2. Place parts onto that kit tray
-3. Direct the AGV to the desired destination.
+1. Place a kit tray onto one of the four AGVs.
+2. Place parts onto that kit tray in a specific quadrant.
+3. Direct the AGV to the warehouse.
+4. Evaluate the submitted kit for scoring.
+
+
 
 ## Assembly Task
 
