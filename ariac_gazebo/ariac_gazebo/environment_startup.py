@@ -34,6 +34,9 @@ from ariac_msgs.msg import (
     Condition,
     ConveyorParts,
     ConveyorBeltState,
+    DroppedPartChallenge,
+    FaultyPartChallenge,
+    HumanChallenge,
     KittingPart,
     KittingTask,
     OrderCondition,
@@ -214,6 +217,34 @@ class EnvironmentStartup(Node):
             return None
 
 
+    def convert_behavior_to_int(self, behavior):
+        """Converts a behavior to an integer.
+        - antagonistic: HumanChallenge.ANTAGONISTIC
+        - indifferent: HumanChallenge.INDIFFERENT
+        - helpful: HumanChallenge.HELPFUL
+
+        Args:
+            behavior (str): The behavior of the human in string format.
+
+        Returns:
+            int: The behavior of a human in integer format.
+        """
+        options = {
+            'antagonistic': HumanChallenge.ANTAGONISTIC,
+            'indifferent': HumanChallenge.INDIFFERENT,
+            'helpful': HumanChallenge.HELPFUL
+        }
+
+        found_behavior = options.get(behavior)
+
+        if found_behavior in [HumanChallenge.ANTAGONISTIC, HumanChallenge.INDIFFERENT, HumanChallenge.HELPFUL]:
+            return found_behavior
+        else:
+            self.get_logger().fatal(
+                f"Behavior '{behavior}' is not correct. Check spelling.")
+            return None
+        
+        
     def convert_part_type_to_int(self, part_type):
         """Converts a part type to an integer.
         - battery: Part.BATTERY
@@ -396,7 +427,7 @@ class EnvironmentStartup(Node):
             msg.robots_to_disable.ceiling_robot = True
 
         if challenge_dict.get('part_place_condition'):
-            msg.condition.type = self.convert_condition_to_int("part_place_condition")
+            msg.condition.type = Condition.PART_PLACE
             msg.condition.part_place_condition.part.type = self.convert_part_type_to_int(
                 challenge_dict['part_place_condition']['type'])
             msg.condition.part_place_condition.part.color = self.convert_part_color_to_int(
@@ -410,10 +441,10 @@ class EnvironmentStartup(Node):
                     msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
                         challenge_dict['part_place_condition']['as'])
         elif challenge_dict.get('time_condition'):
-            msg.condition.type = self.convert_condition_to_int("time_condition")
+            msg.condition.type = Condition.TIME
             msg.condition.time_condition.seconds = float(challenge_dict['time_condition'])
         elif challenge_dict.get('submission_condition'):
-            msg.condition.type = self.convert_condition_to_int("submission_condition")
+            msg.condition.type = Condition.SUBMISSION
             msg.condition.submission_condition.order_id = challenge_dict[
                 'submission_condition']['order_id']
 
@@ -421,14 +452,112 @@ class EnvironmentStartup(Node):
         challenge_msg.type = Challenge.ROBOT_MALFUNCTION
         challenge_msg.robot_malfunction_challenge = msg
         return challenge_msg
+    
+    def create_human_challenge(self, challenge_dict):
+        """Method to build and return a HumanChallenge object from a dictionary
+        
+        Args:
+            challenge_dict (dict): human dictionary from config file
 
+        Returns:
+            HumanChallenge: Object containing human challenge information
+        
+        """
+        msg = HumanChallenge()
+        
+        # Set the behavior
+        msg.behavior = self.convert_behavior_to_int(challenge_dict['behavior'])
+
+        # Set the condition
+        if challenge_dict.get('part_place_condition'):
+            msg.condition.type = Condition.PART_PLACE
+            msg.condition.part_place_condition.part.type = self.convert_part_type_to_int(
+                challenge_dict['part_place_condition']['type'])
+            msg.condition.part_place_condition.part.color = self.convert_part_color_to_int(
+                challenge_dict['part_place_condition']['color'])
+
+            for key in challenge_dict['part_place_condition'].keys():
+                if key == 'agv':
+                    msg.condition.part_place_condition.agv = challenge_dict[
+                        'part_place_condition']['agv']
+                # elif key == 'as':
+                #     msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
+                #         challenge_dict['part_place_condition']['as'])
+        elif challenge_dict.get('time_condition'):
+            msg.condition.type = Condition.TIME
+            msg.condition.time_condition.seconds = float(
+                challenge_dict['time_condition'])
+        elif challenge_dict.get('submission_condition'):
+            msg.condition.type = Condition.SUBMISSION
+            msg.condition.submission_condition.order_id = challenge_dict[
+                'submission_condition']['order_id']
+
+        challenge_msg = Challenge()
+        challenge_msg.type = Challenge.HUMAN
+        challenge_msg.human_challenge = msg
+        return challenge_msg
+    
+    def create_dropped_part(self, challenge_dict):
+        """Method to build and return a DroppedPartChallenge object from a dictionary
+        
+        Args:
+            challenge_dict (dict): dropped_part dictionary from config file
+
+        Returns:
+            DroppedPartChallenge: Object containing dropped part information
+        
+        """
+        msg = DroppedPartChallenge()
+        msg.robot = challenge_dict['robot']
+        # print("ROBOT", challenge_dict['robot'])
+        
+        part_msg = Part()
+        part_msg.type = self.convert_part_type_to_int(challenge_dict['type'])
+        part_msg.color = self.convert_part_color_to_int(challenge_dict['color'])
+        msg.part_to_drop = part_msg
+        msg.drop_after_num = int(challenge_dict['drop_after'])
+        msg.drop_after_time = float(challenge_dict['delay'])
+
+        challenge_msg = Challenge()
+        challenge_msg.type = Challenge.DROPPED_PART
+        challenge_msg.dropped_part_challenge = msg
+        return challenge_msg
+        
+
+    def create_faulty_part(self, challenge_dict):
+        """Method to build and return a FaultyPartChallenge object from a dictionary
+
+        Args:
+            challenge_dict (dict): faulty_part dictionary from config file
+
+        Returns:
+            FaultyPartChallenge: Object containing faulty part information
+        """
+        msg = FaultyPartChallenge()
+        msg.order_id = challenge_dict['order_id']
+        msg.quadrant1 = False
+        msg.quadrant2 = False
+        msg.quadrant3 = False
+        msg.quadrant4 = False
+
+        if challenge_dict.get('quadrant1'):
+            msg.quadrant1 = challenge_dict['quadrant1']
+        if challenge_dict.get('quadrant2'):
+            msg.quadrant2 = challenge_dict['quadrant2']
+        if challenge_dict.get('quadrant3'):
+            msg.quadrant3 = challenge_dict['quadrant3']
+        if challenge_dict.get('quadrant4'):
+            msg.quadrant4 = challenge_dict['quadrant4']
+
+        challenge_msg = Challenge()
+        challenge_msg.type = Challenge.FAULTY_PART
+        challenge_msg.faulty_part_challenge = msg
+        return challenge_msg
 
     def create_sensor_blackout(self, challenge_dict):
         """Method to build and return a SensorBlackoutChallenge object from a dictionary
-
         Args:
             challenge_dict (dict): sensor_blackout dictionary from config file
-
         Returns:
             SensorBlackoutChallenge: Object containing sensor blackout information
         """
@@ -449,7 +578,7 @@ class EnvironmentStartup(Node):
             msg.sensors_to_disable.logical_camera = True
 
         if challenge_dict.get('part_place_condition'):
-            msg.condition.type = self.convert_condition_to_int("part_place_condition")
+            msg.condition.type = Condition.PART_PLACE
             msg.condition.part_place_condition.part.type = self.convert_part_type_to_int(
                 challenge_dict['part_place_condition']['type'])
             msg.condition.part_place_condition.part.color = self.convert_part_color_to_int(
@@ -459,16 +588,17 @@ class EnvironmentStartup(Node):
                 if key == 'agv':
                     agv = challenge_dict['part_place_condition']['agv']
                     msg.condition.part_place_condition.agv = agv
-                elif key == 'as':
-                    station = challenge_dict['part_place_condition']['as']
-                    msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
-                        station)
+                # elif key == 'as':
+                #     station = challenge_dict['part_place_condition']['as']
+                #     msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
+                #         station)
 
         elif challenge_dict.get('time_condition'):
-            msg.condition.type = self.convert_condition_to_int("time_condition")
-            msg.condition.time_condition.seconds = float(challenge_dict['time_condition'])
+            msg.condition.type = Condition.TIME
+            msg.condition.time_condition.seconds = float(
+                challenge_dict['time_condition'])
         elif challenge_dict.get('submission_condition'):
-            msg.condition.type = self.convert_condition_to_int("submission_condition")
+            msg.condition.type = Condition.SUBMISSION
             msg.condition.submission_condition.order_id = challenge_dict[
                 'submission_condition']['order_id']
 
@@ -495,8 +625,14 @@ class EnvironmentStartup(Node):
                 # self.get_logger().fatal(f"KEY: {key}")
                 if key == 'robot_malfunction':
                     challenge_list.append(self.create_robot_malfunction(value))
-                if key == 'sensor_blackout':
+                elif key == 'sensor_blackout':
                     challenge_list.append(self.create_sensor_blackout(value))
+                elif key == 'faulty_part':
+                    challenge_list.append(self.create_faulty_part(value))
+                elif key == 'dropped_part':
+                    challenge_list.append(self.create_dropped_part(value))
+                elif key == 'human':
+                    challenge_list.append(self.create_human_challenge(value))
 
         return challenge_list
 
@@ -635,14 +771,11 @@ class EnvironmentStartup(Node):
             condition = Condition()
             for announcement_key, announcement_value in announcement.items():
                 if announcement_key == 'time_condition':
-                    condition.type = self.convert_condition_to_int('time_condition')
-                    # print("Condition type", condition.type)
-                    
+                    condition.type = Condition.TIME
                     condition.time_condition.seconds = float(
                         announcement_value)
                 elif announcement_key == 'part_place_condition':
-                    condition.type = self.convert_condition_to_int('part_place_condition')
-                    # print("Condition type", condition.type)
+                    condition.type = Condition.PART_PLACE
                     color = order['announcement']['part_place_condition']['color']
                     condition.part_place_condition.part.color = self.convert_part_color_to_int(
                         color)
@@ -660,7 +793,7 @@ class EnvironmentStartup(Node):
                                 station)
 
                 elif announcement_key == 'submission_condition':
-                    condition.type = self.convert_condition_to_int('submission_condition')
+                    condition.type = Condition.SUBMISSION
                     # print("Condition type", condition.type)
                     order_id = order['announcement']['submission_condition']['order_id']
                     condition.submission_condition.order_id = order_id

@@ -17,6 +17,9 @@
 #include <ariac_msgs/msg/kitting_task.hpp>
 #include <ariac_msgs/msg/competition_state.hpp>
 #include <ariac_msgs/srv/submit_order.hpp>
+#include <ariac_msgs/msg/faulty_part_challenge.hpp>
+#include <ariac_msgs/msg/dropped_part_challenge.hpp>
+#include <ariac_msgs/msg/human_challenge.hpp>
 // ARIAC
 #include <ariac_plugins/ariac_common.hpp>
 
@@ -121,12 +124,18 @@ namespace ariac_plugins
          * @param _challenge  SensorBlackoutChallenge ROS message
          */
         void StoreSensorBlackoutChallenges(const ariac_msgs::msg::SensorBlackoutChallenge &_challenge);
+
+        void StoreFaultyPartChallenges(const ariac_msgs::msg::FaultyPartChallenge &_challenge);
+        void StoreDroppedPartChallenges(const ariac_msgs::msg::DroppedPartChallenge &_challenge);
+        void StoreHumanChallenges(const ariac_msgs::msg::HumanChallenge &_challenge);
+
         /**
          * @brief Build ariac_common::RobotMalfunctionChallenge from ROS message and store them in a list.
          *
          * @param _challenge  RobotMalfunctionChallenge ROS message
          */
-        void StoreRobotMalfunctionChallenges(const ariac_msgs::msg::RobotMalfunctionChallenge &_challenge);
+        void
+        StoreRobotMalfunctionChallenges(const ariac_msgs::msg::RobotMalfunctionChallenge &_challenge);
 
         /**
          * @brief Build a KittinTask ROS message from ariac_common::KittingTask
@@ -178,19 +187,25 @@ namespace ariac_plugins
         void ProcessOnSubmissionOrders();
 
         void ProcessTemporalSensorBlackouts();
+        void ProcessOnSubmissionSensorBlackouts();
+        void ProcessOnSubmissionRobotMalfunctions();
 
         void UpdateSensorsHealth();
         void UpdateRobotsHealth();
         void ProcessInProgressSensorBlackouts();
         void ProcessInProgressRobotMalfunctions();
         void ProcessTemporalRobotMalfunctions();
-        /**
-         * @brief Callback function for the topic 'trial_config'
-         *
-         * @param _msg Shared pointer to the message
-         */
-        void
-        OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
+
+
+        void SetSensorsHealth(const std::vector<std::string> &_sensors_to_disable);
+        void SetRobotsHealth(const std::vector<std::string> &_robots_to_disable);
+            /**
+             * @brief Callback function for the topic 'trial_config'
+             *
+             * @param _msg Shared pointer to the message
+             */
+            void
+            OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
 
         /**
          * @brief Callback function for the topic '/ariac/agv1_tray_contents'

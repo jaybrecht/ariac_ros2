@@ -17,6 +17,12 @@
 #include <ariac_msgs/msg/order.hpp>
 #include <ariac_msgs/msg/condition.hpp>
 #include <ariac_msgs/msg/challenge.hpp>
+#include <ariac_msgs/msg/part.hpp>
+#include <ariac_msgs/msg/assembly_task.hpp>
+#include <ariac_msgs/msg/kitting_task.hpp>
+#include <ariac_msgs/msg/combined_task.hpp>
+#include <ariac_msgs/msg/kitting_part.hpp>
+#include <ariac_msgs/msg/assembly_part.hpp>
 
 namespace ariac_common
 {
@@ -27,110 +33,75 @@ namespace ariac_common
     class Part;
 
     //==============================================================================
-    std::string static ConvertPartTypeToString(unsigned int part_type)
+    std::string static ConvertPartTypeToString(unsigned int _part_type)
     {
-        switch (part_type)
-        {
-        case 10:
+        if (_part_type == ariac_msgs::msg::Part::BATTERY)
             return "battery";
-            break;
-        case 11:
+        else if (_part_type == ariac_msgs::msg::Part::PUMP)
             return "pump";
-            break;
-        case 12:
-            return "sensor";
-            break;
-        case 13:
+        else if (_part_type == ariac_msgs::msg::Part::REGULATOR)
             return "regulator";
-            break;
-        default:
+        else if (_part_type == ariac_msgs::msg::Part::SENSOR)
+            return "sensor";
+        else
             return "unknown";
-            break;
-        }
     }
 
     //==============================================================================
-    std::string static ConvertAssemblyStationToString(unsigned int station_id)
+    std::string static ConvertAssemblyStationToString(unsigned int _station_id)
     {
-        switch (station_id)
-        {
-        case 1:
+        if (_station_id == ariac_msgs::msg::AssemblyTask::AS1)
             return "as1";
-            break;
-        case 2:
+        else if (_station_id == ariac_msgs::msg::AssemblyTask::AS2)
             return "as2";
-            break;
-        case 3:
+        else if (_station_id == ariac_msgs::msg::AssemblyTask::AS3)
             return "as3";
-            break;
-        case 4:
+        else if (_station_id == ariac_msgs::msg::AssemblyTask::AS4)
             return "as4";
-            break;
-        default:
+        else
             return "unknown";
-            break;
-        }
     }
 
     //==============================================================================
-    std::string static ConvertDestinationToString(unsigned int destination, unsigned int agv_id)
+    std::string static ConvertDestinationToString(unsigned int _destination, unsigned int _agv_id)
     {
-        switch (destination)
+        if (_agv_id == 1 || _agv_id == 2)
         {
-        case 0:
-            return "kitting";
-            break;
-        case 1:
-            if (agv_id == 1 || agv_id == 2)
+            if (_destination == ariac_msgs::msg::KittingTask::ASSEMBLY_FRONT)
                 return "as1";
-            else if (agv_id == 3 || agv_id == 4)
-                return "as3";
-
-            else
-                return "unknown";
-
-            break;
-        case 2:
-            if (agv_id == 1 || agv_id == 2)
+            else if (_destination == ariac_msgs::msg::KittingTask::ASSEMBLY_BACK)
                 return "as2";
-            else if (agv_id == 3 || agv_id == 4)
-                return "as4";
-            else
-                return "unknown";
-            break;
-        case 3:
-            return "warehouse";
-            break;
-        default:
-            return "unknown";
-            break;
         }
+        else if (_agv_id == 3 || _agv_id == 4)
+        {
+            if (_destination == ariac_msgs::msg::KittingTask::ASSEMBLY_FRONT)
+                return "as3";
+            else if (_destination == ariac_msgs::msg::KittingTask::ASSEMBLY_BACK)
+                return "as4";
+        }
+        if (_destination == ariac_msgs::msg::KittingTask::KITTING)
+            return "kitting";
+        else if (_destination == ariac_msgs::msg::KittingTask::WAREHOUSE)
+            return "warehouse";
+        else
+            return "unknown";
     }
 
     //==============================================================================
     std::string static ConvertPartColorToString(unsigned int part_color)
     {
-        switch (part_color)
-        {
-        case 1:
+        if (part_color == ariac_msgs::msg::Part::RED)
             return "red";
-            break;
-        case 2:
+        else if (part_color == ariac_msgs::msg::Part::GREEN)
             return "green";
-            break;
-        case 3:
+        else if (part_color == ariac_msgs::msg::Part::BLUE)
             return "blue";
-            break;
-        case 4:
-            return "orange";
-            break;
-        case 5:
+        else if (part_color == ariac_msgs::msg::Part::PURPLE)
             return "purple";
-            break;
-        default:
+        else if (part_color == ariac_msgs::msg::Part::ORANGE)
+            return "orange";
+        else
             return "unknown";
-            break;
-        }
     }
 
     //==============================================================================
@@ -140,23 +111,16 @@ namespace ariac_common
      * @param order_type Integer representing the order type
      * @return std::string Type of order as a string
      */
-    std::string static ConvertOrderTypeToString(unsigned int order_type)
+    std::string static ConvertOrderTypeToString(unsigned int _order_type)
     {
-        switch (order_type)
-        {
-        case 1:
-            return "kitting";
-            break;
-        case 2:
+        if (_order_type == ariac_msgs::msg::Order::ASSEMBLY)
             return "assembly";
-            break;
-        case 3:
+        else if (_order_type == ariac_msgs::msg::Order::KITTING)
+            return "kitting";
+        else if (_order_type == ariac_msgs::msg::Order::COMBINED)
             return "combined";
-            break;
-        default:
+        else
             return "unknown";
-            break;
-        }
     }
 
     //==============================================================================
@@ -191,6 +155,14 @@ namespace ariac_common
         unsigned int GetColor() const { return color_; }
         unsigned int GetType() const { return type_; }
 
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const Part &_obj)
+        {
+            _out << "[" << ConvertPartTypeToString(_obj.type_) << "," << ConvertPartColorToString(_obj.color_) << "]";
+
+            return _out;
+        }
+
     private:
         unsigned int color_;
         unsigned int type_;
@@ -208,6 +180,15 @@ namespace ariac_common
         unsigned int GetQuadrant() const { return quadrant_; }
         Part GetPart() const { return part_; }
 
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const KittingPart &_obj)
+        {
+            _out << "   ------" << std::endl;
+            _out << "   Part: " << _obj.part_ << std::endl;
+            _out << "   Quadrant: " << _obj.quadrant_;
+            return _out;
+        }
+
     private:
         unsigned int quadrant_;
         Part part_;
@@ -222,6 +203,21 @@ namespace ariac_common
                      const ignition::math::Vector3<double> &_part_direction) : part_(_part),
                                                                                part_pose_(_part_pose),
                                                                                part_direction_(_part_direction) {}
+
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const AssemblyPart &_obj)
+        {
+            _out << "   ------" << std::endl;
+            _out << "   Part: " << _obj.part_ << std::endl;
+            _out << "   Assembled Pose: [" << _obj.part_pose_.Pos().X() << ","
+                 << _obj.part_pose_.Pos().Y() << "," << _obj.part_pose_.Pos().Z() << "]"
+                 << "[" << _obj.part_pose_.Rot().X() << "," << _obj.part_pose_.Rot().Y() << ","
+                 << _obj.part_pose_.Rot().Z() << "," << _obj.part_pose_.Rot().W() << "]" << std::endl;
+            _out << "   Assembled Direction: [" << _obj.part_direction_[0] << ","
+                 << _obj.part_direction_[1] << "," << _obj.part_direction_[2] << "]";
+
+            return _out;
+        }
 
         Part GetPart() const { return part_; }
         ignition::math::Pose3d GetPartPose() const { return part_pose_; }
@@ -242,6 +238,43 @@ namespace ariac_common
                      const std::vector<AssemblyPart> &_products) : agv_numbers_(_agv_numbers),
                                                                    station_(_station),
                                                                    products_(_products) {}
+
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const AssemblyTask &_obj)
+        {
+            _out << "   Assembly Task" << std::endl;
+            _out << "   ================" << std::endl;
+
+            if (_obj.agv_numbers_.size() == 1)
+                _out << "   AGV: [" << _obj.agv_numbers_[0] << "]" << std::endl;
+            else
+            {
+                int counter = _obj.agv_numbers_.size();
+
+                _out << "   AGV: [";
+                for (auto agv_number : _obj.agv_numbers_){
+                    counter--;
+                    _out << agv_number;
+                    if (counter > 0)
+                        _out << ",";
+                }
+                    
+                _out << "]" << std::endl;
+            }
+
+            // stations
+            _out << "   Station: " << ConvertAssemblyStationToString(_obj.station_) << std::endl;
+
+            // Products
+            _out << "   ================" << std::endl;
+            _out << "   Products: " << std::endl;
+            for (const auto &product : _obj.products_)
+            {
+                _out << product << std::endl;
+            }
+
+            return _out;
+        }
 
         const std::vector<unsigned int> &GetAgvNumbers() const { return agv_numbers_; }
         unsigned int GetStation() const { return station_; }
@@ -267,6 +300,28 @@ namespace ariac_common
                                                                  tray_id_(_tray_id),
                                                                  destination_(_destination),
                                                                  products_(_products) {}
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const KittingTask &_obj)
+        {
+            _out << "   Kitting Task" << std::endl;
+            _out << "   ================" << std::endl;
+
+            _out << "   AGV: " << _obj.agv_number_ << std::endl;
+            _out << "   Tray ID: " << _obj.tray_id_ << std::endl;
+
+            // Destination
+            _out << "   Destination: " << ConvertDestinationToString(_obj.destination_, _obj.agv_number_) << std::endl;
+
+            // Products
+            _out << "   ================" << std::endl;
+            _out << "   Products: " << std::endl;
+            for (const auto &product : _obj.products_)
+            {
+                _out << product << std::endl;
+            }
+
+            return _out;
+        }
 
         unsigned int GetAgvNumber() const { return agv_number_; }
         unsigned int GetTrayId() const { return tray_id_; }
@@ -310,21 +365,20 @@ namespace ariac_common
         SensorBlackout(double _duration,
                        const std::vector<std::string> &_sensors_to_disable) : duration_(_duration),
                                                                               sensors_to_disable_(_sensors_to_disable) {}
-        
-        
+
         double GetDuration() const { return duration_; }
         const std::vector<std::string> &GetSensorsToDisable() const { return sensors_to_disable_; }
         unsigned int GetType() const { return type_; }
-        
+
         double GetStartTime() const { return start_time_; }
         void SetStartTime(double _start_time) { start_time_ = _start_time; }
-        
+
         bool IsStarted() const { return started_; }
         void SetStarted() { started_ = true; }
-        
+
         bool IsCompleted() const { return completed_; }
         void SetCompleted() { completed_ = true; }
-        
+
         void SetStopTime(double _stop_time) { stop_time_ = _stop_time; }
         double GetStopTime() const { return stop_time_; }
 
@@ -362,7 +416,7 @@ namespace ariac_common
                                const std::vector<std::string> &_sensors_to_disable,
                                double _trigger_time) : SensorBlackout(_duration, _sensors_to_disable),
                                                        trigger_time_(_trigger_time) {}
-        
+
         /**
          * @brief Get the time at which the challenge should be triggered
          * @return double Time at which the challenge should be triggered
@@ -423,19 +477,19 @@ namespace ariac_common
          *
          * @param _duration Duration of the blackout
          * @param _sensors_to_disable List of sensors to disable
-         * @param _order_id ID of a submitted order
+         * @param _trigger_order_id ID of a submitted order
          */
 
         SensorBlackoutOnSubmission(double _duration,
                                    const std::vector<std::string> &_sensors_to_disable,
-                                   std::string _order_id) : SensorBlackout(_duration, _sensors_to_disable),
-                                                            order_id_(_order_id) {}
+                                   std::string _trigger_order_id) : SensorBlackout(_duration, _sensors_to_disable),
+                                                                    trigger_order_id_(_trigger_order_id) {}
 
-        std::string GetOrderId() const { return order_id_; }
+        std::string GetTriggerOrderId() const { return trigger_order_id_; }
 
     private:
         //! ID of a submitted order
-        std::string order_id_;
+        std::string trigger_order_id_;
     }; // class SensorBlackoutKittingAction
 
     //==============================================================================
@@ -460,6 +514,31 @@ namespace ariac_common
                                           priority_(_priority),
                                           trial_time_limit_(_trial_time_limit) {}
         ~Order() = default;
+
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const Order &_obj)
+        {
+            _out << "================" << std::endl;
+            _out << "Announcing Order " << _obj.id_ << std::endl;
+            _out << "================" << std::endl;
+            if (_obj.type_ == ariac_msgs::msg::Order::KITTING)
+                _out << "Type: Kitting" << std::endl;
+            else if (_obj.type_ == ariac_msgs::msg::Order::ASSEMBLY)
+                _out << "Type: Assembly" << std::endl;
+            else if (_obj.type_ == ariac_msgs::msg::Order::COMBINED)
+                _out << "Type: Combined" << std::endl;
+            _out << "Priority: " << _obj.priority_ << std::endl;
+            if (_obj.type_ == ariac_msgs::msg::Order::KITTING)
+                _out << *_obj.kitting_task_;
+            else if (_obj.type_ == ariac_msgs::msg::Order::ASSEMBLY)
+                _out << *_obj.assembly_task_;
+            // else if (_obj.type_ == ariac_msgs::msg::Order::COMBINED)
+            // {
+            //     _out << *_obj.kitting_task_;
+            //     _out << *_obj.assembly_task_;
+            // }
+            return _out;
+        }
 
         /**
          * @brief Get the Id of the order
@@ -831,7 +910,6 @@ namespace ariac_common
          * @brief Set the flag to indicate if the challenge has completed
          */
         void SetCompleted() { completed_ = true; }
-        
 
     protected:
         //! Type of the challenge
@@ -936,19 +1014,19 @@ namespace ariac_common
          *
          * @param _duration Duration of the challenge
          * @param _robots_to_disable  List of robots to disable
-         * @param _order_id ID of a submitted order
+         * @param _trigger_order_id ID of the submitted order to trigger the challenge
          */
 
         RobotMalfunctionOnSubmission(double _duration,
                                      const std::vector<std::string> &_sensors_to_disable,
-                                     std::string _order_id) : RobotMalfunction(_duration, _sensors_to_disable),
-                                                              order_id_(_order_id) {}
+                                     std::string _trigger_order_id) : RobotMalfunction(_duration, _sensors_to_disable),
+                                                                      trigger_order_id_(_trigger_order_id) {}
 
-        std::string GetOrderId() const { return order_id_; }
+        std::string GetTriggerOrderId() const { return trigger_order_id_; }
 
     private:
-        //! ID of a submitted order
-        std::string order_id_;
+        //! ID of a submitted order to trigger the challenge
+        std::string trigger_order_id_;
     }; // class RobotMalfunctionOnSubmission
 
 } // namespace ariac_common

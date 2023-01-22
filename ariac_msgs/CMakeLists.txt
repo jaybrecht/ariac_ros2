@@ -30,6 +30,7 @@ set(msg_files
   "msg/ConveyorParts.msg"
   "msg/DroppedPartChallenge.msg"
   "msg/FaultyPartChallenge.msg"
+  "msg/HumanChallenge.msg"
   "msg/KittingPart.msg"
   "msg/KittingTask.msg"
   "msg/KitTrayPose.msg"

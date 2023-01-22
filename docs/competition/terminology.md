@@ -4,7 +4,6 @@
 
 Persons competing in ARIAC. Sometimes competitors are referred as "teams" or "participants".
 
-
 ## Trial
 
 Each run of the competition is called a trial. The configuration for that trial is defined by a
@@ -16,13 +15,13 @@ part locations, orders, and challenges.
 
 ## Part
 
-Parts are used during pick-and-place operations. There are four available parts (battery, pump, regulator, and sensor) and each part 
-can be one of five possible colors (red, green, blue, orange, and purple).
+Parts are used during pick-and-place operations. There are four available parts (battery, pump, regulator, and sensor) and each part can be one of five possible colors (red, green, blue, orange, and purple).
 
 At the start of the environment, parts can be located in 3 different locations:
-  - Bins
-  - AGVs
-  - Conveyor
+
+1. Bins.
+2. AGVs.
+3. Conveyor belt.
 
 ## Order
 
@@ -36,8 +35,6 @@ Kitting is the process which groups separate but related [parts](#part) as one u
 2. Place parts onto that kit tray in a specific quadrant.
 3. Direct the AGV to the warehouse.
 4. Evaluate the submitted kit for scoring.
-
-
 
 ## Assembly Task
 
