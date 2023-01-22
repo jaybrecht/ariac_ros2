@@ -1,5 +1,5 @@
 string order_id
-bool quandrant1
-bool quandrant2
-bool quandrant3
-bool quandrant4
+bool quadrant1
+bool quadrant2
+bool quadrant3
+bool quadrant4

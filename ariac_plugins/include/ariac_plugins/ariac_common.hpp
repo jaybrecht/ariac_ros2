@@ -951,6 +951,71 @@ namespace ariac_common
         std::string order_id_;
     }; // class RobotMalfunctionOnSubmission
 
+    class FaultyPartChallenge
+    {
+    public:
+        FaultyPartChallenge(ariac_msgs::msg::FaultyPartChallenge _msg)
+        {
+            order_id_ = _msg.order_id;
+            faulty_quadrants_ = {{1, _msg.quadrant1},
+                                 {2, _msg.quadrant2},
+                                 {3, _msg.quadrant3},
+                                 {4, _msg.quadrant4}};
+            quadrant_checked_ = {{1, false},
+                                 {2, false},
+                                 {3, false},
+                                 {4, false}};
+        }
+
+        std::string GetOrderId() const {return order_id_;}
+        bool IsQuadrantFaulty(int q) {return faulty_quadrants_[q];}
+        bool WasQuadrantChecked(int q) {return faulty_quadrants_[q];}
+        void SetQuadrantChecked(int q) {quadrant_checked_[q] = true;}
+
+    protected:
+        const unsigned int type_ = ariac_msgs::msg::Challenge::FAULTY_PART;
+        std::string order_id_;
+        std::map<int, bool> faulty_quadrants_;
+        std::map<int, bool> quadrant_checked_;
+    };
+
+    class KitTrayPart
+    {
+    public:
+        KitTrayPart(const Part &_part,
+                    std::string _model_name,
+                    geometry_msgs::msg::Pose _pose_on_tray) : part_(_part),
+                                                              model_name_(_model_name),
+                                                              pose_on_tray_(_pose_on_tray) {}
+  
+        unsigned int GetQuadrant() const { return quadrant_; }
+        Part GetPart() const { return part_; }
+        std::string GetModelName() const { return model_name_; }
+
+        bool IsFaulty() {return model_name_.find("faulty") != std::string::npos;}
+        bool IsFlipped() {return false;}
+
+    private:
+        unsigned int quadrant_;
+        Part part_;
+        std::string model_name_;
+        geometry_msgs::msg::Pose pose_on_tray_;	
+    };
+
+    class KittingShipment
+    {
+    public:
+        KittingShipment(unsigned int _tray_id,
+                        const std::vector<KitTrayPart> &_tray_parts) : tray_id_(_tray_id),
+                                                                       tray_parts_(_tray_parts) {}
+    
+        unsigned int GetTrayId() const { return tray_id_; }
+        const std::vector<KitTrayPart> &GetTrayParts() const { return tray_parts_; }
+    private:
+        unsigned int tray_id_;
+        std::vector<KitTrayPart> tray_parts_;
+    };
+
 } // namespace ariac_common
 
 #endif // ARIAC_PLUGINS__ARIAC_COMMON_HPP_
