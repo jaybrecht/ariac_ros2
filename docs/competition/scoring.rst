@@ -11,9 +11,10 @@ Cost Factor
 -----------
 
 The Cost Factor :math:`CF` compares the cost of the sensors chosen by the team to the average of all sensor configurations across all teams.
-  * :math:`TC`: Total cost of the sensors in the team's configuration.
-  * :math:`TC_{avg}`: Average sensor cost across all teams.
-  * :math:`w_c`: Weighting constant for cost factor.
+
+  * ``TC`` is the total cost of the sensors in the team's configuration.
+  * ``TC_{avg}`` is the average sensor cost across all teams.
+  * ``w_c`` is a weighting constant for cost factor.
 
 .. - the original formula:
 
