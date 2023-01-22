@@ -31,5 +31,7 @@ pygments_style = 'sphinx'
 
 html_theme = 'sphinx_rtd_theme'
 
+mathjax_path = 'MathJax.js?config=TeX-AMS_HTML'
+
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
