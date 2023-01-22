@@ -12,7 +12,8 @@ version = '0.1.0'
 # -- General configuration
 
 extensions = [
-        'myst_parser'
+        'myst_parser',
+        'sphinx.ext.mathjax'
 ]
 
 intersphinx_mapping = {
@@ -22,6 +23,9 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
+
+# The name of the Pygments (syntax highlighting) style to use.
+pygments_style = 'sphinx'
 
 # -- Options for HTML output
 
