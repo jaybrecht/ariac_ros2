@@ -20,9 +20,12 @@ Parts are used during pick-and-place operations. There are four available parts 
 can be one of five possible colors (red, green, blue, orange, and purple).
 
 At the start of the environment, parts can be located in 3 different locations:
-  - Bins
-  - AGVs
-  - Conveyor
+<ul>
+  <li>Bins</li>
+  <li>AGVs</li>
+  <li>Conveyor belt</li>
+  <li>Fourth item</li>
+</ul> 
 
 ## Order
 
