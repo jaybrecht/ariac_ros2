@@ -94,12 +94,12 @@ It can happen that both robots malfunction at the same time. In this case, compe
 
 The robot malfunction challenge is specified in the trial configuration file using the following fields:
 
-- `duration`: The duration of the robot malfunction in seconds.
-- `robots_to_disable`: A list of robots that malfunction. It can be either `floor_robot` or `ceiling_robot` or both.
-- Conditions that can trigger the robot malfunction:
-  - `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
-  - `time_condition`: The challenge starts after a specific time.
-  - `submission_condition`: The challenge starts when a specific order is submitted.
+  - `duration`: The duration of the robot malfunction in seconds.
+  - `robots_to_disable`: A list of robots that malfunction. It can be either `floor_robot` or `ceiling_robot` or both.
+  - Conditions that can trigger the robot malfunction:
+    - `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
+    - `time_condition`: The challenge starts after a specific time.
+    - `submission_condition`: The challenge starts when a specific order is submitted.
 
 Robot malfunctions can occur multiple times in the same trial. The example below shows a robot malfunction challenge occurring four times.
 
