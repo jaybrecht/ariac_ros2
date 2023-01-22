@@ -27,7 +27,7 @@ The environment can be started with parts that are flipped. Flipped parts are pa
 
 Flipped parts apply to a specific part type and color in a specific bin or on the conveyor belt. To set parts flipped, the `flipped` field in the trial configuration file must be set as `true` for the corresponding part.
 
-### Example
+### Flipped Parts Example
 
 The example below describes all purple regulators as flipped in `bin3`.
 
@@ -62,7 +62,7 @@ The faulty gripper challenge simulates a faulty gripper which can drop a part af
 
 The goal of this challenge is to test the ability of the competitors' control system to pick a part of the same type and color again after the gripper has dropped a part. The control system may try to pick the part again from where it was dropped or pick up a part from a different location.
 
-### Example
+### Faulty Gripper Example
 
 The example below describes a faulty gripper occuring 5 seconds after the ceiling robot has picked up a second red pump.
 
@@ -84,19 +84,18 @@ The goal of this challenge is to test the ability of the competitors' control sy
 
 It can happen that both robots malfunction at the same time. In this case, competitors's control system must wait until the malfunction is resolved before continuing with the trial.
 
-### Example
+### Robot Malfunction Example
 
 The robot malfunction challenge is specified in the trial configuration file using the following fields:
 
-  - `duration`: The duration of the robot malfunction in seconds.
-  - `robots_to_disable`: A list of robots that malfunction. It can be either `floor_robot` or `ceiling_robot` or both.
-  - Conditions that can trigger the robot malfunction:
-    - `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
-    - `time_condition`: The challenge starts after a specific time.
-    - `submission_condition`: The challenge starts when a specific order is submitted.
+  * `duration`: The duration of the robot malfunction in seconds.
+  * `robots_to_disable`: A list of robots that malfunction. It can be either `floor_robot` or `ceiling_robot` or both.
+  * Conditions that can trigger the robot malfunction:
+    * `part_place_condition`: The challenge starts when a part of a specific type and color is placed on a specific AGV.
+    * `time_condition`: The challenge starts after a specific time.
+    * `submission_condition`: The challenge starts when a specific order is submitted.
 
 Robot malfunctions can occur multiple times in the same trial. The example below shows a robot malfunction challenge occurring four times.
-
 
 ```yaml
 challenges:
