@@ -14,7 +14,7 @@ version = '0.1.0'
 extensions = [
         'myst_parser',
         'sphinx.ext.mathjax',
-        'sphinx_rtd_theme,
+        'sphinx_rtd_theme',
 ]
 
 intersphinx_mapping = {
@@ -32,7 +32,7 @@ pygments_style = 'sphinx'
 
 html_theme = 'sphinx_rtd_theme'
 
-mathjax_path = 'MathJax.js?config=TeX-AMS_HTML'
+# mathjax_path = 'MathJax.js?config=TeX-AMS_HTML'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
