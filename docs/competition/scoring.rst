@@ -3,13 +3,13 @@ Scoring
 
 Common formulas are:
 
-* the original formula:
+- the original formula:
 
   .. math::
 
     MI = 171 - 5.2 \ln V - 0.23 G - 16.2 \ln L
 
-* the derivative used by SEI:
+- the derivative used by SEI:
 
   .. math::
 
