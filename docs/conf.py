@@ -14,7 +14,6 @@ version = '0.1.0'
 extensions = [
         'myst_parser',
         'sphinx.ext.mathjax',
-        'hoverxref.extension',
 ]
 
 intersphinx_mapping = {
