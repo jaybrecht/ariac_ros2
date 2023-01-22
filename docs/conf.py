@@ -13,6 +13,7 @@ version = '0.1.0'
 
 extensions = [
         'myst_parser',
+        'sphinx_rtd_theme'
 ]
 
 intersphinx_mapping = {
