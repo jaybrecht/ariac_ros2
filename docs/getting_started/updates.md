@@ -1,6 +1,6 @@
 # Release 2023, Jan 20 -- Beta Version
 
-- This is the beta release of the software. This release contains the basic structure of the software and is missing some components that were highlighted during the launch telecon.
+- This is the beta release of the software. This release contains the basic structure of the software and is missing some features that were highlighted during the launch telecon. These features will be added in the final release.
 
 - Documentation for some of the components is missing and will be gradually added as we progress towards the release date of the final version.
 

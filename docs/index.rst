@@ -23,6 +23,7 @@ Welcome to ARIAC 2023!
    :maxdepth: 2
    :hidden:
 
+   competition/overview
    competition/terminology
    competition/environment
    competition/orders
