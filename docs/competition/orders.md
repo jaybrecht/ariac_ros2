@@ -15,6 +15,7 @@ An order has the following specifications:
     c. `combined`: Both kitting and assembly are to be performed.
 3. `priority` (boolean): Each order has a priority. When set to `false` the order is a regular order and when set to `true`, the order is of high priority.
 4. `announcement`: Orders are announced when one of the three following conditions is met:
+
     a. **Time-based condition**: This condition is used to announce an order when the competition time has reached the time provided in the condition. *Note*: The competition time is set when the competitor starts the competition. For each trial, the first order always uses a time-based condition with the value 0. This ensures the first order is announced as soon as the competitor starts the competition. The following snippet shows an example of a time-based condition:
 
     ```yaml

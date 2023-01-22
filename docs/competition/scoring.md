@@ -10,4 +10,4 @@ There are three major components of the Trial Score in ARIAC 2023.
 
 The Cost Factor \(CF\) compares the cost of the sensors chosen by the team to the average of all sensor configurations across all teams.
 
-$$V_{sphere} = \frac{4}{3}\pi r^3$$
+$V_{sphere} = \frac{4}{3}\pi r^3$
