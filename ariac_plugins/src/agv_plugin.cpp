@@ -43,6 +43,7 @@ public:
 
   rclcpp::Time last_publish_time_;
   int update_ns_;
+  bool first_publish_;
 
   // Move service
   rclcpp::Service<ariac_msgs::srv::MoveAGV>::SharedPtr move_service_;
@@ -53,6 +54,7 @@ public:
     ariac_msgs::srv::MoveAGV::Response::SharedPtr res);
   void MoveToGoal(double goal);
   void PublishStatus();
+  void OnUpdate();
 
 };
 
@@ -76,7 +78,7 @@ void AGVPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
 
   impl_->agv_joint_ = model->GetJoint(impl_->agv_number_ + "_joint");
   if (!impl_->agv_joint_) {
-    RCLCPP_ERROR(impl_->ros_node_->get_logger(), "AGV joint not found, unable to start conveyor plugin");
+    RCLCPP_ERROR(impl_->ros_node_->get_logger(), "AGV joint not found, unable to start agv plugin");
     return;
   }
 
@@ -90,7 +92,7 @@ void AGVPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
 
   double publish_rate = 10;
   impl_->update_ns_ = int((1/publish_rate) * 1e9);
-  impl_->last_publish_time_ = impl_->ros_node_->get_clock()->now();
+  impl_->first_publish_ = true;
 
   // Register move service
   impl_->move_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::MoveAGV>(
@@ -101,16 +103,20 @@ void AGVPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
 
   // Create a connection so the OnUpdate function is called at every simulation iteration. 
   impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-    std::bind(&AGVPlugin::OnUpdate, this));
+    std::bind(&AGVPluginPrivate::OnUpdate, impl_.get()));
 }
 
-void AGVPlugin::OnUpdate()
+void AGVPluginPrivate::OnUpdate()
 {
   // Publish status at rate
-  rclcpp::Time now = impl_->ros_node_->get_clock()->now();
-  if (now - impl_->last_publish_time_ >= rclcpp::Duration(0, impl_->update_ns_)) {
-    impl_->PublishStatus();
-    impl_->last_publish_time_ = now;
+  rclcpp::Time now = ros_node_->get_clock()->now();
+  if (first_publish_) {
+    PublishStatus();
+    last_publish_time_ = now;
+    first_publish_ = false;
+  } else if (now - last_publish_time_ >= rclcpp::Duration(0, update_ns_)) {
+    PublishStatus();
+    last_publish_time_ = now;
   }
 }
 
@@ -155,7 +161,7 @@ void AGVPluginPrivate::MoveAGV(
     return;
   }
   else if (req->location == ariac_msgs::srv::MoveAGV::Request::WAREHOUSE){
-    RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Moving " << agv_number_ << " to back assembly station");
+    RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Moving " << agv_number_ << " warehouse");
 
     this->MoveToGoal(warehouse_location_);   
 
@@ -247,6 +253,8 @@ void AGVPluginPrivate::PublishStatus(){
     status_msg_.location = ariac_msgs::msg::AGVStatus::ASSEMBLY_FRONT;
   else if (std::abs(agv_joint_->Position(0) - back_assembly_station_) <= error_margin)
     status_msg_.location = ariac_msgs::msg::AGVStatus::ASSEMBLY_BACK;
+  else if (std::abs(agv_joint_->Position(0) - warehouse_location_) <= error_margin)
+    status_msg_.location = ariac_msgs::msg::AGVStatus::WAREHOUSE;
   else
     status_msg_.location = ariac_msgs::msg::AGVStatus::UNKNOWN;
 

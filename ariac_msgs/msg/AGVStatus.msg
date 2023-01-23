@@ -1,7 +1,8 @@
-int8 KITTING=0
-int8 ASSEMBLY_FRONT=1
-int8 ASSEMBLY_BACK=2 
-int8 UNKNOWN=99
+uint8 KITTING=0
+uint8 ASSEMBLY_FRONT=1
+uint8 ASSEMBLY_BACK=2
+uint8 WAREHOUSE=3
+uint8 UNKNOWN=99
 
 int8 location
 float64 position

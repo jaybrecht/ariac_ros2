@@ -1170,7 +1170,7 @@ namespace ariac_common
 
         std::string GetOrderId() const { return order_id_; }
         bool IsQuadrantFaulty(int q) { return faulty_quadrants_[q]; }
-        bool WasQuadrantChecked(int q) { return faulty_quadrants_[q]; }
+        bool WasQuadrantChecked(int q) { return quadrant_checked_[q]; }
         void SetQuadrantChecked(int q) { quadrant_checked_[q] = true; }
 
     protected:
@@ -1245,6 +1245,18 @@ namespace ariac_common
 
         unsigned int GetTrayId() const { return tray_id_; }
         const std::vector<KitTrayPart> &GetTrayParts() const { return tray_parts_; }
+
+        std::string DebugString() {
+            std::string s = "Kit Tray ID: " + std::to_string(tray_id_);
+
+            for (auto part: tray_parts_) {
+                s += "\n\tPart: (type: " + ConvertPartTypeToString(part.GetPart().GetType()) + 
+                    ", color: " + ConvertPartColorToString(part.GetPart().GetColor()) + 
+                    ", quad: " + std::to_string(part.GetQuadrant()) + ")";
+            }
+
+            return s;
+        }
 
     private:
         unsigned int tray_id_;
