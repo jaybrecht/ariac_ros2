@@ -24,6 +24,7 @@
 #include <std_srvs/srv/trigger.hpp>
 
 #include <ariac_msgs/msg/order.hpp>
+#include <ariac_msgs/msg/competition_state.hpp>
 #include <ariac_msgs/msg/advanced_logical_camera_image.hpp>
 #include <ariac_msgs/msg/kitting_task.hpp>
 #include <ariac_msgs/msg/kit_tray_pose.hpp>
@@ -33,6 +34,7 @@
 #include <ariac_msgs/srv/vacuum_gripper_control.hpp>
 #include <ariac_msgs/srv/move_agv.hpp>
 #include <ariac_msgs/srv/submit_order.hpp>
+#include <ariac_msgs/srv/perform_quality_check.hpp>
 
 #include <geometry_msgs/msg/pose.hpp>
 
@@ -58,6 +60,7 @@ public:
 
   // ARIAC Functions
   bool StartCompetition();
+  bool EndCompetition();
   bool LockAGVTray(int agv_num);
   bool MoveAGV(int agv_num, int destination);
   bool SubmitOrder(std::string order_id);
@@ -74,8 +77,6 @@ private:
   bool FloorRobotMoveCartesian(std::vector<geometry_msgs::msg::Pose> waypoints, double vsf, double asf);
   geometry_msgs::msg::Quaternion FloorRobotSetOrientation(double rotation);
   void FloorRobotWaitForAttach(double timeout);
-
-  
 
   // Helper Functions
   geometry_msgs::msg::Pose MultiplyPose(geometry_msgs::msg::Pose p1, geometry_msgs::msg::Pose p2);
@@ -105,7 +106,7 @@ private:
 
   // Subscriptions
   rclcpp::Subscription<ariac_msgs::msg::Order>::SharedPtr orders_sub_;
-  // rclcpp::Subscription<ariac_msgs::msg::Order>::SharedPtr orders_sub_;
+  rclcpp::Subscription<ariac_msgs::msg::CompetitionState>::SharedPtr competition_state_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr kts1_camera_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr kts2_camera_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr left_bins_camera_sub_;
@@ -114,7 +115,10 @@ private:
   rclcpp::Subscription<ariac_msgs::msg::VacuumGripperState>::SharedPtr floor_gripper_state_sub_;
 
   // Orders List
+  ariac_msgs::msg::Order current_order_;
   std::vector<ariac_msgs::msg::Order> orders_;
+
+  unsigned int competition_state_;
 
   // Gripper State
   ariac_msgs::msg::VacuumGripperState floor_gripper_state_;
@@ -151,7 +155,11 @@ private:
   // Orders Callback
   void orders_cb(const ariac_msgs::msg::Order::ConstSharedPtr msg);
 
-  // ARIAC Services 
+  // Competition state callback
+  void competition_state_cb(const ariac_msgs::msg::CompetitionState::ConstSharedPtr msg);
+
+  // ARIAC Services
+  rclcpp::Client<ariac_msgs::srv::PerformQualityCheck>::SharedPtr quality_checker_;
   rclcpp::Client<ariac_msgs::srv::ChangeGripper>::SharedPtr floor_robot_tool_changer_;
   rclcpp::Client<ariac_msgs::srv::VacuumGripperControl>::SharedPtr floor_robot_gripper_enable_;
 

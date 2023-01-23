@@ -18,5 +18,7 @@ int main(int argc, char *argv[])
   // Complete Orders
   test_competitor->CompleteOrders();
 
+  test_competitor->EndCompetition();
+
   rclcpp::shutdown();
 }

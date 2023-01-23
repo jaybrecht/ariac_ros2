@@ -23,6 +23,9 @@ TestCompetitor::TestCompetitor()
   orders_sub_ = this->create_subscription<ariac_msgs::msg::Order>("/ariac/orders", 1, 
     std::bind(&TestCompetitor::orders_cb, this, std::placeholders::_1), options);
 
+  competition_state_sub_ = this->create_subscription<ariac_msgs::msg::CompetitionState>("/ariac/competition_state", 1, 
+    std::bind(&TestCompetitor::competition_state_cb, this, std::placeholders::_1), options);
+
   kts1_camera_sub_ = this->create_subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>(
     "/ariac/sensors/kts1_camera/image", rclcpp::SensorDataQoS(), 
     std::bind(&TestCompetitor::kts1_camera_cb, this, std::placeholders::_1), options);
@@ -44,6 +47,7 @@ TestCompetitor::TestCompetitor()
     std::bind(&TestCompetitor::floor_gripper_state_cb, this, std::placeholders::_1), options);
 
   // Initialize service clients 
+  quality_checker_ = this->create_client<ariac_msgs::srv::PerformQualityCheck>("/ariac/perform_quality_check");
   floor_robot_tool_changer_ = this->create_client<ariac_msgs::srv::ChangeGripper>("/ariac/floor_robot_change_gripper");
   floor_robot_gripper_enable_ = this->create_client<ariac_msgs::srv::VacuumGripperControl>("/ariac/floor_robot_enable_gripper");
 
@@ -62,6 +66,12 @@ void TestCompetitor::orders_cb(
   const ariac_msgs::msg::Order::ConstSharedPtr msg) 
 {
   orders_.push_back(*msg);
+}
+
+void TestCompetitor::competition_state_cb(
+  const ariac_msgs::msg::CompetitionState::ConstSharedPtr msg) 
+{
+  competition_state_ = msg->competition_state;
 }
 
 void TestCompetitor::kts1_camera_cb(
@@ -683,27 +693,43 @@ bool TestCompetitor::CeilingRobotMovetoTarget()
 
 
 bool TestCompetitor::CompleteOrders(){
-  // Wait for orders to be published
+  // Wait for first order to be published
   while (orders_.size() == 0) {}
 
-  ariac_msgs::msg::Order current_order = orders_.front();
-  orders_.erase(orders_.begin());
+  bool success;
+  while (true) {
+    if (competition_state_ == ariac_msgs::msg::CompetitionState::ENDED) {
+      success = false;
+      break;
+    }
 
-  bool result;
+    if (orders_.size() == 0){
+      if (competition_state_  != ariac_msgs::msg::CompetitionState::ORDER_ANNOUNCEMENTS_DONE) {
+        // wait for more orders
+        RCLCPP_INFO(get_logger(), "Waiting for orders...");
+        while (orders_.size() == 0) {}
+      } else {
+        RCLCPP_INFO(get_logger(), "Completed all orders");
+        success = true;
+        break;
+      }
+    }
+    
+    current_order_ = orders_.front();
+    orders_.erase(orders_.begin());
 
-  if (current_order.type == ariac_msgs::msg::Order::KITTING) {
-    result = TestCompetitor::CompleteKittingTask(current_order.kitting_task);
-    // Submit order
-    TestCompetitor::SubmitOrder(current_order.id);
-  } else if (current_order.type == ariac_msgs::msg::Order::ASSEMBLY) {
-    result = TestCompetitor::CompleteAssemblyTask(current_order.assembly_task);
-  } else if (current_order.type == ariac_msgs::msg::Order::COMBINED) {
-    result = TestCompetitor::CompleteCombinedTask(current_order.combined_task);
-  } else {
-    result = false;
+    if (current_order_.type == ariac_msgs::msg::Order::KITTING) {
+      TestCompetitor::CompleteKittingTask(current_order_.kitting_task);
+      // Submit order
+      TestCompetitor::SubmitOrder(current_order_.id);
+    } else if (current_order_.type == ariac_msgs::msg::Order::ASSEMBLY) {
+      TestCompetitor::CompleteAssemblyTask(current_order_.assembly_task);
+    } else if (current_order_.type == ariac_msgs::msg::Order::COMBINED) {
+      TestCompetitor::CompleteCombinedTask(current_order_.combined_task);
+    }
   }
 
-  return result;
+  return success;
 }
 
 bool TestCompetitor::CompleteKittingTask(ariac_msgs::msg::KittingTask task)
@@ -717,7 +743,15 @@ bool TestCompetitor::CompleteKittingTask(ariac_msgs::msg::KittingTask task)
     FloorRobotPlacePartOnKitTray(task.agv_number, kit_part.quadrant);
   }
 
-  // Check quality 
+  // Check quality
+  auto request = std::make_shared<ariac_msgs::srv::PerformQualityCheck::Request>();
+  request->order_id = current_order_.id;
+  auto result = quality_checker_->async_send_request(request);
+  result.wait();
+
+  if (!result.get()->all_passed) {
+    RCLCPP_ERROR(get_logger(), "Issue with shipment");
+  }
 
   MoveAGV(task.agv_number, task.destination);
 
@@ -745,9 +779,28 @@ bool TestCompetitor::CompleteCombinedTask(ariac_msgs::msg::CombinedTask task)
 
 bool TestCompetitor::StartCompetition()
 {
+  // Wait for competition state to be ready
+  while (competition_state_ != ariac_msgs::msg::CompetitionState::READY) {}
+
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client;
 
   std::string srv_name = "/ariac/start_competition";
+
+  client = this->create_client<std_srvs::srv::Trigger>(srv_name);
+
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+
+  auto result =client->async_send_request(request);
+  result.wait();
+
+  return result.get()->success;
+}
+
+bool TestCompetitor::EndCompetition()
+{
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client;
+
+  std::string srv_name = "/ariac/end_competition";
 
   client = this->create_client<std_srvs::srv::Trigger>(srv_name);
 
