@@ -1543,7 +1543,7 @@ namespace ariac_plugins
 
         // Instantiate a KittingShipment from the agv_tray_sensor data
         auto shipment = ParseAGVTraySensorImage(agv_tray_images_[task->GetAgvNumber()]);
-        RCLCPP_INFO(ros_node_->get_logger(), shipment.DebugString().c_str());
+        // RCLCPP_INFO(ros_node_->get_logger(), shipment.DebugString().c_str());
 
         if (task->GetTrayId() != shipment.GetTrayId())
             response->incorrect_tray = true;
@@ -1553,6 +1553,14 @@ namespace ariac_plugins
         response->quadrant2 = CheckQuadrantQuality(2, *task, shipment);
         response->quadrant3 = CheckQuadrantQuality(3, *task, shipment);
         response->quadrant4 = CheckQuadrantQuality(4, *task, shipment);
+
+        if (response->quadrant1.all_passed && 
+            response->quadrant2.all_passed && 
+            response->quadrant3.all_passed && 
+            response->quadrant4.all_passed) {
+            
+            response->all_passed = true;
+        }
 
         // Check if the order has a faulty part challenge
         if (faulty_part_challenges_.size()>0){
@@ -1682,33 +1690,36 @@ namespace ariac_plugins
     {
         ariac_msgs::msg::QualityIssue issue;
 
+        bool task_has_part_in_quadrant = false;
+
         for (auto product : task.GetProducts())
         {
             if (product.GetQuadrant() == quadrant)
             {
-                bool part_in_quadrant;
+                task_has_part_in_quadrant = true;
+                bool shipment_has_part_in_quadrant;
                 for (auto tray_part : shipment.GetTrayParts())
                 {
                     if (tray_part.GetQuadrant() == quadrant)
                     {
-                        part_in_quadrant = true;
+                        shipment_has_part_in_quadrant = true;
 
                         issue.incorrect_part_type = !tray_part.isCorrectType(product.GetPart().GetType());
                         issue.incorrect_part_color = !tray_part.isCorrectColor(product.GetPart().GetColor());
                         issue.faulty_part = tray_part.isFaulty();
-                        issue.flipped_part = tray_part.isFlipped();
-
-                        if (issue.incorrect_part_type || issue.incorrect_part_color || issue.faulty_part || issue.flipped_part)
-                            issue.all_passed = false;
-                        else
-                            issue.all_passed = true;
+                        issue.flipped_part = tray_part.isFlipped();                        
                     }
                 }
 
-                if (!part_in_quadrant)
-                    issue.incorrect_part_type = true;
+                if (!shipment_has_part_in_quadrant)
+                    issue.missing_part = true;
             }
         }
+
+        if (issue.missing_part || issue.incorrect_part_type || issue.incorrect_part_color || issue.faulty_part || issue.flipped_part)
+            issue.all_passed = false;
+        else
+            issue.all_passed = true;
 
         return issue;
     }
