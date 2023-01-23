@@ -315,21 +315,21 @@ namespace ariac_plugins
             "/ariac/trial_config", qos.get_subscription_qos("/ariac/trial_config", rclcpp::QoS(1)),
             std::bind(&TaskManagerPlugin::OnTrialCallback, this, std::placeholders::_1));
 
-        // impl_->agv1_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
-        //     "/ariac/agv1_status", qos.get_subscription_qos("/ariac/agv1_status", rclcpp::QoS(1)),
-        //     std::bind(&TaskManagerPlugin::OnAGV1StatusCallback, this, std::placeholders::_1));
+        impl_->agv1_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
+            "/ariac/agv1_status", qos.get_subscription_qos("/ariac/agv1_status", rclcpp::QoS(1)),
+            std::bind(&TaskManagerPlugin::OnAGV1StatusCallback, this, std::placeholders::_1));
 
-        // impl_->agv2_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
-        //     "/ariac/agv2_status", qos.get_subscription_qos("/ariac/agv2_status", rclcpp::QoS(1)),
-        //     std::bind(&TaskManagerPlugin::OnAGV2StatusCallback, this, std::placeholders::_1));
+        impl_->agv2_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
+            "/ariac/agv2_status", qos.get_subscription_qos("/ariac/agv2_status", rclcpp::QoS(1)),
+            std::bind(&TaskManagerPlugin::OnAGV2StatusCallback, this, std::placeholders::_1));
 
-        // impl_->agv3_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
-        //     "/ariac/agv3_status", qos.get_subscription_qos("/ariac/agv3_status", rclcpp::QoS(1)),
-        //     std::bind(&TaskManagerPlugin::OnAGV3StatusCallback, this, std::placeholders::_1));
+        impl_->agv3_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
+            "/ariac/agv3_status", qos.get_subscription_qos("/ariac/agv3_status", rclcpp::QoS(1)),
+            std::bind(&TaskManagerPlugin::OnAGV3StatusCallback, this, std::placeholders::_1));
 
-        // impl_->agv4_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
-        //     "/ariac/agv4_status", qos.get_subscription_qos("/ariac/agv4_status", rclcpp::QoS(1)),
-        //     std::bind(&TaskManagerPlugin::OnAGV4StatusCallback, this, std::placeholders::_1));
+        impl_->agv4_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
+            "/ariac/agv4_status", qos.get_subscription_qos("/ariac/agv4_status", rclcpp::QoS(1)),
+            std::bind(&TaskManagerPlugin::OnAGV4StatusCallback, this, std::placeholders::_1));
 
         //============== PUBLISHERS =================
         impl_->sensor_health_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Sensors>("/ariac/sensor_health", 10);
@@ -939,26 +939,26 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    // void TaskManagerPlugin::OnAGV1StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
-    // {
+    void TaskManagerPlugin::OnAGV1StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
+    {
 
-    //     impl_->agv1_status_ = _msg->location;
-    // }
+        impl_->agv1_location_ = _msg->location;
+    }
 
-    // void TaskManagerPlugin::OnAGV2StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
-    // {
-    //     impl_->agv2_status_ = _msg->location;
-    // }
+    void TaskManagerPlugin::OnAGV2StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
+    {
+        impl_->agv2_location_ = _msg->location;
+    }
 
-    // void TaskManagerPlugin::OnAGV3StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
-    // {
-    //     impl_->agv3_status_ = _msg->location;
-    // }
+    void TaskManagerPlugin::OnAGV3StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
+    {
+        impl_->agv3_location_ = _msg->location;
+    }
 
-    // void TaskManagerPlugin::OnAGV4StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
-    // {
-    //     impl_->agv4_status_ = _msg->location;
-    // }
+    void TaskManagerPlugin::OnAGV4StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
+    {
+        impl_->agv4_location_ = _msg->location;
+    }
 
     //==============================================================================
     void TaskManagerPlugin::OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg)
@@ -1383,23 +1383,39 @@ namespace ariac_plugins
         int quadrant4_score = 0;
         int total_quadrants_score = 0;
 
+        // destination
+        int destination_score = 1;
+
         // Penalty points for extra parts
         int penalty = 0;
 
+        // current AGV location
+
+        int agv_current_location = -1;
+
         // Get the kitting task for this order
         auto kitting_task = _order->GetKittingTask();
+        auto expected_destination = kitting_task->GetDestination();
+
         int expected_number_of_parts = kitting_task->GetProducts().size();
 
-        // Get the AGV number for this kitting task
+        // Get the AGV for this kitting task
         auto expected_agv = kitting_task->GetAgvNumber();
+        // Get AGV current location
+        if (expected_agv == 1)
+            agv_current_location = agv1_location_;
+        else if (expected_agv == 2)
+            agv_current_location = agv2_location_;
+        else if (expected_agv == 3)
+            agv_current_location = agv3_location_;
+        else if (expected_agv == 4)
+            agv_current_location = agv4_location_;
 
         // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "AGV ID: " << agv);
 
         // Get tray sensor information for this AGV
 
         auto shipment = ParseAGVTraySensorImage(agv_tray_images_[expected_agv]);
-        // how do we get the actual agv?
-        // auto actual_agv =
 
         // Compute points for parts in the tray
         auto quadrant1 = CheckQuadrantQuality(1, *kitting_task, shipment);
@@ -1468,8 +1484,14 @@ namespace ariac_plugins
         if (shipment.GetTrayParts().size() > expected_number_of_parts)
             penalty = shipment.GetTrayParts().size() - expected_number_of_parts;
 
+        // Check destination
+        if (agv_current_location != expected_destination)
+        {
+            destination_score = 0;
+        }
+        
         // Compute the score for the submitted kit
-        int kit_score = std::max(tray_score + total_quadrants_score + bonus - penalty, 0);
+        int kit_score = std::max(tray_score + total_quadrants_score + bonus - penalty, 0) * destination_score;
 
         // Create a kitting score object
         auto kitting_score = std::make_shared<ariac_common::KittingScore>(

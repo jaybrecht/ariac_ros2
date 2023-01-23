@@ -21,6 +21,7 @@
 #include <ariac_msgs/msg/dropped_part_challenge.hpp>
 #include <ariac_msgs/msg/human_challenge.hpp>
 #include <ariac_msgs/msg/quality_issue.hpp>
+#include <ariac_msgs/msg/agv_status.hpp>
 // ARIAC
 #include <ariac_plugins/ariac_common.hpp>
 
@@ -206,10 +207,10 @@ namespace ariac_plugins
          */
         void
         OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
-        // void OnAGV1StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
-        // void OnAGV2StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
-        // void OnAGV3StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
-        // void OnAGV4StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
+        void OnAGV1StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
+        void OnAGV2StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
+        void OnAGV3StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
+        void OnAGV4StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
 
         void ComputeTrialScore();
 
