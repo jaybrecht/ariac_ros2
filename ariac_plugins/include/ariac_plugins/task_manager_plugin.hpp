@@ -20,6 +20,7 @@
 #include <ariac_msgs/msg/faulty_part_challenge.hpp>
 #include <ariac_msgs/msg/dropped_part_challenge.hpp>
 #include <ariac_msgs/msg/human_challenge.hpp>
+#include <ariac_msgs/msg/quality_issue.hpp>
 // ARIAC
 #include <ariac_plugins/ariac_common.hpp>
 
@@ -50,7 +51,7 @@ namespace ariac_plugins
          * @brief Start the controllers for all robots
          */
         int StartAllRobots();
-      
+
         /**
          * @brief Build a kitting task from ROS message
          *
@@ -196,42 +197,19 @@ namespace ariac_plugins
         void ProcessInProgressRobotMalfunctions();
         void ProcessTemporalRobotMalfunctions();
 
-
         void SetSensorsHealth(const std::vector<std::string> &_sensors_to_disable);
         void SetRobotsHealth(const std::vector<std::string> &_robots_to_disable);
-            /**
-             * @brief Callback function for the topic 'trial_config'
-             *
-             * @param _msg Shared pointer to the message
-             */
-            void
-            OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
+        /**
+         * @brief Callback function for the topic 'trial_config'
+         *
+         * @param _msg Shared pointer to the message
+         */
+        void
+        OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
 
-        /**
-         * @brief Callback function for the topic '/ariac/agv1_tray_contents'
-         *
-         * @param _msg Shared pointer to the message
-         */
-        void OnAGV1TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
-        /**
-         * @brief Callback function for the topic '/ariac/agv2_tray_contents'
-         *
-         * @param _msg Shared pointer to the message
-         */
-        void OnAGV2TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
-        /**
-         * @brief Callback function for the topic '/ariac/agv3_tray_contents'
-         *
-         * @param _msg Shared pointer to the message
-         */
-        void OnAGV3TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
-        /**
-         * @brief Callback function for the topic '/ariac/agv4_tray_contents'
-         *
-         * @param _msg Shared pointer to the message
-         */
-        void OnAGV4TrayContentsCallback(const ariac_msgs::msg::Parts::SharedPtr _msg);
-
+        void ComputeTrialScore();
+       
+       
         /**
          * @brief Build and publish an order message
          *
@@ -240,8 +218,7 @@ namespace ariac_plugins
         // void AnnounceOrder(std::shared_ptr<ariac_common::Order> _order);
 
         /// \brief Load the plugin.
-        virtual void
-        Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf) override;
+        virtual void Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf) override;
 
     protected:
         /// Optional callback to be called at every simulation iteration.

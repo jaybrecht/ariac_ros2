@@ -693,6 +693,8 @@ bool TestCompetitor::CompleteOrders(){
 
   if (current_order.type == ariac_msgs::msg::Order::KITTING) {
     result = TestCompetitor::CompleteKittingTask(current_order.kitting_task);
+    // Submit order
+    TestCompetitor::SubmitOrder(current_order.id);
   } else if (current_order.type == ariac_msgs::msg::Order::ASSEMBLY) {
     result = TestCompetitor::CompleteAssemblyTask(current_order.assembly_task);
   } else if (current_order.type == ariac_msgs::msg::Order::COMBINED) {
@@ -718,8 +720,6 @@ bool TestCompetitor::CompleteKittingTask(ariac_msgs::msg::KittingTask task)
   // Check quality 
 
   MoveAGV(task.agv_number, task.destination);
-
-  // Submit order
 
   return true;
 }
@@ -754,6 +754,20 @@ bool TestCompetitor::StartCompetition()
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
 
   auto result =client->async_send_request(request);
+  result.wait();
+
+  return result.get()->success;
+}
+
+bool TestCompetitor::SubmitOrder(std::string order_id)
+{
+  rclcpp::Client<ariac_msgs::srv::SubmitOrder>::SharedPtr client;
+  std::string srv_name = "/ariac/submit_order";
+  client = this->create_client<ariac_msgs::srv::SubmitOrder>(srv_name);
+  auto request = std::make_shared<ariac_msgs::srv::SubmitOrder::Request>();
+  request->order_id = order_id;
+
+  auto result = client->async_send_request(request);
   result.wait();
 
   return result.get()->success;

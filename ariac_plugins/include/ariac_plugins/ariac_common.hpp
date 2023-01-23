@@ -13,6 +13,10 @@
 #include <gazebo/gazebo.hh>
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Vector3.hh>
+// KDL and TF2
+#include <tf2_kdl/tf2_kdl.h>
+#include <tf2/convert.h>
+#include <kdl/frames.hpp>
 // Messages
 #include <ariac_msgs/msg/order.hpp>
 #include <ariac_msgs/msg/condition.hpp>
@@ -123,27 +127,28 @@ namespace ariac_common
             return "unknown";
     }
 
-    //==============================================================================
-    enum agv_destination
+    class Score
     {
-        KITTING = 0,
-        ASSEMBLY_FRONT = 1,
-        ASSEMBLY_BACK = 2,
-        WAREHOUSE = 3
-    };
+    public:
+        Score() : score_(0), penalty_(0) {}
 
-    struct OrderType
-    {
-        const static unsigned int KITTING{ariac_msgs::msg::Order::KITTING};
-        const static unsigned int ASSEMBLY{ariac_msgs::msg::Order::ASSEMBLY};
-        const static unsigned int COMBINED{ariac_msgs::msg::Order::COMBINED};
-    };
+        void AddScore(double _score) { score_ += _score; }
+        void AddPenalty(double _penalty) { penalty_ += _penalty; }
 
-    struct ConditionType
-    {
-        const static unsigned int TIME{ariac_msgs::msg::Condition::TIME};
-        const static unsigned int PART_PLACE{ariac_msgs::msg::Condition::PART_PLACE};
-        const static unsigned int SUBMISSION{ariac_msgs::msg::Condition::SUBMISSION};
+        double GetScore() const { return score_; }
+        double GetPenalty() const { return penalty_; }
+
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const Score &_obj)
+        {
+            _out << "Score: " << _obj.score_ << " Penalty: " << _obj.penalty_;
+
+            return _out;
+        }
+
+    private:
+        double score_;
+        double penalty_;
     };
 
     //==============================================================================
@@ -252,13 +257,14 @@ namespace ariac_common
                 int counter = _obj.agv_numbers_.size();
 
                 _out << "   AGV: [";
-                for (auto agv_number : _obj.agv_numbers_){
+                for (auto agv_number : _obj.agv_numbers_)
+                {
                     counter--;
                     _out << agv_number;
                     if (counter > 0)
                         _out << ",";
                 }
-                    
+
                 _out << "]" << std::endl;
             }
 
@@ -349,6 +355,26 @@ namespace ariac_common
         unsigned int GetStation() const { return station_; }
         const std::vector<AssemblyPart> &GetProducts() const { return products_; }
 
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const CombinedTask &_obj)
+        {
+            _out << "   Combined Task" << std::endl;
+            _out << "   ================" << std::endl;
+
+            // stations
+            _out << "   Station: " << ConvertAssemblyStationToString(_obj.station_) << std::endl;
+
+            // Products
+            _out << "   ================" << std::endl;
+            _out << "   Products: " << std::endl;
+            for (const auto &product : _obj.products_)
+            {
+                _out << product << std::endl;
+            }
+
+            return _out;
+        }
+
     private:
         unsigned int station_;
         std::vector<AssemblyPart> products_;
@@ -362,6 +388,12 @@ namespace ariac_common
     class SensorBlackout
     {
     public:
+        /**
+         * @brief Construct a new SensorBlackout object
+         *
+         * @param _duration The duration of the blackout in seconds
+         * @param _sensors_to_disable List of sensors to disable
+         */
         SensorBlackout(double _duration,
                        const std::vector<std::string> &_sensors_to_disable) : duration_(_duration),
                                                                               sensors_to_disable_(_sensors_to_disable) {}
@@ -398,7 +430,7 @@ namespace ariac_common
 
     //==============================================================================
     /**
-     * @brief Derived class for the sensor blackout challenge.
+     * @brief Class which derives SensorBlackout
      *
      * This challenge is triggered at a specific simulation time.
      */
@@ -408,7 +440,7 @@ namespace ariac_common
         /**
          * @brief Construct a new SensorBlackoutTemporal object
          *
-         * @param _duration Duration of the blackout
+         * @param _duration Duration of the blackout in seconds
          * @param _sensors_to_disable List of sensors to disable
          * @param _trigger_time Time at which the challenge should be triggered
          */
@@ -493,6 +525,68 @@ namespace ariac_common
     }; // class SensorBlackoutKittingAction
 
     //==============================================================================
+    class KittingScore
+    {
+    public:
+        KittingScore(std::string _order_id,
+                     int _kit_score,
+                     int _tray_score,
+                     int _quadrant1_score,
+                     int _quadrant2_score,
+                     int _quadrant3_score,
+                     int _quadrant4_score,
+                     int _bonus,
+                     int _penalty) : order_id_(_order_id),
+                                   kit_score_(_kit_score),
+                                   tray_score_(_tray_score),
+                                   quadrant1_score_(_quadrant1_score),
+                                   quadrant2_score_(_quadrant2_score),
+                                   quadrant3_score_(_quadrant3_score),
+                                   quadrant4_score_(_quadrant4_score),
+                                   bonus_(_bonus),
+                                   penalty_(_penalty) {}
+
+        /**
+         * @brief Overload the << operator to print the score
+         *
+         * @param _out  Output stream
+         * @param _obj  KittingScore object
+         * @return std::ostream&
+         */
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const KittingScore &_obj)
+        {
+            _out << "\n================" << std::endl;
+            _out << "Score for Order " << _obj.order_id_ << ": " << _obj.kit_score_ << std::endl;
+            _out << "================" << std::endl;
+
+            _out << "   Points for correct tray: " << _obj.tray_score_ << std::endl;
+            _out << "   Points for quadrant 1: " << _obj.quadrant1_score_ << std::endl;
+            _out << "   Points for quadrant 2: " << _obj.quadrant2_score_ << std::endl;
+            _out << "   Points for quadrant 3: " << _obj.quadrant3_score_ << std::endl;
+            _out << "   Points for quadrant 4: " << _obj.quadrant4_score_ << std::endl;
+            _out << "   Bonus: " << _obj.bonus_ << std::endl;
+            _out << "   Penalty: " << _obj.penalty_ << std::endl;
+
+            return _out;
+        }
+
+        int GetKitScore() const { return kit_score_; }
+
+    protected:
+        std::string order_id_;
+        int kit_score_;
+        int tray_score_;
+        int quadrant1_score_;
+        int quadrant2_score_;
+        int quadrant3_score_;
+        int quadrant4_score_;
+        int bonus_;
+        int penalty_;
+
+    }; // class KittingScore
+
+    //==============================================================================
     class Order
     {
     public:
@@ -532,11 +626,8 @@ namespace ariac_common
                 _out << *_obj.kitting_task_;
             else if (_obj.type_ == ariac_msgs::msg::Order::ASSEMBLY)
                 _out << *_obj.assembly_task_;
-            // else if (_obj.type_ == ariac_msgs::msg::Order::COMBINED)
-            // {
-            //     _out << *_obj.kitting_task_;
-            //     _out << *_obj.assembly_task_;
-            // }
+            else if (_obj.type_ == ariac_msgs::msg::Order::COMBINED)
+                _out << *_obj.combined_task_;
             return _out;
         }
 
@@ -643,6 +734,22 @@ namespace ariac_common
          */
         double GetSubmittedTime() const { return submitted_time_; }
 
+        /**
+         * @brief Set the KittingScore object for the order
+         *
+         * @param _kitting_score Pointer to the KittingScore object for the order
+         */
+        virtual void SetKittingScore(std::shared_ptr<KittingScore> _kitting_score)
+        {
+            kitting_score_ = _kitting_score;
+        }
+        /**
+         * @brief Get the KittingScore object for the order
+         *
+         * @return std::shared_ptr<KittingScore> Pointer to the KittingScore object for the order
+         */
+        std::shared_ptr<KittingScore> GetKittingScore() const { return kitting_score_; }
+
     protected:
         /**
          * @brief Whether or not this order has already been announced
@@ -701,6 +808,12 @@ namespace ariac_common
          *
          */
         std::shared_ptr<CombinedTask> combined_task_ = nullptr;
+
+        /**
+         * @brief Score computed for the current order
+         *
+         */
+        std::shared_ptr<KittingScore> kitting_score_ = nullptr;
     };
     //-- end class Order
 
@@ -1028,6 +1141,115 @@ namespace ariac_common
         //! ID of a submitted order to trigger the challenge
         std::string trigger_order_id_;
     }; // class RobotMalfunctionOnSubmission
+
+    //==============================================================================
+
+    /**
+     * @brief Class to represent the fields for the faulty part challenge
+     */
+    class FaultyPartChallenge
+    {
+    public:
+        /**
+         * @brief Construct a new FaultyPartChallenge object
+         *
+         * @param _msg FaultyPartChallenge message
+         */
+        FaultyPartChallenge(ariac_msgs::msg::FaultyPartChallenge _msg)
+        {
+            order_id_ = _msg.order_id;
+            faulty_quadrants_ = {{1, _msg.quadrant1},
+                                 {2, _msg.quadrant2},
+                                 {3, _msg.quadrant3},
+                                 {4, _msg.quadrant4}};
+            quadrant_checked_ = {{1, false},
+                                 {2, false},
+                                 {3, false},
+                                 {4, false}};
+        }
+
+        std::string GetOrderId() const { return order_id_; }
+        bool IsQuadrantFaulty(int q) { return faulty_quadrants_[q]; }
+        bool WasQuadrantChecked(int q) { return faulty_quadrants_[q]; }
+        void SetQuadrantChecked(int q) { quadrant_checked_[q] = true; }
+
+    protected:
+        const unsigned int type_ = ariac_msgs::msg::Challenge::FAULTY_PART;
+        std::string order_id_;
+        std::map<int, bool> faulty_quadrants_;
+        std::map<int, bool> quadrant_checked_;
+    };
+
+    class KitTrayPart
+    {
+    public:
+        KitTrayPart(const Part &_part,
+                    std::string _model_name,
+                    geometry_msgs::msg::Pose _pose_on_tray) : part_(_part),
+                                                              model_name_(_model_name),
+                                                              pose_on_tray_(_pose_on_tray)
+        {
+            // Determine which quadrant based on pose
+            double x = pose_on_tray_.position.x;
+            double y = pose_on_tray_.position.y;
+            if (x < 0.0 && y >= 0.0)
+                quadrant_ = 1;
+            else if (x >= 0.0 && y >= 0.0)
+                quadrant_ = 2;
+            else if (x < 0.0 && y < 0.0)
+                quadrant_ = 3;
+            else if (x >= 0.0 && y < 0.0)
+                quadrant_ = 4;
+        }
+
+        unsigned int GetQuadrant() const { return quadrant_; }
+        Part GetPart() const { return part_; }
+        std::string GetModelName() const { return model_name_; }
+
+        bool isCorrectType(unsigned int type) { return type == part_.GetType(); }
+        bool isCorrectColor(unsigned int color) { return color == part_.GetColor(); }
+        bool isFaulty() { return model_name_.find("faulty") != std::string::npos; }
+        bool isFlipped()
+        {
+            KDL::Frame part_on_tray;
+            tf2::fromMsg(pose_on_tray_, part_on_tray);
+            KDL::Vector part_z = part_on_tray * KDL::Vector(0, 0, 1);
+
+            // Calculate the angle between the two vectors
+            double angle = KDL::acos(KDL::dot(KDL::Vector(0, 0, 1), part_z) / (part_z.Norm()));
+
+            // Return that the part is flipped if angle is greater than ~10deg
+            if (angle > -0.2 && angle < 0.2)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+    private:
+        unsigned int quadrant_;
+        Part part_;
+        std::string model_name_;
+        geometry_msgs::msg::Pose pose_on_tray_;
+    };
+
+    class KittingShipment
+    {
+    public:
+        KittingShipment(unsigned int _tray_id,
+                        const std::vector<KitTrayPart> &_tray_parts) : tray_id_(_tray_id),
+                                                                       tray_parts_(_tray_parts) {}
+
+        unsigned int GetTrayId() const { return tray_id_; }
+        const std::vector<KitTrayPart> &GetTrayParts() const { return tray_parts_; }
+
+    private:
+        unsigned int tray_id_;
+        std::vector<KitTrayPart> tray_parts_;
+    };
 
 } // namespace ariac_common
 

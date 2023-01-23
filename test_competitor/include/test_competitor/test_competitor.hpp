@@ -32,6 +32,7 @@
 #include <ariac_msgs/srv/change_gripper.hpp>
 #include <ariac_msgs/srv/vacuum_gripper_control.hpp>
 #include <ariac_msgs/srv/move_agv.hpp>
+#include <ariac_msgs/srv/submit_order.hpp>
 
 #include <geometry_msgs/msg/pose.hpp>
 
@@ -59,6 +60,7 @@ public:
   bool StartCompetition();
   bool LockAGVTray(int agv_num);
   bool MoveAGV(int agv_num, int destination);
+  bool SubmitOrder(std::string order_id);
 
   bool CompleteOrders();
   bool CompleteKittingTask(ariac_msgs::msg::KittingTask task);
@@ -103,7 +105,7 @@ private:
 
   // Subscriptions
   rclcpp::Subscription<ariac_msgs::msg::Order>::SharedPtr orders_sub_;
-
+  // rclcpp::Subscription<ariac_msgs::msg::Order>::SharedPtr orders_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr kts1_camera_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr kts2_camera_sub_;
   rclcpp::Subscription<ariac_msgs::msg::AdvancedLogicalCameraImage>::SharedPtr left_bins_camera_sub_;
