@@ -1327,7 +1327,7 @@ namespace ariac_plugins
         int quadrant2_score = 0;
         int quadrant3_score = 0;
         int quadrant4_score = 0;
-        int total_quandrants_score = 0;
+        int total_quadrants_score = 0;
 
         // Penalty points for extra parts
         int penalty = 0;
@@ -1338,19 +1338,12 @@ namespace ariac_plugins
 
         // Get the AGV number for this kitting task
         auto agv = kitting_task->GetAgvNumber();
-        RCLCPP_INFO_STREAM(ros_node_->get_logger(), "AGV ID: " << agv);
+        // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "AGV ID: " << agv);
 
         // Get tray sensor information for this AGV
 
         auto shipment = ParseAGVTraySensorImage(agv_tray_images_[agv]);
 
-        auto parts = shipment.GetTrayParts();
-        RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Part size: " << parts.size());
-        for (auto part : parts)
-        {
-            RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Part type: " << part.GetPart().GetType());
-            RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Part color: " << part.GetPart().GetColor());
-        }
 
         // Compute points for parts in the tray
         auto quadrant1 = CheckQuadrantQuality(1, *kitting_task, shipment);
@@ -1359,25 +1352,33 @@ namespace ariac_plugins
         auto quadrant4 = CheckQuadrantQuality(4, *kitting_task, shipment);
 
         // Check isCorrectTrayId
-        RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Order tray ID: " << kitting_task->GetTrayId());
-        RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Shipment tray ID: " << shipment.GetTrayId());
+        // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Order tray ID: " << kitting_task->GetTrayId());
+        // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Shipment tray ID: " << shipment.GetTrayId());
         if (kitting_task->GetTrayId() == shipment.GetTrayId())
             tray_score = 1;
 
-        // Check Quadrant 1
-        quadrant1_score = ScoreQuadrant(quadrant1);
-        // Check Quadrant 2
-        quadrant2_score = ScoreQuadrant(quadrant2);
-        // Check Quadrant 3
-        quadrant3_score = ScoreQuadrant(quadrant3);
-        // Check Quadrant 4
-        quadrant4_score = ScoreQuadrant(quadrant4);
+        auto kitting_task_parts = kitting_task->GetProducts();
 
-        // Sum quandrant scores
-        total_quandrants_score = quadrant1_score + quadrant2_score + quadrant3_score + quadrant4_score;
+        
+        for (auto &part : kitting_task_parts)
+        {
+            auto quality_issue = CheckQuadrantQuality(part.GetQuadrant(), *kitting_task, shipment);
+            if (part.GetQuadrant() == 1)
+                quadrant1_score = ScoreQuadrant(quality_issue);
+            else if (part.GetQuadrant() == 2)
+                quadrant2_score = ScoreQuadrant(quality_issue);
+            else if (part.GetQuadrant() == 3)
+                quadrant3_score = ScoreQuadrant(quality_issue);
+            else if (part.GetQuadrant() == 4)
+                quadrant4_score = ScoreQuadrant(quality_issue);
+            // total_quandrants_score += ScoreQuadrant(quality_issue);
+        }
+
+        // Sum quadrant scores
+        total_quadrants_score = quadrant1_score + quadrant2_score + quadrant3_score + quadrant4_score;
 
         // Compute bonus
-        if (total_quandrants_score == 3 * expected_number_of_parts)
+        if (total_quadrants_score == 3 * expected_number_of_parts)
             bonus = expected_number_of_parts;
 
         // Compute penalty
@@ -1385,7 +1386,7 @@ namespace ariac_plugins
             penalty = shipment.GetTrayParts().size() - expected_number_of_parts;
 
         // Compute the score for the submitted kit
-        int kit_score = std::max(tray_score + total_quandrants_score + bonus - penalty, 0);
+        int kit_score = std::max(tray_score + total_quadrants_score + bonus - penalty, 0);
 
         // Create a kitting score object
         auto kitting_score = std::make_shared<ariac_common::KittingScore>(
