@@ -15,14 +15,15 @@ parts:
     agv4:
       tray_id: 0
       parts:
-        - type: 'sensor'
-          color: 'green'
-          quadrant: 3
-          rotation: 'pi'
         - type: 'pump'
           color: 'green'
           quadrant: 1
           rotation: 0
+          flipped: true
+        - type: 'sensor'
+          color: 'green'
+          quadrant: 3
+          rotation: 'pi'
   
   bins: # bin params - 8 total bins each bin has nine total slots (1-9)
     bin1: 
@@ -140,13 +141,16 @@ orders:
       time_condition: 0
     priority: false
     kitting_task:
-      agv_number: 1
-      tray_id: 3
+      agv_number: 4
+      tray_id: 0
       destination: 'warehouse'
       products:
-        - type: 'battery'
-          color: 'orange'
+        - type: 'pump'
+          color: 'green'
           quadrant: 1
+        - type: 'sensor'
+          color: 'green'
+          quadrant: 3
   - id: 'MMB30H56'
     type: 'kitting'
     announcement:

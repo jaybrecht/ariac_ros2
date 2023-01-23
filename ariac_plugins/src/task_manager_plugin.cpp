@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // Gazebo
+#include <gazebo/physics/Model.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo_ros/node.hpp>
 #include <gazebo/transport/Subscriber.hh>
@@ -196,7 +197,7 @@ namespace ariac_plugins
         /**
          * @brief Map of AGV trays. The key is the AGV ID and the value is information about the tray.
          */
-        std::map<int, ConstLogicalCameraImagePtr> agv_tray_images_;
+        std::map<int, gazebo::msgs::LogicalCameraImage> agv_tray_images_;
 
         /*!< Callback to parse the tray located on AGV1. */
         void AGV1TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
@@ -210,7 +211,7 @@ namespace ariac_plugins
         // Kitting Methods
         int ScoreQuadrant(ariac_msgs::msg::QualityIssue _quadrant);
         void ScoreKittingTask(std::shared_ptr<ariac_common::Order> _order);
-        ariac_common::KittingShipment ParseAGVTraySensorImage(ConstLogicalCameraImagePtr &_msg);
+        ariac_common::KittingShipment ParseAGVTraySensorImage(gazebo::msgs::LogicalCameraImage &_msg);
         ariac_msgs::msg::QualityIssue CheckQuadrantQuality(int quadrant,
                                                            ariac_common::KittingTask task,
                                                            ariac_common::KittingShipment shipment);
@@ -325,26 +326,25 @@ namespace ariac_plugins
     // ============================================
     void TaskManagerPluginPrivate::AGV1TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
-        agv_tray_images_.insert(std::make_pair(1, _msg));
-        // _msg->PrintDebugString();
+        agv_tray_images_.insert_or_assign(1, *_msg);
     }
 
     // ============================================
     void TaskManagerPluginPrivate::AGV2TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
-        agv_tray_images_.insert(std::make_pair(2, _msg));
+        agv_tray_images_.insert_or_assign(2, *_msg);
     }
 
     // ============================================
     void TaskManagerPluginPrivate::AGV3TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
-        agv_tray_images_.insert(std::make_pair(3, _msg));
+        agv_tray_images_.insert_or_assign(3, *_msg);
     }
 
     // ============================================
     void TaskManagerPluginPrivate::AGV4TraySensorCallback(ConstLogicalCameraImagePtr &_msg)
     {
-        agv_tray_images_.insert(std::make_pair(4, _msg));
+        agv_tray_images_.insert_or_assign(4, *_msg);
     }
 
     // void TaskManagerPluginPrivate::Station1SensorCallback(ConstContactsPtr &_msg)
@@ -1342,10 +1342,7 @@ namespace ariac_plugins
 
         // Get tray sensor information for this AGV
 
-        // What information is available in the tray sensor image?
-        agv_tray_images_.at(agv)->PrintDebugString();
-
-        auto shipment = ParseAGVTraySensorImage(agv_tray_images_.at(agv));
+        auto shipment = ParseAGVTraySensorImage(agv_tray_images_[agv]);
 
         auto parts = shipment.GetTrayParts();
         RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Part size: " << parts.size());
@@ -1546,6 +1543,7 @@ namespace ariac_plugins
 
         // Instantiate a KittingShipment from the agv_tray_sensor data
         auto shipment = ParseAGVTraySensorImage(agv_tray_images_[task->GetAgvNumber()]);
+        RCLCPP_INFO(ros_node_->get_logger(), shipment.DebugString().c_str());
 
         if (task->GetTrayId() != shipment.GetTrayId())
             response->incorrect_tray = true;
@@ -1556,25 +1554,52 @@ namespace ariac_plugins
         response->quadrant3 = CheckQuadrantQuality(3, *task, shipment);
         response->quadrant4 = CheckQuadrantQuality(4, *task, shipment);
 
-        // TODO: Check if the order has a faulty part challenge
+        // Check if the order has a faulty part challenge
         if (faulty_part_challenges_.size()>0){
             for (auto &challenge : faulty_part_challenges_){
                 if (challenge->GetOrderId() == request->order_id) // order has a faulty part challenge
                 {
-                    // Check if the faulty part has already been checked
+                    // RCLCPP_INFO(ros_node_->get_logger(), "Order has a faulty part");
+                    for (int i=1; i<5; i++){
+                        if (challenge->IsQuadrantFaulty(i)) {
+                            // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Quadrant " + std::to_string(i) + " is faulty");
+                            if (!challenge->WasQuadrantChecked(i)) {
+                                // Rename part in gazebo
+                                for (auto &product: task->GetProducts()){
+                                    if (product.GetQuadrant() == i) {
+                                        for (auto tray_part: shipment.GetTrayParts()) {
+                                            if (tray_part.GetQuadrant() == i) {
+                                                if (tray_part.isCorrectType(product.GetPart().GetType()) && 
+                                                    tray_part.isCorrectColor(product.GetPart().GetColor())) {
+                                                    std::string original_name = tray_part.GetModelName();
+                                                    // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Changing name to (" + original_name + "_faulty)");
+                                                    world_->ModelByName(original_name)->SetName(original_name + "_faulty");
+                                                    challenge->SetQuadrantChecked(i);
+
+                                                    // Set correct quality issue
+                                                    if (i == 1)
+                                                        response->quadrant1.faulty_part = true;
+                                                    else if (i == 2)
+                                                        response->quadrant2.faulty_part = true;
+                                                    else if (i == 3)
+                                                        response->quadrant3.faulty_part = true;
+                                                    else if (i == 4)
+                                                        response->quadrant4.faulty_part = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-
-        // See if the faulty part has already been checked
-
-        // Modify the quality issue for the given quadrants and change the name of that part and set checked to true
     }
 
-    ariac_common::KittingShipment TaskManagerPluginPrivate::ParseAGVTraySensorImage(ConstLogicalCameraImagePtr &_msg)
+    ariac_common::KittingShipment TaskManagerPluginPrivate::ParseAGVTraySensorImage(gazebo::msgs::LogicalCameraImage &_msg)
     {
-        // _msg->DebugString();
-
         // Create a kitting shipment from data in the msg
         KDL::Frame sensor_to_tray;
         int kit_tray_id = -1;
@@ -1582,13 +1607,11 @@ namespace ariac_plugins
         std::vector<ariac_common::KitTrayPart> tray_parts;
 
         // Find Kit Tray
-        RCLCPP_INFO_STREAM(ros_node_->get_logger(), "MODEL SIZE: " << _msg->model_size());
-        for (int i = 0; i < _msg->model_size(); i++)
+        for (int i = 0; i < _msg.model_size(); i++)
         {
-            const auto &lc_model = _msg->model(i);
+            const auto &lc_model = _msg.model(i);
 
             std::string model_name = lc_model.name();
-            RCLCPP_INFO_STREAM(ros_node_->get_logger(), "MODEL: " << model_name);
             // name of kit tray model is "kit_tray_XX_YY" where XX indicates
             // the marker_id for the tray
             if (model_name.find("kit_tray") != std::string::npos)
@@ -1607,46 +1630,45 @@ namespace ariac_plugins
             return ariac_common::KittingShipment(kit_tray_id, tray_parts);
 
         // Fill vector of KitTrayParts
-        for (int i = 0; i < _msg->model_size(); i++)
+        for (int i = 0; i < _msg.model_size(); i++)
         {
-            const auto &lc_model = _msg->model(i);
+            const auto &lc_model = _msg.model(i);
             std::string model_name = lc_model.name();
 
-            int part_type;
-            int part_color;
-
+            bool classified_part = false;
             // Determine part type
             for (const auto &type : part_types_)
             {
-                if (model_name.find(type.first) != std::string::npos)
-                    part_type = type.second;
-
-                // Determine part color
-                for (const auto &color : part_colors_)
-                {
-                    if (model_name.find(color.first) != std::string::npos)
+                if (model_name.find(type.first) != std::string::npos) {
+                    // Determine part color
+                    for (const auto &color : part_colors_)
                     {
-                        part_color = color.second;
+                        if (model_name.find(color.first) != std::string::npos)
+                        {
+                            ariac_common::Part part(color.second, type.second);
 
-                        ariac_common::Part part(part_color, part_type);
+                            // Get pose on tray
+                            KDL::Frame sensor_to_part;
+                            tf2::fromMsg(gazebo_ros::Convert<geometry_msgs::msg::Pose>(
+                                            gazebo::msgs::ConvertIgn(lc_model.pose())),
+                                        sensor_to_part);
 
-                        // Get pose on tray
-                        KDL::Frame sensor_to_part;
-                        tf2::fromMsg(gazebo_ros::Convert<geometry_msgs::msg::Pose>(
-                                         gazebo::msgs::ConvertIgn(lc_model.pose())),
-                                     sensor_to_part);
+                            KDL::Frame tray_to_part;
+                            tray_to_part = sensor_to_tray.Inverse() * sensor_to_part;
 
-                        KDL::Frame tray_to_part;
-                        tray_to_part = sensor_to_tray.Inverse() * sensor_to_part;
+                            geometry_msgs::msg::Pose pose_on_tray = tf2::toMsg(tray_to_part);
 
-                        geometry_msgs::msg::Pose pose_on_tray = tf2::toMsg(tray_to_part);
+                            // Create KitTrayPart
+                            ariac_common::KitTrayPart tray_part(part, model_name, pose_on_tray);
 
-                        // Create KitTrayPart
-                        ariac_common::KitTrayPart tray_part(part, model_name, pose_on_tray);
-
-                        tray_parts.push_back(tray_part);
+                            tray_parts.push_back(tray_part);
+                            classified_part = true;
+                            break;
+                        }
                     }
                 }
+                if (classified_part)
+                    break;
             }
         }
 
