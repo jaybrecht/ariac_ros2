@@ -31,7 +31,22 @@ parts:
           flipped: true
 
   conveyor_belt: # population params for conveyor belt
-    active: false
+    active: true
+    spawn_rate: 3.0 # seconds between spawn
+    order: 'sequential' # random or sequential
+    parts_to_spawn:
+      - type: 'battery'
+        color: 'red'
+        number: 5
+        offset: 0.5 # between -1 and 1
+        flipped: false
+        rotation: 'pi/6'
+      - type: 'sensor'
+        color: 'green'
+        number: 5
+        offset: -0.25 # between -1 and 1
+        flipped: true
+        rotation: 'pi'
 
 
 # challenges:
