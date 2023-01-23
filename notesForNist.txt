@@ -1,7 +1,10 @@
 Jason Agents:
-Our Agents' code is in the folder 'ariac_ros2/human_control', we need everything in there.
-To execute the agents you must run ./gradlew run at such folder.
-It is tested with Java jdk-17.
+Our Agents' code are in the folder 'ariac_ros2/human_control', we need everything in there.
+It requires Java SDK-17 to be installed.
+To execute the agents you must run, at 'ariac_ros2/human_control', one of the three versions:
+a) for Indifferent:  ./gradlew runIndif
+b) for Antagonistic: ./gradlew runAntag
+c) for Helper:       ./gradlew runHelp 
 
 Additional files and configurations required by the agents:
 
@@ -15,6 +18,8 @@ Should modify the following files:
 ariac_gazebo/launch/ariac.launch.py 
 ariac_human/CMakeLists.txt 
 ariac_human/package.xml added the <exec_depend> clause to allow movebase_server.py to call the teleport service 
+ariac_gazebo/models/floor/model.sdf - added <surface> clause 
+
 
 It was also developed a Gazebo plugin in C++, which involves the following files:
 ariac_msgs/srv/TeleportHuman.srv

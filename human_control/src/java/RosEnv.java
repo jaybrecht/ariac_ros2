@@ -26,6 +26,8 @@ public class RosEnv extends Environment {
 	double gpX = 0.0;
 	double gpY = 0.0;
 	double gpZ = 0.0;
+
+	boolean simulationStarted = false;
     
     RosBridge bridge = new RosBridge();
 
@@ -51,8 +53,8 @@ public class RosEnv extends Environment {
 						//logger.info("I see the Gantry robot in less than " + msg.distance_robot_human_operator +" meters: gantry_detected");
 						Literal gDetectedLit = new LiteralImpl("gantry_detected"); //movebase_result");
 						gDetectedLit.addTerm(new NumberTermImpl(detcont++)); //movebase_result.addTerm(new NumberTermImpl(msg.status.status));
-						addPercept("human",gDetectedLit); 
-						//addPercept("human",Literal.parseLiteral("gantry_detected")); 
+						if(simulationStarted==true)
+							addPercept("human",gDetectedLit); 
 					}
 //					logger.info(msg.time+"");
 //					logger.info(msg.human_operator_speed+"");
@@ -87,6 +89,25 @@ public class RosEnv extends Environment {
 	}
 	);
 
+		/* Subscriber for getting the START message */
+		bridge.subscribe(SubscriptionRequestMsg.generate("/human_start")
+				.setType("std_msgs/Bool")
+				.setThrottleRate(1)
+				.setQueueLength(1),
+			new RosListenDelegate() {
+				public void receive(JsonNode data, String stringRep) {
+					MessageUnpacker<PrimitiveMsg<Boolean>> unpacker = new MessageUnpacker<PrimitiveMsg<Boolean>>(PrimitiveMsg.class);
+					PrimitiveMsg<Boolean> msg = unpacker.unpackRosMessage(data);
+					if (msg.data){
+						clearPercepts("human");
+						logger.info("Simulation started!");
+						addPercept("human",Literal.parseLiteral("human_start"));
+					}
+					simulationStarted = true; 
+				}
+			}
+	); 
+	
 		/* Subscriber for getting the information that the Gantry has been disabled. Note that the topic is made up, it should be replaced with the correct one later */
 		bridge.subscribe(SubscriptionRequestMsg.generate("/gantry_disabled")
 				.setType("std_msgs/Bool")
@@ -99,7 +120,8 @@ public class RosEnv extends Environment {
 					if (msg.data){
 						clearPercepts("human");
 						logger.info("Gantry has been disabled!");
-						addPercept("human",Literal.parseLiteral("gantry_disabled"));
+						if(simulationStarted==true)
+							addPercept("human",Literal.parseLiteral("gantry_disabled"));
 					}
 				}
 			}
@@ -127,8 +149,8 @@ public class RosEnv extends Environment {
 					Literal movebase_result = new LiteralImpl("work_completed"); //movebase_result");
 					movebase_result.addTerm(new NumberTermImpl(cont++)); //movebase_result.addTerm(new NumberTermImpl(msg.status.status));
 					logger.info("cont: "+cont);
-					addPercept("human", movebase_result);
-					//addPercept("human",Literal.parseLiteral("work_completed"));
+					if(simulationStarted==true)
+							addPercept("human", movebase_result);
 				}
 			}
 	    );
@@ -176,25 +198,26 @@ public class RosEnv extends Environment {
 		}
 	}*/
 	
+	// MOVE request; published topic is read by movebaser_node.py
 	public void move(double x, double y, double z) {
 		Publisher move_base = new Publisher("/jason_to_move_base", "geometry_msgs/Vector3", bridge);		
 		move_base.publish(new Vector3(x,y,z));
 	}
 	
-	// This method also needs to cancel any ongoing move base goals
+	// STOP request; published topic is read by movebaser_node.py
 	public void stop_moving() {
 		Publisher move_base = new Publisher("/jason_stop_human", "geometry_msgs/Vector3", bridge);		
 		move_base.publish(new Vector3(0.0, 0.0, 0.0)); //LB: could fix: reimplement without parameters
 	}
 	
-	// 2 do: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
+	// Published topic is read by movebaser_node.py; it than calls a service in the Gazebo plugin TeleportHuman
 	public void teleport() { // ros2 service call /ariac/teleport_human ariac_msgs/srv/TeleportHuman
 		logger.info("RosEnv: executing Teleport");	
 		Publisher teleport_h = new Publisher("/jason_teleport_human", "geometry_msgs/Vector3", bridge); //"std_msgs/Bool", bridge);	
 		teleport_h.publish(new Vector3(0.0, 0.0, 0.0));	// new Boolean(true)); //LB: changed from Bool to Vector3 to make work	
 	}
 
-	// Fix: Should call a service by sending a message to a topic and having a Python script reading it to send the service request
+	// First STOP than MOVE; published topics are read by movebaser_node.py 
 	public void move_to_gantry() {
 		Publisher stop = new Publisher("/jason_stop_human", "geometry_msgs/Vector3", bridge);		
 		stop.publish(new Vector3(0.0, 0.0, 0.0)); //LB: could fix: reimplement without parameters

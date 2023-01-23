@@ -28,10 +28,11 @@ gantry_position(0.0, 0.0, 0.0).
 g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == percept).
 
 /* Initial goals */
-
-!start.
+!standby.
+//!start.
 
 /* Plans */
++!standby: true <- .wait("+human_start"); .print("Human agent started"); !start.
 
 +!start : indifferent <- .include("indifferent.asl"); !work(station4).
 +!start : helpful <- .include("helpful.asl"); !work(station3).
@@ -64,7 +65,7 @@ g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == per
 @disabled[atomic]
 +gantry_disabled : working(Location)
 	<-
-		//stop_movement; // stops moving and cancel any navigation goals
+		//stop_movement; // not needed, teleport stops the robot
 		.print("Gantry disabled: teleport requested.");
 		teleport_safe; // ask to be teleported to the safe zone
 		.wait(8000); // waits for 8 seconds in the safe zone

@@ -6,8 +6,8 @@ MAS hello_ros {
 
 	agents:
 		human 
-			  [beliefs="indifferent"];
-//			  [beliefs="helpful"];
+//			  [beliefs="indifferent"];
+			  [beliefs="helpful"];
 //			  [beliefs="antagonistic"];
 
 	aslSourcePath:

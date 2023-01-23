@@ -17,6 +17,14 @@
       </visual>
 
       <collision name="visual">
+        <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+          </surface>
         <geometry>
           <mesh>
             <uri>model://floor/meshes/floor.dae</uri>
