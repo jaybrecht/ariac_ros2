@@ -5,6 +5,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ariac_msgs/srv/conveyor_belt_control.hpp>
 #include <ariac_msgs/msg/conveyor_belt_state.hpp>
+#include <ariac_msgs/msg/competition_state.hpp>
 
 #include <memory>
 
@@ -27,11 +28,16 @@ public:
   double max_velocity_;
   double power_;
 
+  unsigned int competition_state_;
+
   /// Position limit of belt joint to reset 
   double limit_;
 
   /// Service for enabling the vacuum gripper
   rclcpp::Service<ariac_msgs::srv::ConveyorBeltControl>::SharedPtr enable_service_;
+
+  // Subscriber to competition state
+  rclcpp::Subscription<ariac_msgs::msg::CompetitionState>::SharedPtr competition_state_sub_;
 
   /// Status Publisher
   rclcpp::Publisher<ariac_msgs::msg::ConveyorBeltState>::SharedPtr status_pub_;
@@ -40,6 +46,8 @@ public:
   rclcpp::Time last_publish_time_;
   int update_ns_;
 
+  void OnUpdate();
+
   /// Callback for enable service
   void SetConveyorPower(
     ariac_msgs::srv::ConveyorBeltControl::Request::SharedPtr,
@@ -47,6 +55,8 @@ public:
 
   /// Method to publish status
   void PublishStatus();
+
+  void CompetitionStateCallback(const ariac_msgs::msg::CompetitionState::SharedPtr msg_);
 };
 
 ConveyorBeltPlugin::ConveyorBeltPlugin()
@@ -68,6 +78,11 @@ void ConveyorBeltPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
   impl_->status_msg_.enabled = false;
   impl_->status_msg_.power = 0;
 
+  // Create subscriber
+  impl_->competition_state_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::CompetitionState>(
+    "/ariac/competition_state", 10, 
+    std::bind(&ConveyorBeltPluginPrivate::CompetitionStateCallback, impl_.get(), std::placeholders::_1));
+
   // Create belt joint
   impl_->belt_joint_ = model->GetJoint("belt_joint");
 
@@ -83,11 +98,11 @@ void ConveyorBeltPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
   impl_->limit_ = impl_->belt_joint_->UpperLimit();
 
   // Register enable service
-  impl_->enable_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::ConveyorBeltControl>(
-      "/ariac/set_conveyor_power", 
-      std::bind(
-        &ConveyorBeltPluginPrivate::SetConveyorPower, impl_.get(),
-        std::placeholders::_1, std::placeholders::_2));
+  // impl_->enable_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::ConveyorBeltControl>(
+  //     "/ariac/set_conveyor_power", 
+  //     std::bind(
+  //       &ConveyorBeltPluginPrivate::SetConveyorPower, impl_.get(),
+  //       std::placeholders::_1, std::placeholders::_2));
 
   double publish_rate = sdf->GetElement("publish_rate")->Get<double>();
   impl_->update_ns_ = int((1/publish_rate) * 1e9);
@@ -96,24 +111,24 @@ void ConveyorBeltPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
 
   // Create a connection so the OnUpdate function is called at every simulation iteration. 
   impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-    std::bind(&ConveyorBeltPlugin::OnUpdate, this));
+    std::bind(&ConveyorBeltPluginPrivate::OnUpdate, impl_.get()));
 }
 
-void ConveyorBeltPlugin::OnUpdate()
+void ConveyorBeltPluginPrivate::OnUpdate()
 {
-  impl_->belt_joint_->SetVelocity(0, impl_->belt_velocity_);
+  belt_joint_->SetVelocity(0, belt_velocity_);
 
-  double belt_position = impl_->belt_joint_->Position(0);
+  double belt_position = belt_joint_->Position(0);
 
-  if (belt_position >= impl_->limit_){
-    impl_->belt_joint_->SetPosition(0, 0);
+  if (belt_position >= limit_){
+    belt_joint_->SetPosition(0, 0);
   }
 
   // Publish status at rate
-  rclcpp::Time now = impl_->ros_node_->get_clock()->now();
-  if (now - impl_->last_publish_time_ >= rclcpp::Duration(0, impl_->update_ns_)) {
-    impl_->PublishStatus();
-    impl_->last_publish_time_ = now;
+  rclcpp::Time now = ros_node_->get_clock()->now();
+  if (now - last_publish_time_ >= rclcpp::Duration(0, update_ns_)) {
+    PublishStatus();
+    last_publish_time_ = now;
   }
     
 }
@@ -131,6 +146,21 @@ void ConveyorBeltPluginPrivate::SetConveyorPower(
   else{
     RCLCPP_WARN(ros_node_->get_logger(), "Conveyor power must be between 0 and 100");
   }
+}
+
+void ConveyorBeltPluginPrivate::CompetitionStateCallback(const ariac_msgs::msg::CompetitionState::SharedPtr msg_){
+  competition_state_ = msg_->competition_state;
+
+  if (competition_state_ == ariac_msgs::msg::CompetitionState::STARTED){
+    power_ = 100;
+    belt_velocity_ = max_velocity_;
+  } 
+  
+  if (competition_state_ == ariac_msgs::msg::CompetitionState::ENDED){
+    power_ = 0;
+    belt_velocity_ = 0;
+  } 
+
 }
 
 void ConveyorBeltPluginPrivate::PublishStatus(){
