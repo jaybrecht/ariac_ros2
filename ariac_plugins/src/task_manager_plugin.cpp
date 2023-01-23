@@ -1491,6 +1491,7 @@ namespace ariac_plugins
         {
             if (order->GetKittingScore())
             {
+                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(),  *order->GetKittingScore());
                 impl_->trial_score_ += order->GetKittingScore()->GetKitScore();
             }
             // TODO: Do the same thing for assembly and combined tasks
@@ -1512,6 +1513,10 @@ namespace ariac_plugins
 
         response->success = true;
         response->message = "Competition ended successfully!";
+
+        // Display the trial score
+        ComputeTrialScore();
+       
         return true;
     }
 
