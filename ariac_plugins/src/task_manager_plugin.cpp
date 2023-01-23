@@ -40,6 +40,7 @@
 #include <ariac_msgs/msg/robots.hpp>
 #include <ariac_msgs/msg/competition_state.hpp>
 #include <ariac_msgs/msg/quality_issue.hpp>
+#include <ariac_msgs/msg/agv_status.hpp>
 #include <ariac_msgs/srv/submit_order.hpp>
 #include <ariac_msgs/srv/perform_quality_check.hpp>
 // ROS
@@ -103,10 +104,14 @@ namespace ariac_plugins
         gazebo::common::Time last_sim_time_;
         gazebo::common::Time last_on_update_time_;
 
-        //============== FLAGS =================
+        //============== MISC ATTRIBUTES =================
         bool competition_time_set_{false};
         /*< Counter to keep track of the total number of orders in the current trial. */
         int total_orders_{-1};
+        unsigned int agv1_location_;
+        unsigned int agv2_location_;
+        unsigned int agv3_location_;
+        unsigned int agv4_location_;
 
         //============== ROS =================
         /*!< Time when this plugin is loaded. */
@@ -115,8 +120,16 @@ namespace ariac_plugins
         double elapsed_time_;
 
         //============== SUBSCRIBERS =================
-        /*!< Subscriber to topic: "trial_config"*/
+        /*!< Subscriber to topic: "/ariac/trial_config"*/
         rclcpp::Subscription<ariac_msgs::msg::Trial>::SharedPtr trial_config_sub_;
+        /*!< Subscriber to topic: "/ariac/agv1_status"*/
+        rclcpp::Subscription<ariac_msgs::msg::AGVStatus>::SharedPtr agv1_status_;
+        /*!< Subscriber to topic: "/ariac/agv2_status"*/
+        rclcpp::Subscription<ariac_msgs::msg::AGVStatus>::SharedPtr agv2_status_;
+        /*!< Subscriber to topic: "/ariac/agv3_status"*/
+        rclcpp::Subscription<ariac_msgs::msg::AGVStatus>::SharedPtr agv3_status_;
+        /*!< Subscriber to topic: "/ariac/agv4_status"*/
+        rclcpp::Subscription<ariac_msgs::msg::AGVStatus>::SharedPtr agv4_status_;
 
         gazebo::transport::SubscriberPtr agv1_tray_sub_;
         gazebo::transport::SubscriberPtr agv2_tray_sub_;
@@ -209,8 +222,11 @@ namespace ariac_plugins
         void AGV4TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
 
         // Kitting Methods
+        std::array<bool, 4> CheckFaultyParts(std::shared_ptr<ariac_common::FaultyPartChallenge> _challenge,
+                                             std::shared_ptr<ariac_common::KittingTask> _task,
+                                             ariac_common::KittingShipment _shipment);
         int ScoreQuadrant(ariac_msgs::msg::QualityIssue _quadrant);
-        void ScoreKittingTask(std::shared_ptr<ariac_common::Order> _order);
+        void ScoreKittingTask(std::shared_ptr<ariac_common::Order> _order, std::string _submitted_order_id);
         ariac_common::KittingShipment ParseAGVTraySensorImage(gazebo::msgs::LogicalCameraImage &_msg);
         ariac_msgs::msg::QualityIssue CheckQuadrantQuality(int quadrant,
                                                            ariac_common::KittingTask task,
@@ -263,8 +279,7 @@ namespace ariac_plugins
 
         // Init trial score
         impl_->trial_score_ = 0;
-       
-       
+
         std::string tray1_topic = "/gazebo/world/agv_tray_sensor_1/sensor_base/agv_tray_sensor/models";
         std::string tray2_topic = "/gazebo/world/agv_tray_sensor_2/sensor_base/agv_tray_sensor/models";
         std::string tray3_topic = "/gazebo/world/agv_tray_sensor_3/sensor_base/agv_tray_sensor/models";
@@ -299,6 +314,22 @@ namespace ariac_plugins
         impl_->trial_config_sub_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::Trial>(
             "/ariac/trial_config", qos.get_subscription_qos("/ariac/trial_config", rclcpp::QoS(1)),
             std::bind(&TaskManagerPlugin::OnTrialCallback, this, std::placeholders::_1));
+
+        // impl_->agv1_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
+        //     "/ariac/agv1_status", qos.get_subscription_qos("/ariac/agv1_status", rclcpp::QoS(1)),
+        //     std::bind(&TaskManagerPlugin::OnAGV1StatusCallback, this, std::placeholders::_1));
+
+        // impl_->agv2_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
+        //     "/ariac/agv2_status", qos.get_subscription_qos("/ariac/agv2_status", rclcpp::QoS(1)),
+        //     std::bind(&TaskManagerPlugin::OnAGV2StatusCallback, this, std::placeholders::_1));
+
+        // impl_->agv3_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
+        //     "/ariac/agv3_status", qos.get_subscription_qos("/ariac/agv3_status", rclcpp::QoS(1)),
+        //     std::bind(&TaskManagerPlugin::OnAGV3StatusCallback, this, std::placeholders::_1));
+
+        // impl_->agv4_status_ = impl_->ros_node_->create_subscription<ariac_msgs::msg::AGVStatus>(
+        //     "/ariac/agv4_status", qos.get_subscription_qos("/ariac/agv4_status", rclcpp::QoS(1)),
+        //     std::bind(&TaskManagerPlugin::OnAGV4StatusCallback, this, std::placeholders::_1));
 
         //============== PUBLISHERS =================
         impl_->sensor_health_pub_ = impl_->ros_node_->create_publisher<ariac_msgs::msg::Sensors>("/ariac/sensor_health", 10);
@@ -507,6 +538,7 @@ namespace ariac_plugins
     //==============================================================================
     void TaskManagerPlugin::ProcessOnPartPlacementOrders()
     {
+        // auto shipment = ParseAGVTraySensorImage(agv_tray_images_[expected_agv]);
         // for (const auto &order : impl_->on_part_placement_orders_)
         // {
         //     auto agv = order->GetAgv();
@@ -848,18 +880,6 @@ namespace ariac_plugins
                                                                                                              this,
                                                                                                              std::placeholders::_1,
                                                                                                              std::placeholders::_2));
-
-            impl_->submit_order_srv_ = impl_->ros_node_->create_service<ariac_msgs::srv::SubmitOrder>("/ariac/submit_order",
-                                                                                                      std::bind(&TaskManagerPlugin::SubmitOrderServiceCallback,
-                                                                                                                this,
-                                                                                                                std::placeholders::_1,
-                                                                                                                std::placeholders::_2));
-
-            impl_->quality_check_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::PerformQualityCheck>("/ariac/perform_quality_check",
-                                                                                                                   std::bind(&TaskManagerPluginPrivate::PerformQualityCheck,
-                                                                                                                             this->impl_.get(),
-                                                                                                                             std::placeholders::_1,
-                                                                                                                             std::placeholders::_2));
         }
 
         if ((current_sim_time - impl_->last_sim_time_).Double() >= 1.0)
@@ -883,6 +903,18 @@ namespace ariac_plugins
         {
             impl_->start_competition_time_ = current_sim_time;
             impl_->competition_time_set_ = true;
+
+            impl_->submit_order_srv_ = impl_->ros_node_->create_service<ariac_msgs::srv::SubmitOrder>("/ariac/submit_order",
+                                                                                                      std::bind(&TaskManagerPlugin::SubmitOrderServiceCallback,
+                                                                                                                this,
+                                                                                                                std::placeholders::_1,
+                                                                                                                std::placeholders::_2));
+
+            impl_->quality_check_service_ = impl_->ros_node_->create_service<ariac_msgs::srv::PerformQualityCheck>("/ariac/perform_quality_check",
+                                                                                                                   std::bind(&TaskManagerPluginPrivate::PerformQualityCheck,
+                                                                                                                             this->impl_.get(),
+                                                                                                                             std::placeholders::_1,
+                                                                                                                             std::placeholders::_2));
         }
 
         // Elapsed time since the competition started
@@ -905,6 +937,28 @@ namespace ariac_plugins
 
         impl_->last_on_update_time_ = current_sim_time;
     }
+
+    //==============================================================================
+    // void TaskManagerPlugin::OnAGV1StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
+    // {
+
+    //     impl_->agv1_status_ = _msg->location;
+    // }
+
+    // void TaskManagerPlugin::OnAGV2StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
+    // {
+    //     impl_->agv2_status_ = _msg->location;
+    // }
+
+    // void TaskManagerPlugin::OnAGV3StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
+    // {
+    //     impl_->agv3_status_ = _msg->location;
+    // }
+
+    // void TaskManagerPlugin::OnAGV4StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg)
+    // {
+    //     impl_->agv4_status_ = _msg->location;
+    // }
 
     //==============================================================================
     void TaskManagerPlugin::OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg)
@@ -1316,7 +1370,7 @@ namespace ariac_plugins
     }
 
     //==============================================================================
-    void TaskManagerPluginPrivate::ScoreKittingTask(std::shared_ptr<ariac_common::Order> _order)
+    void TaskManagerPluginPrivate::ScoreKittingTask(std::shared_ptr<ariac_common::Order> _order, std::string _submitted_order_id)
     {
         // Bonus points for completing the order
         int bonus = 0;
@@ -1337,13 +1391,15 @@ namespace ariac_plugins
         int expected_number_of_parts = kitting_task->GetProducts().size();
 
         // Get the AGV number for this kitting task
-        auto agv = kitting_task->GetAgvNumber();
+        auto expected_agv = kitting_task->GetAgvNumber();
+
         // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "AGV ID: " << agv);
 
         // Get tray sensor information for this AGV
 
-        auto shipment = ParseAGVTraySensorImage(agv_tray_images_[agv]);
-
+        auto shipment = ParseAGVTraySensorImage(agv_tray_images_[expected_agv]);
+        // how do we get the actual agv?
+        // auto actual_agv =
 
         // Compute points for parts in the tray
         auto quadrant1 = CheckQuadrantQuality(1, *kitting_task, shipment);
@@ -1351,20 +1407,47 @@ namespace ariac_plugins
         auto quadrant3 = CheckQuadrantQuality(3, *kitting_task, shipment);
         auto quadrant4 = CheckQuadrantQuality(4, *kitting_task, shipment);
 
+        // Check if the order has a faulty part challenge
+        if (faulty_part_challenges_.size() > 0)
+        {
+            for (auto &challenge : faulty_part_challenges_)
+            {
+                if (challenge->GetOrderId() == _submitted_order_id) // order has a faulty part challenge
+                {
+                    auto faulty_parts_result = CheckFaultyParts(challenge, kitting_task, shipment);
+                    quadrant1.faulty_part = faulty_parts_result.at(0);
+                    quadrant2.faulty_part = faulty_parts_result.at(1);
+                    quadrant3.faulty_part = faulty_parts_result.at(2);
+                    quadrant4.faulty_part = faulty_parts_result.at(3);
+                }
+            }
+        }
+
         // Check isCorrectTrayId
-        // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Order tray ID: " << kitting_task->GetTrayId());
-        // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Shipment tray ID: " << shipment.GetTrayId());
         if (kitting_task->GetTrayId() == shipment.GetTrayId())
-            tray_score = 1;
+            tray_score = 3;
 
         auto kitting_task_parts = kitting_task->GetProducts();
 
-        
+        /*
+        for (auto tray_part : shipment.GetTrayParts())
+                        {
+                            if (tray_part.GetQuadrant() == quadrant)
+                            {
+                                shipment_has_part_in_quadrant = true;
+
+                                issue.incorrect_part_type = !tray_part.isCorrectType(product.GetPart().GetType());
+                                issue.incorrect_part_color = !tray_part.isCorrectColor(product.GetPart().GetColor());
+                                issue.faulty_part = tray_part.isFaulty();
+                                issue.flipped_part = tray_part.isFlipped();
+                            }
+                        }
+        */
         for (auto &part : kitting_task_parts)
         {
             auto quality_issue = CheckQuadrantQuality(part.GetQuadrant(), *kitting_task, shipment);
             if (part.GetQuadrant() == 1)
-                quadrant1_score = ScoreQuadrant(quality_issue);
+                quadrant1_score = ScoreQuadrant(quality_issue); // part a
             else if (part.GetQuadrant() == 2)
                 quadrant2_score = ScoreQuadrant(quality_issue);
             else if (part.GetQuadrant() == 3)
@@ -1407,7 +1490,6 @@ namespace ariac_plugins
         RCLCPP_INFO_STREAM(ros_node_->get_logger(), *kitting_score);
     }
 
-
     // ==================================== //
     // Services
     // ==================================== //
@@ -1434,7 +1516,7 @@ namespace ariac_plugins
                     // Score the kitting task
                     if (order->GetKittingTask())
                     {
-                        impl_->ScoreKittingTask(order);
+                        impl_->ScoreKittingTask(order, request->order_id);
                     }
                 }
 
@@ -1485,18 +1567,29 @@ namespace ariac_plugins
 
     void TaskManagerPlugin::ComputeTrialScore()
     {
+
         for (auto &order : impl_->all_orders_)
         {
             if (order->GetKittingScore())
             {
-                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(),  *order->GetKittingScore());
                 impl_->trial_score_ += order->GetKittingScore()->GetKitScore();
             }
             // TODO: Do the same thing for assembly and combined tasks
         }
 
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "================");
         RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Trial score: " << impl_->trial_score_);
-        
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "================");
+        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Summary");
+
+        for (auto &order : impl_->all_orders_)
+        {
+            if (order->GetKittingScore())
+            {
+                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), *order->GetKittingScore());
+            }
+            // TODO: Do the same thing for assembly and combined tasks
+        }
     }
     //==============================================================================
     bool TaskManagerPlugin::EndCompetitionServiceCallback(
@@ -1514,7 +1607,7 @@ namespace ariac_plugins
 
         // Display the trial score
         ComputeTrialScore();
-       
+
         return true;
     }
 
@@ -1560,48 +1653,115 @@ namespace ariac_plugins
         response->quadrant3 = CheckQuadrantQuality(3, *task, shipment);
         response->quadrant4 = CheckQuadrantQuality(4, *task, shipment);
 
-        if (response->quadrant1.all_passed && 
-            response->quadrant2.all_passed && 
-            response->quadrant3.all_passed && 
-            response->quadrant4.all_passed) {
-            
+        if (response->quadrant1.all_passed &&
+            response->quadrant2.all_passed &&
+            response->quadrant3.all_passed &&
+            response->quadrant4.all_passed)
+        {
+
             response->all_passed = true;
         }
 
         // Check if the order has a faulty part challenge
-        if (faulty_part_challenges_.size()>0){
-            for (auto &challenge : faulty_part_challenges_){
+        if (faulty_part_challenges_.size() > 0)
+        {
+            for (auto &challenge : faulty_part_challenges_)
+            {
                 if (challenge->GetOrderId() == request->order_id) // order has a faulty part challenge
                 {
+                    auto faulty_parts_result = CheckFaultyParts(challenge, task, shipment);
+                    response->quadrant1.faulty_part = faulty_parts_result.at(0);
+                    response->quadrant2.faulty_part = faulty_parts_result.at(1);
+                    response->quadrant3.faulty_part = faulty_parts_result.at(2);
+                    response->quadrant4.faulty_part = faulty_parts_result.at(3);
                     // RCLCPP_INFO(ros_node_->get_logger(), "Order has a faulty part");
-                    for (int i=1; i<5; i++){
-                        if (challenge->IsQuadrantFaulty(i)) {
-                            // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Quadrant " + std::to_string(i) + " is faulty");
-                            if (!challenge->WasQuadrantChecked(i)) {
-                                // Rename part in gazebo
-                                for (auto &product: task->GetProducts()){
-                                    if (product.GetQuadrant() == i) {
-                                        for (auto tray_part: shipment.GetTrayParts()) {
-                                            if (tray_part.GetQuadrant() == i) {
-                                                if (tray_part.isCorrectType(product.GetPart().GetType()) && 
-                                                    tray_part.isCorrectColor(product.GetPart().GetColor())) {
-                                                    std::string original_name = tray_part.GetModelName();
-                                                    // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Changing name to (" + original_name + "_faulty)");
-                                                    world_->ModelByName(original_name)->SetName(original_name + "_faulty");
-                                                    challenge->SetQuadrantChecked(i);
+                    // for (int i = 1; i < 5; i++)
+                    // {
+                    //     if (challenge->IsQuadrantFaulty(i))
+                    //     {
+                    //         // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Quadrant " + std::to_string(i) + " is faulty");
+                    //         if (!challenge->WasQuadrantChecked(i))
+                    //         {
+                    //             // Rename part in gazebo
+                    //             for (auto &product : task->GetProducts())
+                    //             {
+                    //                 if (product.GetQuadrant() == i)
+                    //                 {
+                    //                     for (auto tray_part : shipment.GetTrayParts())
+                    //                     {
+                    //                         if (tray_part.GetQuadrant() == i)
+                    //                         {
+                    //                             if (tray_part.isCorrectType(product.GetPart().GetType()) &&
+                    //                                 tray_part.isCorrectColor(product.GetPart().GetColor()))
+                    //                             {
+                    //                                 std::string original_name = tray_part.GetModelName();
+                    //                                 // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Changing name to (" + original_name + "_faulty)");
+                    //                                 world_->ModelByName(original_name)->SetName(original_name + "_faulty");
+                    //                                 challenge->SetQuadrantChecked(i);
 
-                                                    // Set correct quality issue
-                                                    if (i == 1)
-                                                        response->quadrant1.faulty_part = true;
-                                                    else if (i == 2)
-                                                        response->quadrant2.faulty_part = true;
-                                                    else if (i == 3)
-                                                        response->quadrant3.faulty_part = true;
-                                                    else if (i == 4)
-                                                        response->quadrant4.faulty_part = true;
-                                                }
-                                            }
-                                        }
+                    //                                 // Set correct quality issue
+                    //                                 if (i == 1)
+                    //                                     response->quadrant1.faulty_part = true;
+                    //                                 else if (i == 2)
+                    //                                     response->quadrant2.faulty_part = true;
+                    //                                 else if (i == 3)
+                    //                                     response->quadrant3.faulty_part = true;
+                    //                                 else if (i == 4)
+                    //                                     response->quadrant4.faulty_part = true;
+                    //                             }
+                    //                         }
+                    //                     }
+                    //                 }
+                    //             }
+                    //         }
+                    //     }
+                    // }
+                }
+            }
+        }
+    }
+
+    //==============================================================================
+    std::array<bool, 4> TaskManagerPluginPrivate::CheckFaultyParts(std::shared_ptr<ariac_common::FaultyPartChallenge> _challenge,
+                                                                   std::shared_ptr<ariac_common::KittingTask> _task,
+                                                                   ariac_common::KittingShipment _shipment)
+    {
+
+        std::array<bool, 4> faulty_parts = {false, false, false, false};
+
+        for (int i = 1; i < 5; i++)
+        {
+            if (_challenge->IsQuadrantFaulty(i))
+            {
+                // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Quadrant " + std::to_string(i) + " is faulty");
+                if (!_challenge->WasQuadrantChecked(i))
+                {
+                    // Rename part in gazebo
+                    for (auto &product : _task->GetProducts())
+                    {
+                        if (product.GetQuadrant() == i)
+                        {
+                            for (auto tray_part : _shipment.GetTrayParts())
+                            {
+                                if (tray_part.GetQuadrant() == i)
+                                {
+                                    if (tray_part.isCorrectType(product.GetPart().GetType()) &&
+                                        tray_part.isCorrectColor(product.GetPart().GetColor()))
+                                    {
+                                        std::string original_name = tray_part.GetModelName();
+                                        // RCLCPP_INFO_STREAM(ros_node_->get_logger(), "Changing name to (" + original_name + "_faulty)");
+                                        world_->ModelByName(original_name)->SetName(original_name + "_faulty");
+                                        _challenge->SetQuadrantChecked(i);
+
+                                        // Set correct quality issue
+                                        if (i == 1)
+                                            faulty_parts.at(0) = true;
+                                        else if (i == 2)
+                                            faulty_parts.at(1) = true;
+                                        else if (i == 3)
+                                            faulty_parts.at(2) = true;
+                                        else if (i == 4)
+                                            faulty_parts.at(3) = true;
                                     }
                                 }
                             }
@@ -1610,6 +1770,8 @@ namespace ariac_plugins
                 }
             }
         }
+
+        return faulty_parts;
     }
 
     ariac_common::KittingShipment TaskManagerPluginPrivate::ParseAGVTraySensorImage(gazebo::msgs::LogicalCameraImage &_msg)
@@ -1630,7 +1792,7 @@ namespace ariac_plugins
             // the marker_id for the tray
             if (model_name.find("kit_tray") != std::string::npos)
             {
-                
+
                 std::string id_string = model_name.substr(9, 2);
                 kit_tray_id = std::stoi(id_string);
                 auto pose = gazebo_ros::Convert<geometry_msgs::msg::Pose>(gazebo::msgs::ConvertIgn(lc_model.pose()));
@@ -1653,7 +1815,8 @@ namespace ariac_plugins
             // Determine part type
             for (const auto &type : part_types_)
             {
-                if (model_name.find(type.first) != std::string::npos) {
+                if (model_name.find(type.first) != std::string::npos)
+                {
                     // Determine part color
                     for (const auto &color : part_colors_)
                     {
@@ -1664,8 +1827,8 @@ namespace ariac_plugins
                             // Get pose on tray
                             KDL::Frame sensor_to_part;
                             tf2::fromMsg(gazebo_ros::Convert<geometry_msgs::msg::Pose>(
-                                            gazebo::msgs::ConvertIgn(lc_model.pose())),
-                                        sensor_to_part);
+                                             gazebo::msgs::ConvertIgn(lc_model.pose())),
+                                         sensor_to_part);
 
                             KDL::Frame tray_to_part;
                             tray_to_part = sensor_to_tray.Inverse() * sensor_to_part;
@@ -1713,7 +1876,7 @@ namespace ariac_plugins
                         issue.incorrect_part_type = !tray_part.isCorrectType(product.GetPart().GetType());
                         issue.incorrect_part_color = !tray_part.isCorrectColor(product.GetPart().GetColor());
                         issue.faulty_part = tray_part.isFaulty();
-                        issue.flipped_part = tray_part.isFlipped();                        
+                        issue.flipped_part = tray_part.isFlipped();
                     }
                 }
 

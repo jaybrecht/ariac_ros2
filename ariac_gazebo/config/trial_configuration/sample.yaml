@@ -19,6 +19,7 @@ parts:
           color: 'green'
           quadrant: 1
           rotation: 0
+          flipped: true
         - type: 'sensor'
           color: 'green'
           quadrant: 3
