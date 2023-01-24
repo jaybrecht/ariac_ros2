@@ -49,7 +49,7 @@ Kitting Task Score
   * A shipment has :math:`m` parts on the kitting tray.
   * For each task there are two Boolean conditions:
   
-      1. :math:`isCorrectTrayID` is true if the shipment tray ID matches the kitting tray ID.
+      1. :math:`isCorrectTrayID \rightarrow A` is true if the shipment tray ID matches the kitting tray ID.
       2. :math:`isCorrectDestination` is true if the shipment was sent to the correct destination (as1, as2, as3, as4, kitting, or warehouse).
   * For each quadrant `q` of the kitting tray there are four Boolean condition:
   
@@ -64,6 +64,16 @@ Kitting Task Score
     \texttt{pt}_{tray} = \begin{cases}
     3, &\text{if} ~~ A \\
     0, &\text{otherwise}  \\
+    \end{cases}
+
+  .. math::
+
+    \texttt{pt}_q = \begin{cases}
+    0, &\text{if} ~~ \lnot B \lor E \\
+    3, &\text{if} ~~ B \land C \land \lnot D \land \lnot E\\
+    2, &\text{if} ~~ B \land \lnot C \land \lnot D \land \lnot E\\
+    2, &\text{if} ~~ B \land C \land  D \land \lnot E\\
+    1, &\text{if} ~~ B \land \lnot C \land D \land \lnot E\\
     \end{cases}
 
       .. n_{\mathrm{offset}} = \sum_{k=0}^{N-1} s_k n_k
