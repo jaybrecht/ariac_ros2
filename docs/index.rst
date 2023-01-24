@@ -31,31 +31,5 @@ Welcome to ARIAC 2023!
    competition/sensors
    competition/ros_communication
    competition/challenges
-   .. competition/scoring
-   .. competition/tf_frames
-   
-
-.. .. toctree::
-..    :caption: Tutorials
-..    :maxdepth: 2
-..    :hidden:
-
-   .. tutorials/moving_robots
-   .. tutorials/reading_sensor_data
-   .. tutorials/picking_part_from_bin
-   .. tutorials/picking_part_from_conveyor
-   .. tutorials/assembling_a_part
-   .. tutorials/changing_robot_tool
-   .. tutorials/picking_kit_tray
-   .. tutorials/performing_qc
-   .. tutorials/reading_an_order
-   .. tutorials/completing_kitting_order
-   .. tutorials/completing_assembly_order
-   .. tutorials/completing_combined_order
-
-.. .. toctree::
-..    :caption: Automated Evaluation
-..    :maxdepth: 2
-..    :hidden:
-
-   .. automated_evaluation/docker_setup
+   competition/scoring
+ 
