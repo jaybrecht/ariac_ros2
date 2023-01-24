@@ -14,6 +14,7 @@ Welcome to ARIAC 2023!
    :maxdepth: 2
    :hidden:
 
+   getting_started/updates
    getting_started/installation
    getting_started/registering
    getting_started/events
