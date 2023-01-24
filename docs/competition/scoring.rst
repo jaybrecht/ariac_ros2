@@ -60,5 +60,10 @@ Kitting Task Score
 
 
   .. math::
+    
+    \texttt{pt}_{tray} = \begin{cases}
+    3, &\text{if} ~~ A \\
+    0, &\text{otherwise}  \\
+    \end{cases}
 
-      n_{\mathrm{offset}} = \sum_{k=0}^{N-1} s_k n_k
+      .. n_{\mathrm{offset}} = \sum_{k=0}^{N-1} s_k n_k
