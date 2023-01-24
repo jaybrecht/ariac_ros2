@@ -59,7 +59,7 @@ Kitting Task Score
       4. :math:`isFaulty_{q} \rightarrow E` is true if the part in quadrant :math:`q` is faulty.
 
 
-  * Tray score.
+  * Tray score:
 
     .. math::
       
@@ -67,6 +67,8 @@ Kitting Task Score
       3, &\text{if} ~~ A \\
       0, &\text{otherwise}  \\
       \end{cases}
+
+  * Quadrant score:
 
   .. math::
 
@@ -78,6 +80,8 @@ Kitting Task Score
     1, &\text{if} ~~ B \land \lnot C \land D \land \lnot E\\
     \end{cases}
 
+  * Bonus score:
+
   .. math::
 
     \texttt{pt}_b = \begin{cases}
@@ -85,12 +89,15 @@ Kitting Task Score
     0, &\text{otherwise} \\
     \end{cases}
 
+  * Penalty score for having more parts than required:
   .. math::
 
     \texttt{pn}_{ep} = \begin{cases}
     m - n, &\text{if} ~~ m>n \\
     0, &\text{otherwise} \\
     \end{cases}
+
+  * Destination score:
 
   .. math::
 
@@ -99,6 +106,8 @@ Kitting Task Score
     0, &\text{otherwise} \\
     \end{cases}
 
+  * Kitting task score:
+  
   .. math::
 
     S_{k} = (\max{[\texttt{pt}_{tray} + \sum_{q}^{n}{\texttt{pt}_q} + \texttt{pt}_b - \texttt{pn}_{eq} , 0]}) \times (\texttt{destination})
