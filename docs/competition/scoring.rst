@@ -1,3 +1,4 @@
+========
 Scoring
 ========
 
@@ -56,6 +57,9 @@ Kitting Task Score
       2. :math:`isCorrectColor_{q}` is true if the part color in quadrant :math:`q` is correct.
       3. :math:`isFlipped_{q}` is true if the part in quadrant :math:`q` is still flipped.
       4. :math:`isFaulty_{q}` is true if the part in quadrant :math:`q` is faulty.
+
+
+test
 
   .. math::
     
