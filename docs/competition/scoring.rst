@@ -33,7 +33,7 @@ The Efficiency Factor :math:`EF_i` for order :math:`i` compares the time to comp
 
   .. math::
 
-    EF_i = w_t \cdot \frac{TC_{avg}_{i}}{T_i}
+    EF_i = w_t \cdot \frac{TC_{avg_{i}}}{T_i}
 
 
 Completion Score
@@ -41,5 +41,8 @@ Completion Score
 
 Completion score varies between Kitting, Assembly, and Combined tasks. Each task is generated from Boolean conditions.
 
-Kitting Task Score
--------------------
+  Kitting Task Score
+  -------------------
+
+  * A kitting order has :math:`n` parts that need to be placed on the kitting tray.
+  * A shipment has :math:`m` parts on the kitting tray.
