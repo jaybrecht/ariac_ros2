@@ -16,9 +16,9 @@ The Cost Factor :math:`CF` compares the cost of the sensors chosen by the team t
   * :math:`TC_{avg}` is the average sensor cost across all teams.
   * :math:`w_c` is a weighting constant for cost factor.
 
-.. math::
+  .. math::
 
-CF = w_c \cdot \frac{TC_{avg}}{TC}
+    CF = w_c \cdot \frac{TC_{avg}}{TC}
 
 
 Efficiency Factor
@@ -31,6 +31,15 @@ The Efficiency Factor :math:`EF_i` for order :math:`i` compares the time to comp
   * :math:`w_t` is a weighting constant for efficiency factor.
 
 
-.. math::
+  .. math::
 
-EF_i = w_t \cdot \frac{TC_{avg}_{i}}{T_i}
+    EF_i = w_t \cdot \frac{TC_{avg}_{i}}{T_i}
+
+
+Completion Score
+-----------------
+
+Completion score varies between Kitting, Assembly, and Combined tasks. Each task is generated from Boolean conditions.
+
+Kitting Task Score
+-------------------
