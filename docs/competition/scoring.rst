@@ -95,7 +95,7 @@ Kitting Task Score
   .. math::
 
     \texttt{destination} = \begin{cases}
-    1, &\text{if\,} isCorrectDestination=true \\
+    1, &\text{if}\, isCorrectDestination=true \\
     0, &\text{otherwise} \\
     \end{cases}
 
