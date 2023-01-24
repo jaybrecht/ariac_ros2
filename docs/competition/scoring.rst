@@ -41,8 +41,18 @@ Completion Score
 
 Completion score varies between Kitting, Assembly, and Combined tasks. Each task is generated from Boolean conditions.
 
-  Kitting Task Score
-  -------------------
+Kitting Task Score
+^^^^^^^^^^^^^^^^^^^
 
   * A kitting order has :math:`n` parts that need to be placed on the kitting tray.
   * A shipment has :math:`m` parts on the kitting tray.
+  * For each task there are two Boolean conditions:
+  
+      1. :math:`isCorrectTrayID` is true if the shipment tray ID matches the kitting tray ID.
+      2. :math:`isCorrectDestination` is true if the shipment was sent to the correct destination (as1, as2, as3, as4, kitting, or warehouse).
+  * For each quadrant `q` of the kitting tray there are four Boolean condition:
+  
+      1. :math:`isCorrectType_{q}` is true if the part type in quadrant :math:`q` is correct.
+      2. :math:`isCorrectColor_{q}` is true if the part color in quadrant :math:`q` is correct.
+      3. :math:`isFlipped_{q}` is true if the part in quadrant :math:`q` is still flipped.
+      4. :math:`isFaulty_{q}` is true if the part in quadrant :math:`q` is faulty.
