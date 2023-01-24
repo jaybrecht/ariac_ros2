@@ -76,4 +76,27 @@ Kitting Task Score
     1, &\text{if} ~~ B \land \lnot C \land D \land \lnot E\\
     \end{cases}
 
-      .. n_{\mathrm{offset}} = \sum_{k=0}^{N-1} s_k n_k
+  .. math::
+
+    \texttt{pt}_b = \begin{cases}
+    n, &\text{if} ~~ \sum_{q}^{n}{\texttt{pt}_q} = n\times 3 \\
+    0, &\text{otherwise} \\
+    \end{cases}
+
+  .. math::
+
+    \texttt{pn}_{ep} = \begin{cases}
+    m - n, &\text{if} ~~ m>n \\
+    0, &\text{otherwise} \\
+    \end{cases}
+
+  .. math::
+
+    \texttt{destination} = \begin{cases}
+    1, &\text{if AGV is sent to correct station} \\
+    0, &\text{otherwise} \\
+    \end{cases}
+
+  .. math::
+
+    S_{k} = (\max{[\texttt{pt}_{tray} + \sum_{q}^{n}{\texttt{pt}_q} + \texttt{pt}_b - \texttt{pn}_{eq} , 0]}) \times (\texttt{destination})
