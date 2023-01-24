@@ -35,10 +35,10 @@ Welcome to ARIAC 2023!
    .. competition/tf_frames
    
 
-.. toctree::
-   :caption: Tutorials
-   :maxdepth: 2
-   :hidden:
+.. .. toctree::
+..    :caption: Tutorials
+..    :maxdepth: 2
+..    :hidden:
 
    .. tutorials/moving_robots
    .. tutorials/reading_sensor_data
@@ -53,9 +53,9 @@ Welcome to ARIAC 2023!
    .. tutorials/completing_assembly_order
    .. tutorials/completing_combined_order
 
-.. toctree::
-   :caption: Automated Evaluation
-   :maxdepth: 2
-   :hidden:
+.. .. toctree::
+..    :caption: Automated Evaluation
+..    :maxdepth: 2
+..    :hidden:
 
    .. automated_evaluation/docker_setup
