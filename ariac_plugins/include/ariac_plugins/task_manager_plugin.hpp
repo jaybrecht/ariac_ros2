@@ -197,31 +197,31 @@ namespace ariac_plugins
         void ProcessInProgressSensorBlackouts();
         void ProcessInProgressRobotMalfunctions();
         void ProcessTemporalRobotMalfunctions();
-
+        void ProcessOnPartPlacementRobotMalfunctions();
+        void ProcessOnPartPlacementSensorBlackouts();
         void SetSensorsHealth(const std::vector<std::string> &_sensors_to_disable);
         void SetRobotsHealth(const std::vector<std::string> &_robots_to_disable);
+        
         /**
          * @brief Callback function for the topic 'trial_config'
          *
          * @param _msg Shared pointer to the message
          */
-        void
-        OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
+        void OnTrialCallback(const ariac_msgs::msg::Trial::SharedPtr _msg);
         void OnAGV1StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
         void OnAGV2StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
         void OnAGV3StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
         void OnAGV4StatusCallback(const ariac_msgs::msg::AGVStatus::SharedPtr _msg);
 
+        /**
+         * @brief Compute the final score for the trial
+         *
+         */
         void ComputeTrialScore();
 
         /**
-         * @brief Build and publish an order message
-         *
-         * @param _order Order to be published
+         * @brief Load the plugin
          */
-        // void AnnounceOrder(std::shared_ptr<ariac_common::Order> _order);
-
-        /// \brief Load the plugin.
         virtual void Load(gazebo::physics::WorldPtr _world, sdf::ElementPtr _sdf) override;
 
     protected:

@@ -1216,7 +1216,7 @@ class EnvironmentStartup(Node):
         try:
             conveyor_config = self.trial_config['parts']['conveyor_belt']
         except KeyError:
-            self.get_logger().error("Unable to find conveyor belt params in configuration file")
+            self.get_logger().info("Conveyor belt not in use in this trial")
             return False
 
         try:

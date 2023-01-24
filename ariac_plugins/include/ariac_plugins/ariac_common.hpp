@@ -35,6 +35,7 @@ namespace ariac_common
     class Order;
     class OrderTemporal;
     class Part;
+    class Quadrant;
 
     //==============================================================================
     std::string static ConvertPartTypeToString(unsigned int _part_type)
@@ -405,10 +406,10 @@ namespace ariac_common
         double GetStartTime() const { return start_time_; }
         void SetStartTime(double _start_time) { start_time_ = _start_time; }
 
-        bool IsStarted() const { return started_; }
+        bool HasStarted() const { return started_; }
         void SetStarted() { started_ = true; }
 
-        bool IsCompleted() const { return completed_; }
+        bool HasCompleted() const { return completed_; }
         void SetCompleted() { completed_ = true; }
 
         void SetStopTime(double _stop_time) { stop_time_ = _stop_time; }
@@ -524,6 +525,55 @@ namespace ariac_common
         std::string trigger_order_id_;
     }; // class SensorBlackoutKittingAction
 
+    class Quadrant
+    {
+    public:
+        Quadrant(int _quadrant_number,
+                 bool _is_correct_part_type,
+                 bool _is_correct_part_color,
+                 bool _is_faulty,
+                 bool _is_flipped,
+                 int _score) : quadrant_number_(_quadrant_number),
+                               is_correct_part_type_(_is_correct_part_type),
+                               is_correct_part_color_(_is_correct_part_color),
+                               is_faulty_(_is_faulty),
+                               is_flipped_(_is_flipped),
+                               score_(_score)
+        {
+        }
+
+        friend std::ostream &operator<<(std::ostream &_out,
+                                        const Quadrant &_obj)
+        {
+            int quadrant_num = 0;
+            if (_obj.quadrant_number_ == 1)
+                quadrant_num = 1;
+            else if (_obj.quadrant_number_ == 2)
+                quadrant_num = 2;
+            else if (_obj.quadrant_number_ == 3)
+                quadrant_num = 3;
+            else if (_obj.quadrant_number_ == 4)
+                quadrant_num = 4;
+            _out << "-----------" << std::endl;
+            _out << "   Quadrant" << quadrant_num << " score: " << _obj.score_ << std::endl;
+            _out << "   -----------" << std::endl;
+            _out << "   Correct part type: " << std::boolalpha << _obj.is_correct_part_type_ << std::endl;
+            _out << "   Correct part color: " << std::boolalpha << _obj.is_correct_part_color_ << std::endl;
+            _out << "   Faulty Part: " << std::boolalpha << _obj.is_faulty_ << std::endl;
+            _out << "   Flipped Part: " << std::boolalpha << _obj.is_flipped_ << std::endl;
+
+            return _out;
+        }
+
+    protected:
+        int quadrant_number_;
+        bool is_correct_part_type_;
+        bool is_correct_part_color_;
+        bool is_faulty_;
+        bool is_flipped_;
+        int score_;
+    };
+
     //==============================================================================
     class KittingScore
     {
@@ -531,27 +581,27 @@ namespace ariac_common
         KittingScore(std::string _order_id,
                      int _kit_score,
                      int _tray_score,
-                     int _quadrant1_score,
-                     int _quadrant2_score,
-                     int _quadrant3_score,
-                     int _quadrant4_score,
+                     std::shared_ptr<Quadrant> _quadrant1,
+                     std::shared_ptr<Quadrant> _quadrant2,
+                     std::shared_ptr<Quadrant> _quadrant3,
+                     std::shared_ptr<Quadrant> _quadrant4,
                      int _bonus,
                      int _penalty) : order_id_(_order_id),
-                                   kit_score_(_kit_score),
-                                   tray_score_(_tray_score),
-                                   quadrant1_score_(_quadrant1_score),
-                                   quadrant2_score_(_quadrant2_score),
-                                   quadrant3_score_(_quadrant3_score),
-                                   quadrant4_score_(_quadrant4_score),
-                                   bonus_(_bonus),
-                                   penalty_(_penalty) {}
+                                     kit_score_(_kit_score),
+                                     tray_score_(_tray_score),
+                                     quadrant1_(_quadrant1),
+                                     quadrant2_(_quadrant2),
+                                     quadrant3_(_quadrant3),
+                                     quadrant4_(_quadrant4),
+                                     bonus_(_bonus),
+                                     penalty_(_penalty) {}
 
         /**
          * @brief Overload the << operator to print the score
          *
          * @param _out  Output stream
          * @param _obj  KittingScore object
-         * @return std::ostream&
+         * @return std::ostream& Output stream
          */
         friend std::ostream &operator<<(std::ostream &_out,
                                         const KittingScore &_obj)
@@ -560,13 +610,46 @@ namespace ariac_common
             _out << "Score for Order " << _obj.order_id_ << ": " << _obj.kit_score_ << std::endl;
             _out << "================" << std::endl;
 
-            _out << "   Points for correct tray: " << _obj.tray_score_ << std::endl;
-            _out << "   Points for quadrant 1: " << _obj.quadrant1_score_ << std::endl;
-            _out << "   Points for quadrant 2: " << _obj.quadrant2_score_ << std::endl;
-            _out << "   Points for quadrant 3: " << _obj.quadrant3_score_ << std::endl;
-            _out << "   Points for quadrant 4: " << _obj.quadrant4_score_ << std::endl;
+            auto quad1 = _obj.quadrant1_;
+            auto quad2 = _obj.quadrant2_;
+            auto quad3 = _obj.quadrant3_;
+            auto quad4 = _obj.quadrant4_;
+
+            _out << "   Correct tray score: " << _obj.tray_score_ << std::endl;
+            if (_obj.quadrant1_)
+                _out << "   " << *_obj.quadrant1_ << std::endl;
+            else
+            {
+                _out << "   -----------" << std::endl;
+                _out << "   Quadrant 1: Not used" << std::endl;
+            }
+
+            if (_obj.quadrant2_)
+                _out << "   " << *_obj.quadrant2_ << std::endl;
+            else
+            {
+                _out << "   -----------" << std::endl;
+                _out << "   Quadrant 2: Not used" << std::endl;
+            }
+            if (_obj.quadrant3_)
+                _out << "   " << *_obj.quadrant3_ << std::endl;
+
+            else
+            {
+                _out << "   -----------" << std::endl;
+                _out << "   Quadrant 3: Not used" << std::endl;
+            }
+            if (_obj.quadrant4_)
+                _out << "   " << *_obj.quadrant4_ << std::endl;
+
+            else
+            {
+                _out << "   -----------" << std::endl;
+                _out << "   Quadrant 4: Not used" << std::endl;
+            }
+            _out << "   -----------" << std::endl;
             _out << "   Bonus: " << _obj.bonus_ << std::endl;
-            _out << "   Penalty: " << _obj.penalty_ << std::endl;
+            _out << "   Extra Parts Penalty: " << _obj.penalty_ << std::endl;
 
             return _out;
         }
@@ -577,10 +660,10 @@ namespace ariac_common
         std::string order_id_;
         int kit_score_;
         int tray_score_;
-        int quadrant1_score_;
-        int quadrant2_score_;
-        int quadrant3_score_;
-        int quadrant4_score_;
+        std::shared_ptr<Quadrant> quadrant1_ = nullptr;
+        std::shared_ptr<Quadrant> quadrant2_ = nullptr;
+        std::shared_ptr<Quadrant> quadrant3_ = nullptr;
+        std::shared_ptr<Quadrant> quadrant4_ = nullptr;
         int bonus_;
         int penalty_;
 
@@ -612,9 +695,9 @@ namespace ariac_common
         friend std::ostream &operator<<(std::ostream &_out,
                                         const Order &_obj)
         {
-            _out << "================" << std::endl;
+            _out << "=================" << std::endl;
             _out << "Announcing Order " << _obj.id_ << std::endl;
-            _out << "================" << std::endl;
+            _out << "=================" << std::endl;
             if (_obj.type_ == ariac_msgs::msg::Order::KITTING)
                 _out << "Type: Kitting" << std::endl;
             else if (_obj.type_ == ariac_msgs::msg::Order::ASSEMBLY)
@@ -1246,13 +1329,15 @@ namespace ariac_common
         unsigned int GetTrayId() const { return tray_id_; }
         const std::vector<KitTrayPart> &GetTrayParts() const { return tray_parts_; }
 
-        std::string DebugString() {
+        std::string DebugString()
+        {
             std::string s = "Kit Tray ID: " + std::to_string(tray_id_);
 
-            for (auto part: tray_parts_) {
-                s += "\n\tPart: (type: " + ConvertPartTypeToString(part.GetPart().GetType()) + 
-                    ", color: " + ConvertPartColorToString(part.GetPart().GetColor()) + 
-                    ", quad: " + std::to_string(part.GetQuadrant()) + ")";
+            for (auto part : tray_parts_)
+            {
+                s += "\n\tPart: (type: " + ConvertPartTypeToString(part.GetPart().GetType()) +
+                     ", color: " + ConvertPartColorToString(part.GetPart().GetColor()) +
+                     ", quad: " + std::to_string(part.GetQuadrant()) + ")";
             }
 
             return s;

@@ -53,6 +53,18 @@ parts:
 #   - faulty_part:
 #       order_id: 'MMB30H56'
 #       quadrant1: true
+  # - robot_malfunction:
+  #     duration: 5.0
+  #     robots_to_disable: ['floor_robot']
+  #     part_place_condition:
+  #       color: 'blue'
+  #       type: 'battery'
+  #       agv: 4
+  # - sensor_blackout:
+  #     duration: 5.0
+  #     sensors_to_disable: ['lidar', 'logical_camera']
+  #     submission_condition:
+  #       order_id: 'MMB30H57'
 
 
 orders:
@@ -69,28 +81,16 @@ orders:
         - type: 'battery'
           color: 'blue'
           quadrant: 1
-        - type: 'pump'
-          color: 'purple'
-          quadrant: 3
-        - type: 'pump'
-          color: 'purple'
-          quadrant: 2
-  - id: '8EX92YUD'
-    type: 'kitting'
-    announcement:
-      part_place_condition:
-        color: 'blue'
-        type: 'battery'
-        agv: 4
-    priority: false
-    kitting_task:
-      agv_number: 1
-      tray_id: 8
-      destination: 'warehouse'
-      products:
-        # - type: 'battery'
-        #   color: 'blue'
-        #   quadrant: 4
-        - type: 'pump'
-          color: 'purple'
-          quadrant: 2
+  # - id: '8EX92YUD'
+  #   type: 'kitting'
+  #   announcement:
+  #     time_condition: 40
+  #   priority: false
+  #   kitting_task:
+  #     agv_number: 1
+  #     tray_id: 8
+  #     destination: 'warehouse'
+  #     products:
+  #       - type: 'pump'
+  #         color: 'purple'
+  #         quadrant: 2
