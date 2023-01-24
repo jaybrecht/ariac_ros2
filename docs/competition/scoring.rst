@@ -17,6 +17,7 @@ The Cost Factor :math:`CF` compares the cost of the sensors chosen by the team t
   * :math:`w_c` is a weighting constant for cost factor.
 
 .. math::
+
 CF = w_c \cdot \frac{TC_{avg}}{TC}
 
 
@@ -26,8 +27,10 @@ Efficiency Factor
 The Efficiency Factor :math:`EF_i` for order :math:`i` compares the time to complete order :math:`i` for the team to the average of all teams's times to complete order :math:`i`.
 
   * :math:`T_i` is the time to complete order :math:`i`
-  * :math:`T_{avg}_i` is the average time to complete order :math:`i` for all teams
+  * :math:`T_{avg_{i}}` is the average time to complete order :math:`i` for all teams
   * :math:`w_t` is a weighting constant for efficiency factor.
 
+
 .. math::
-EF_i = w_t \cdot \frac{TC_{avg}_i}{T_i}
+
+EF_i = w_t \cdot \frac{TC_{avg}_{i}}{T_i}
