@@ -8,11 +8,17 @@ c) for Helper:       ./gradlew runHelp
 
 Additional files and configurations required by the agents:
 
-We developed four (4) python ROS nodes, which are in the folder 'ariac_human/launch': 
-  launch/human_listener.py
-  launch/robot_listener.py
-  launch/snapshot.py
-  launch/clockNode.py
+We developed four (4) python ROS nodes, located at 'ariac_human/launch': 
+- /human_listener.py
+- /robot_listener.py
+- /snapshot.py
+- /clockNode.py
+  
+Our nodes use customized messages, available at 'ariac_msgs/msg':
+- /Snapshot.msg
+- /TimedFloat.msg
+- /TimedPose.msg
+* These messages should be added to ariac_msgs/CMakelist.txt
 
 Should modify the following files:
 ariac_gazebo/launch/ariac.launch.py 

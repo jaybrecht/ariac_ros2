@@ -1,9 +1,12 @@
-@detected[atomic]
-+gantry_detected(_) : not movingToGantry  //working(Location) & g_position(X, Y, Z) 
++gantry_detected(_) : working(Location) & next_location(Location,Prev) 
 	<-
-		.print("Detected the Gantry robot in close proximity and moving towards me, I want to mess with it.");
 		stop_movement; // stops moving and cancel any navigation goals
-		+movingToGantry;
+		.print("Detected the Gantry robot in close proximity and moving towards me, I want to mess with it.");
+		.wait(1000);
+		//+movingToGantry;
 		move_to_gantry;
-		.wait(3000). // waits for 3 seconds before resuming
-
+		.wait(12000); // waits for 12 seconds
+		stop_movement; 
+		.wait(1000);
+		!work(Next);
+		.wait(1500). 

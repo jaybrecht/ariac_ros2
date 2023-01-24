@@ -1,0 +1,244 @@
+/* begin x
+end x */
+
+/* begin 3
+end 3 */
+
+
+/* begin 2: see gantry close to the target waypoint
+
+[RosEnv] I see the Gantry robot in 4.950318907319966 meters: gantry_detected
+[RosEnv]  t: 350
+[RosEnv] hs: 0.07854219823451226
+[RosEnv] rs: -6.728624391667615E-16
+[RosEnv]  d: 4.950318907319966
+[human] Detected the Gantry robot in close proximity and moving towards me, selecting a different table.
+[human] Now moving to: station4
+[RosEnv] Human reached waypoint	!
+[RosEnv] cont: 1
+[human] Work completed at station4
+[human] Now moving to: station3
+[RosEnv]  t: 355
+[RosEnv] hs: 0.051158940924633994
+[RosEnv] rs: 1.5509210077818185E-11
+[RosEnv]  d: 4.865906654771594
+[RosEnv]  t: 359
+[RosEnv] hs: 0.03142459527712197
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.824426189005793
+[RosEnv]  t: 364
+[RosEnv] hs: 0.001681070801043119
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.821652422184072
+[RosEnv]  t: 369
+[RosEnv] hs: 8.324714767154176E-4
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.8202788442474915
+[RosEnv]  t: 373
+[RosEnv] hs: 0.0029085603653300146
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.816439544565256
+[RosEnv]  t: 378
+[RosEnv] hs: 0.007964382440438813
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.803298313538532
+[RosEnv] Human reached waypoint	!
+[RosEnv] cont: 2
+[human] Work completed at station3
+[human] Now moving to: station1
+[RosEnv]  t: 383
+[RosEnv] hs: 0.02205582769298689
+[RosEnv] rs: -1.6494818978709656E-11
+[RosEnv]  d: 4.766906197872951
+[RosEnv]  t: 387
+[RosEnv] hs: 0.1342362556672241
+[RosEnv] rs: 2.0053319274486992E-11
+[RosEnv]  d: 4.589714340364998
+[RosEnv]  t: 392
+[RosEnv] hs: 0.12704661930692213
+[RosEnv] rs: 5.382899513334091E-16
+[RosEnv]  d: 4.380087418508577
+
+end 2 */
+
+/* begin 1: general log
+[RosEnv]  t: 2541
+[RosEnv] hs: 0.12143395297227477
+[RosEnv] rs: -1.9475330439242743E-11
+[RosEnv]  d: 10.483847690595786
+[RosEnv]  t: 2546
+[RosEnv] hs: 0.11476676529645491
+[RosEnv] rs: 1.900271186197201E-11
+[RosEnv]  d: 10.294482527824503
+[RosEnv]  t: 2555
+[RosEnv] hs: 0.12164287339608859
+[RosEnv] rs: 5.980999459260102E-16
+[RosEnv]  d: 9.933203193838118
+[RosEnv]  t: 2560
+[RosEnv] hs: 0.12441182979450316
+[RosEnv] rs: -1.7648374344417153E-11
+[RosEnv]  d: 9.727923674707128
+[RosEnv]  t: 2565
+[RosEnv] hs: 0.11697273209418355
+[RosEnv] rs: 1.7072404096490406E-11
+[RosEnv]  d: 9.534918666722605
+[RosEnv]  t: 2569
+[RosEnv] hs: 0.13004816617637377
+[RosEnv] rs: 0.0
+[RosEnv]  d: 9.363255087369792
+[RosEnv]  t: 2574
+[RosEnv] hs: 0.1127219959789544
+[RosEnv] rs: -1.60894866453556E-11
+[RosEnv]  d: 9.177263794031976
+[RosEnv]  t: 2579
+[RosEnv] hs: 0.12379014121207696
+[RosEnv] rs: 1.5597489629836865E-11
+[RosEnv]  d: 8.973010061005503
+[RosEnv]  t: 2584
+[RosEnv] hs: 0.10210239316535738
+[RosEnv] rs: -1.4953694848042108E-11
+[RosEnv]  d: 8.8045411123084
+[RosEnv]  t: 2589
+[RosEnv] hs: 0.11000021684652712
+[RosEnv] rs: 0.0
+[RosEnv]  d: 8.62304075451163
+[RosEnv]  t: 2598
+[RosEnv] hs: 0.10908411193228468
+[RosEnv] rs: 7.229234046407686E-12
+[RosEnv]  d: 8.299060942049165
+[RosEnv]  t: 2603
+[RosEnv] hs: 0.0871230548844211
+[RosEnv] rs: -1.2217028735463055E-11
+[RosEnv]  d: 8.15530790151134
+[RosEnv]  t: 2608
+[RosEnv] hs: 0.11545031344724496
+[RosEnv] rs: 0.0
+[RosEnv]  d: 7.964814884323387
+[RosEnv]  t: 2613
+[RosEnv] hs: 0.10794227922403311
+[RosEnv] rs: 0.0
+[RosEnv]  d: 7.786710123603731
+[RosEnv]  t: 2622
+[RosEnv] hs: 0.11292616344615591
+[RosEnv] rs: 5.148444334531096E-12
+[RosEnv]  d: 7.4513194181510105
+[RosEnv]  t: 2627
+[RosEnv] hs: 0.10078147347912218
+[RosEnv] rs: 0.0
+[RosEnv]  d: 7.285029986910459
+[RosEnv]  t: 2632
+[RosEnv] hs: 0.10947685384866146
+[RosEnv] rs: 0.0
+[RosEnv]  d: 7.1043931780601675
+[RosEnv]  t: 2636
+[RosEnv] hs: 0.10563822451554469
+[RosEnv] rs: -8.204211720760323E-12
+[RosEnv]  d: 6.96495072171181
+[RosEnv]  t: 2641
+[RosEnv] hs: 0.10603021009931914
+[RosEnv] rs: 5.330147098103418E-12
+[RosEnv]  d: 6.790000875037104
+[RosEnv]  t: 2646
+[RosEnv] hs: 0.09938711699158544
+[RosEnv] rs: 0.0
+[RosEnv]  d: 6.626012132000988
+[RosEnv]  t: 2650
+[RosEnv] hs: 0.09766598512737965
+[RosEnv] rs: -4.1347396886797494E-12
+[RosEnv]  d: 6.497093031639867
+[RosEnv]  t: 2655
+[RosEnv] hs: 0.09452701748283135
+[RosEnv] rs: 0.0
+[RosEnv]  d: 6.3411234527931954
+[RosEnv]  t: 2660
+[RosEnv] hs: 0.0941020428439239
+[RosEnv] rs: 8.973293488727931E-13
+[RosEnv]  d: 6.185855082097262
+[RosEnv]  t: 2665
+[RosEnv] hs: 0.11061624476642822
+[RosEnv] rs: 5.280624422580744E-13
+[RosEnv]  d: 6.0033382782341365
+[RosEnv]  t: 2669
+[RosEnv] hs: 0.08544250389570988
+[RosEnv] rs: 0.0
+[RosEnv]  d: 5.890554173091799
+[RosEnv]  t: 2674
+[RosEnv] hs: 0.08601969746520809
+[RosEnv] rs: -3.147919635397777E-12
+[RosEnv]  d: 5.748621672276988
+[RosEnv]  t: 2679
+[RosEnv] hs: 0.09201150267682943
+[RosEnv] rs: 4.817156774482679E-12
+[RosEnv]  d: 5.596802692855025
+[RosEnv]  t: 2683
+[RosEnv] hs: 0.07990704252606677
+[RosEnv] rs: 0.0
+[RosEnv]  d: 5.491325396720617
+[RosEnv]  t: 2688
+[RosEnv] hs: 0.07213764747042717
+[RosEnv] rs: 0.0
+[RosEnv]  d: 5.372298278394412
+[RosEnv]  t: 2693
+[RosEnv] hs: 0.08402125147187293
+[RosEnv] rs: -9.346328425001984E-12
+[RosEnv]  d: 5.233663213478447
+[RosEnv]  t: 2698
+[RosEnv] hs: 0.058988531373857254
+[RosEnv] rs: 5.382899513334091E-16
+[RosEnv]  d: 5.136332136711581
+[RosEnv]  t: 2703
+[RosEnv] hs: 0.06484948333269476
+[RosEnv] rs: 1.2837138759399142E-11
+[RosEnv]  d: 5.029330489194361
+[RosEnv] I see the Gantry robot in 4.955715735658154 meters: gantry_detected
+[RosEnv]  t: 2707
+[RosEnv] hs: 0.05576875267894524
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.955715735658154
+[RosEnv]  t: 2712
+[RosEnv] hs: 0.05644075480897803
+[RosEnv] rs: -1.5844026427547565E-11
+[RosEnv]  d: 4.862588490246809
+[RosEnv]  t: 2717
+[RosEnv] hs: 0.02236406743870812
+[RosEnv] rs: 1.6371550579854308E-11
+[RosEnv]  d: 4.825687778946799
+[RosEnv]  t: 2722
+[RosEnv] hs: 0.0021492776010016237
+[RosEnv] rs: -1.6365091100438306E-11
+[RosEnv]  d: 4.822141470932159
+[RosEnv]  t: 2726
+[RosEnv] hs: -0.004080482864714114
+[RosEnv] rs: 2.0590936363381236E-11
+[RosEnv]  d: 4.827527708286579
+[RosEnv]  t: 2731
+[RosEnv] hs: 0.0023759572428277468
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.823607378835913
+[RosEnv] I see the Gantry robot in 4.8377994806186235 meters: gantry_detected
+[RosEnv]  t: 2736
+[RosEnv] hs: -0.008601273807703445
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.8377994806186235
+[RosEnv] Human reached waypoint	!
+[RosEnv] cont: 1
+[human] Work completed at station3
+[human] Now moving to: station1
+[RosEnv]  t: 2741
+[RosEnv] hs: -0.005362432770812184
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.846647494690464
+[RosEnv]  t: 2745
+[RosEnv] hs: 0.08832781335990282
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.730054781055392
+[RosEnv]  t: 2750
+[RosEnv] hs: 0.13264793172494777
+[RosEnv] rs: -1.5925846500150243E-11
+[RosEnv]  d: 4.511185693735581
+[RosEnv]  t: 2755
+[RosEnv] hs: 0.12118870260550753
+[RosEnv] rs: 0.0
+[RosEnv]  d: 4.311224334436495
+end 1 */
+

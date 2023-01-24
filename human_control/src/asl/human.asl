@@ -25,17 +25,17 @@ previous_location(station3,station4).
 gantry_position(0.0, 0.0, 0.0).
 
 //////////////// Rules
-g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == percept).
+//g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == percept).
 
 /* Initial goals */
 !standby.
 //!start.
 
 /* Plans */
-+!standby: true <- .wait("+human_start"); .print("Human agent started"); !start.
++!standby: true <- +counterClock; .wait("+human_start"); .print("Human agent started"); !start.
 
 +!start : indifferent <- .include("indifferent.asl"); !work(station4).
-+!start : helpful <- .include("helpful.asl"); !work(station3).
++!start : helpful <- .include("helpful.asl"); !work(station4).
 +!start : antagonistic <- .include("antagonistic.asl"); !work(station4).
 
 // Work pattern plans
@@ -48,16 +48,17 @@ g_position(X, Y, Z) :- gantry_position(X,Y,Z)[source(S)] & (S == self | S == per
 
 
 //+work_completed : working(Location) & next_location(Location,Next)
-+work_completed(_) : working(Location) & next_location(Location,Next) & not movingToGantry
++work_completed(_) : working(Location) & previous_location(Location,Prev) & not counterClock
 	<-
-		.print("Work completed at ", Location);
-		!work(Next).
+		.print("Clockwise - Work completed at ", Location);
+		!work(Prev).
 
 
 //+work_completed : working(Location) & next_location(Location,Next)
-+work_completed(_) : working(Location) & next_location(Location,Next) & movingToGantry
++work_completed(_) : working(Location) & next_location(Location,Next) & counterClock
 	<-
-		-movingToGantry;
+		.print("Counterclock - Work completed at ", Location);
+//		-movingToGantry;
 		!work(Next).
 
 

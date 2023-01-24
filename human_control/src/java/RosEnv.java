@@ -18,7 +18,7 @@ public class RosEnv extends Environment {
 
     private Logger logger = Logger.getLogger("ariac_env."+RosEnv.class.getName());
     
-    final int gantry_detection = 5;
+    final double gantry_detection = 5.0;
 
 	int cont = 0;
 	int detcont = 0;
@@ -27,7 +27,13 @@ public class RosEnv extends Environment {
 	double gpY = 0.0;
 	double gpZ = 0.0;
 
+	// "smart" orientation variables
+	double lastMsgTime = 0.0;
+	double previousDistance = 0.0;
+	boolean isAproximating = false;
+	
 	boolean simulationStarted = false;
+	
     
     RosBridge bridge = new RosBridge();
 
@@ -48,18 +54,27 @@ public class RosEnv extends Environment {
 				public void receive(JsonNode data, String stringRep) {
 					MessageUnpacker<Snapshot> unpacker = new MessageUnpacker<Snapshot>(Snapshot.class);
 					Snapshot msg = unpacker.unpackRosMessage(data);
-					if (msg.distance_robot_human_operator <= gantry_detection) {
-						//clearPercepts("human");
-						//logger.info("I see the Gantry robot in less than " + msg.distance_robot_human_operator +" meters: gantry_detected");
+					if(msg.distance_robot_human_operator < previousDistance)
+						isAproximating = true;
+					else 
+						isAproximating = false;
+					previousDistance = msg.distance_robot_human_operator;
+					//fix: do something when human and robot are too close
+					//if (msg.distance_robot_human_operator <= teleport_distance) {}
+					if ((msg.distance_robot_human_operator <= gantry_detection) && 
+						(msg.time-lastMsgTime > 150.0) && (isAproximating == true)){
+							//clearPercepts("human");
+						lastMsgTime=msg.time;
+						logger.info("I see the Gantry robot in " + msg.distance_robot_human_operator +" meters: gantry_detected");
 						Literal gDetectedLit = new LiteralImpl("gantry_detected"); //movebase_result");
 						gDetectedLit.addTerm(new NumberTermImpl(detcont++)); //movebase_result.addTerm(new NumberTermImpl(msg.status.status));
 						if(simulationStarted==true)
 							addPercept("human",gDetectedLit); 
 					}
-//					logger.info(msg.time+"");
-//					logger.info(msg.human_operator_speed+"");
-//					logger.info(msg.robot_speed+"");
-//					logger.info(msg.distance_robot_human_operator+"");
+					// logger.info(" t: "+msg.time+"");
+					// logger.info("hs: "+msg.human_operator_speed+"");
+					// logger.info("rs: "+msg.robot_speed+"");
+					// logger.info(" d: "+msg.distance_robot_human_operator+"");
 				}
 			}
 	);
@@ -215,6 +230,10 @@ public class RosEnv extends Environment {
 		logger.info("RosEnv: executing Teleport");	
 		Publisher teleport_h = new Publisher("/jason_teleport_human", "geometry_msgs/Vector3", bridge); //"std_msgs/Bool", bridge);	
 		teleport_h.publish(new Vector3(0.0, 0.0, 0.0));	// new Boolean(true)); //LB: changed from Bool to Vector3 to make work	
+		// Reset "smart" orientation variables
+		lastMsgTime = 0.0;
+		previousDistance = 0.0;
+		isAproximating = false;
 	}
 
 	// First STOP than MOVE; published topics are read by movebaser_node.py 
