@@ -113,6 +113,13 @@ namespace ariac_plugins
         unsigned int agv3_location_;
         unsigned int agv4_location_;
 
+        // std::vector<ariac_common::Part> agv1_parts_;
+        // std::vector<ariac_common::Part> agv2_parts_;
+        // std::vector<ariac_common::Part> agv3_parts_;
+        // std::vector<ariac_common::Part> agv4_parts_;
+
+        std::map<int, std::vector<ariac_common::Part>> agv_parts_;
+
         //============== ROS =================
         /*!< Time when this plugin is loaded. */
         rclcpp::Time current_sim_time_;
@@ -222,6 +229,13 @@ namespace ariac_plugins
         void AGV4TraySensorCallback(ConstLogicalCameraImagePtr &_msg);
 
         // Kitting Methods
+
+        /**
+         * @brief Store parts for the part placement condition.
+         * @param _msg The message containing the tray information.
+         */
+        void StoreParts(int agv_id, gazebo::msgs::LogicalCameraImage &_msg);
+
         std::array<bool, 4> CheckFaultyParts(std::shared_ptr<ariac_common::FaultyPartChallenge> _challenge,
                                              std::shared_ptr<ariac_common::KittingTask> _task,
                                              ariac_common::KittingShipment _shipment);
@@ -521,16 +535,19 @@ namespace ariac_plugins
     {
         for (const auto &order : impl_->time_based_orders_)
         {
-            if (impl_->elapsed_time_ >= order->GetAnnouncementTime() && !order->IsAnnounced())
+            if (!order->IsAnnounced())
             {
-                auto order_message = BuildOrderMsg(order);
-                RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "\n" << *order);
+                if (impl_->elapsed_time_ >= order->GetAnnouncementTime() && !order->IsAnnounced())
+                {
+                    auto order_message = BuildOrderMsg(order);
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "\n" << *order);
 
-                impl_->order_pub_->publish(order_message);
-                impl_->announced_orders_.push_back(order_message.id);
-                order->SetAnnouncedTime(impl_->elapsed_time_);
-                order->SetIsAnnounced();
-                impl_->total_orders_--;
+                    impl_->order_pub_->publish(order_message);
+                    impl_->announced_orders_.push_back(order_message.id);
+                    order->SetAnnouncedTime(impl_->elapsed_time_);
+                    order->SetIsAnnounced();
+                    impl_->total_orders_--;
+                }
             }
         }
     }
@@ -538,52 +555,37 @@ namespace ariac_plugins
     //==============================================================================
     void TaskManagerPlugin::ProcessOnPartPlacementOrders()
     {
-        // auto shipment = ParseAGVTraySensorImage(agv_tray_images_[expected_agv]);
-        // for (const auto &order : impl_->on_part_placement_orders_)
-        // {
-        //     auto agv = order->GetAgv();
-        //     auto part = order->GetPart();
+        for (const auto &order : impl_->on_part_placement_orders_)
+        {
+            // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Order: " << order->GetId());
 
-        //     bool found{false};
+            if (!order->IsAnnounced())
+            {
+                auto part_condition = order->GetPart();
+                auto agv_condition = order->GetAgv();
 
-        //     switch (agv)
-        //     {
-        //     case 1:
-        //         if (std::find(impl_->agv1_tray_contents_.begin(), impl_->agv1_tray_contents_.end(), part) != impl_->agv1_tray_contents_.end())
-        //         {
-        //             found = true;
-        //         }
-        //     case 2:
-        //         if (std::find(impl_->agv2_tray_contents_.begin(), impl_->agv2_tray_contents_.end(), part) != impl_->agv2_tray_contents_.end())
-        //         {
-        //             found = true;
-        //         }
-        //     case 3:
-        //         if (std::find(impl_->agv3_tray_contents_.begin(), impl_->agv3_tray_contents_.end(), part) != impl_->agv3_tray_contents_.end())
-        //         {
-        //             found = true;
-        //         }
-        //     case 4:
-        //         if (std::find(impl_->agv4_tray_contents_.begin(), impl_->agv4_tray_contents_.end(), part) != impl_->agv4_tray_contents_.end())
-        //         {
-        //             found = true;
-        //         }
-        //         break;
+                auto parts = impl_->agv_parts_.find(agv_condition)->second;
 
-        //     default:
-        //         break;
-        //     }
+                for (const auto &agv_part : parts)
+                {
+                    // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Part type: " << agv_part.GetType());
+                    // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Part color: " << agv_part.GetColor());
+                    // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Part condition type: " << part_condition->GetType());
+                    // RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Part condition color: " << part_condition->GetColor());
+                    if (agv_part.GetType() == part_condition->GetType() && agv_part.GetColor() == part_condition->GetColor())
+                    {
+                        auto order_message = BuildOrderMsg(order);
 
-        //     if (found && !order->IsAnnounced())
-        //     {
-        //         auto order_message = BuildOrderMsg(order);
-        //         RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Publishing order: " << order_message.id);
-        //         impl_->order_pub_->publish(order_message);
-        //         // impl_->submitted_orders_.push_back(order_message.id);
-        //         order->SetIsAnnounced();
-        //         impl_->total_orders_--;
-        //     }
-        // }
+                        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order: " << order_message.id);
+                        impl_->order_pub_->publish(order_message);
+                        impl_->announced_orders_.push_back(order_message.id);
+                        order->SetAnnouncedTime(impl_->elapsed_time_);
+                        order->SetIsAnnounced();
+                        impl_->total_orders_--;
+                    }
+                }
+            }
+        }
     }
 
     //==============================================================================
@@ -591,14 +593,15 @@ namespace ariac_plugins
     {
         for (const auto &order_ins : impl_->on_order_submission_orders_)
         {
-            // Get the id of the order which will trigger the annoucement of order_ins
-            auto trigger_order = order_ins->GetOrderId();
-
-            // parse the list of submitted orders to see if the trigger order has been submitted
-            if (std::find(impl_->submitted_orders_.begin(), impl_->submitted_orders_.end(), trigger_order) != impl_->submitted_orders_.end())
+            if (!order_ins->IsAnnounced())
             {
-                if (!order_ins->IsAnnounced())
+                // Get the id of the order which will trigger the annoucement of order_ins
+                auto trigger_order = order_ins->GetOrderId();
+
+                // parse the list of submitted orders to see if the trigger order has been submitted
+                if (std::find(impl_->submitted_orders_.begin(), impl_->submitted_orders_.end(), trigger_order) != impl_->submitted_orders_.end())
                 {
+
                     auto order_message = BuildOrderMsg(order_ins);
                     RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order: " << order_message.id);
                     impl_->order_pub_->publish(order_message);
@@ -927,6 +930,11 @@ namespace ariac_plugins
         if (impl_->current_state_ == ariac_msgs::msg::CompetitionState::STARTED ||
             impl_->current_state_ == ariac_msgs::msg::CompetitionState::ORDER_ANNOUNCEMENTS_DONE)
         {
+
+            impl_->StoreParts(1, impl_->agv_tray_images_[1]);
+            impl_->StoreParts(2, impl_->agv_tray_images_[2]);
+            impl_->StoreParts(3, impl_->agv_tray_images_[3]);
+            impl_->StoreParts(4, impl_->agv_tray_images_[4]);
             ProcessOrdersToAnnounce();
             ProcessChallengesToAnnounce();
             ProcessInProgressSensorBlackouts();
@@ -1489,7 +1497,7 @@ namespace ariac_plugins
         {
             destination_score = 0;
         }
-        
+
         // Compute the score for the submitted kit
         int kit_score = std::max(tray_score + total_quadrants_score + bonus - penalty, 0) * destination_score;
 
@@ -1794,6 +1802,76 @@ namespace ariac_plugins
         }
 
         return faulty_parts;
+    }
+
+    //==============================================================================
+    void TaskManagerPluginPrivate::StoreParts(int agv_id, gazebo::msgs::LogicalCameraImage &_msg)
+    {
+        agv_parts_.find(agv_id)->second.clear();
+        std::vector<ariac_common::Part> kit_tray_parts;
+
+        int kit_tray_id = -1;
+
+        for (int i = 0; i < _msg.model_size(); i++)
+        {
+            const auto &lc_model = _msg.model(i);
+
+            std::string model_name = lc_model.name();
+            // name of kit tray model is "kit_tray_XX_YY" where XX indicates
+            // the marker_id for the tray
+            if (model_name.find("kit_tray") != std::string::npos)
+            {
+                std::string id_string = model_name.substr(9, 2);
+                kit_tray_id = std::stoi(id_string);
+            }
+        }
+
+        // If no kit tray is detected return
+        if (kit_tray_id == -1)
+            return;
+
+        // Fill vector of KitTrayParts
+        for (int i = 0; i < _msg.model_size(); i++)
+        {
+            const auto &lc_model = _msg.model(i);
+            std::string model_name = lc_model.name();
+
+            bool classified_part = false;
+            // Determine part type
+            for (const auto &type : part_types_)
+            {
+                if (model_name.find(type.first) != std::string::npos)
+                {
+                    // Determine part color
+                    for (const auto &color : part_colors_)
+                    {
+                        if (model_name.find(color.first) != std::string::npos)
+                        {
+                            ariac_common::Part part(color.second, type.second);
+                            kit_tray_parts.push_back(part);
+
+                            classified_part = true;
+                            break;
+                        }
+                    }
+                }
+                if (classified_part)
+                    break;
+            }
+        }
+        agv_parts_[agv_id] = kit_tray_parts;
+
+        // if (agv_id == 4)
+        // {
+        //     if (agv_parts_[agv_id].size() > 0)
+        //     {
+        //         std::cout << "AGV4: " << std::endl;
+        //         for (auto part : agv_parts_[agv_id])
+        //         {
+        //             std::cout << part.GetType() << " " << part.GetColor() << std::endl;
+        //         }
+        //     }
+        // }
     }
 
     ariac_common::KittingShipment TaskManagerPluginPrivate::ParseAGVTraySensorImage(gazebo::msgs::LogicalCameraImage &_msg)
