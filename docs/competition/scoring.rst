@@ -59,13 +59,6 @@ Kitting Task Score
       4. :math:`isFaulty_{q}` is true if the part in quadrant :math:`q` is faulty.
 
 
-test
-
   .. math::
-    
-    \[ f(n) =
-    \begin{cases}
-    n/2       & \quad \text{if } n \text{ is even}\\
-    -(n+1)/2  & \quad \text{if } n \text{ is odd}
-    \end{cases}
-    \]
+
+      n_{\mathrm{offset}} = \sum_{k=0}^{N-1} s_k n_k
