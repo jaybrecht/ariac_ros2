@@ -23,9 +23,9 @@ challenges:
 
 ## Flipped Parts
 
-The environment can be started with parts that are flipped. Flipped parts are parts that are upside down. When a part is spawned as flipped, competitors will need to flip those parts again so they end up with the correct orientation. If an order is submitted with flipped parts, these parts are not considered for scorring. Flipped parts are identified by quality control sensors, which are attached to AGVs.
+The environment can be started with parts that are flipped. Flipped parts are parts that are upside down. When a part is spawned as flipped, competitors will need to flip those parts again so they end up with the correct orientation. If an order is submitted with flipped parts, these parts are not considered for scoring. Flipped parts are identified by quality control sensors, which are attached to AGVs.
 
-Flipped parts apply to a specific part type and color in a specific bin or on the conveyor belt. To set parts flipped, the `flipped` field in the trial configuration file must be set as `true` for the corresponding part.
+Flipped parts apply to a specific part type and color in a specific bin or on the conveyor belt. To set parts as flipped, the `flipped` field in the trial configuration file must be set as `true` for the corresponding part.
 
 ### Flipped Parts Example
 

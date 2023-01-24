@@ -540,6 +540,7 @@ namespace ariac_plugins
                 if (impl_->elapsed_time_ >= order->GetAnnouncementTime() && !order->IsAnnounced())
                 {
                     auto order_message = BuildOrderMsg(order);
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order");
                     RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "\n" << *order);
 
                     impl_->order_pub_->publish(order_message);
@@ -576,7 +577,8 @@ namespace ariac_plugins
                     {
                         auto order_message = BuildOrderMsg(order);
 
-                        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order: " << order_message.id);
+                        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order");
+                        RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "\n" << *order);
                         impl_->order_pub_->publish(order_message);
                         impl_->announced_orders_.push_back(order_message.id);
                         order->SetAnnouncedTime(impl_->elapsed_time_);
@@ -591,22 +593,23 @@ namespace ariac_plugins
     //==============================================================================
     void TaskManagerPlugin::ProcessOnSubmissionOrders()
     {
-        for (const auto &order_ins : impl_->on_order_submission_orders_)
+        for (const auto &order : impl_->on_order_submission_orders_)
         {
-            if (!order_ins->IsAnnounced())
+            if (!order->IsAnnounced())
             {
                 // Get the id of the order which will trigger the annoucement of order_ins
-                auto trigger_order = order_ins->GetOrderId();
+                auto trigger_order = order->GetOrderId();
 
                 // parse the list of submitted orders to see if the trigger order has been submitted
                 if (std::find(impl_->submitted_orders_.begin(), impl_->submitted_orders_.end(), trigger_order) != impl_->submitted_orders_.end())
                 {
 
-                    auto order_message = BuildOrderMsg(order_ins);
-                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order: " << order_message.id);
+                    auto order_message = BuildOrderMsg(order);
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "Announcing order");
+                    RCLCPP_INFO_STREAM(impl_->ros_node_->get_logger(), "\n" << *order);
                     impl_->order_pub_->publish(order_message);
-                    order_ins->SetAnnouncedTime(impl_->elapsed_time_);
-                    order_ins->SetIsAnnounced();
+                    order->SetAnnouncedTime(impl_->elapsed_time_);
+                    order->SetIsAnnounced();
                     impl_->total_orders_--;
                 }
             }
@@ -1152,7 +1155,7 @@ namespace ariac_plugins
             else if (order->condition.type == ariac_msgs::msg::Condition::PART_PLACE)
             {
                 auto agv = order->condition.part_place_condition.agv;
-                auto part = std::make_shared<ariac_common::Part>(order->condition.part_place_condition.part.type, order->condition.part_place_condition.part.color);
+                auto part = std::make_shared<ariac_common::Part>(order->condition.part_place_condition.part.color, order->condition.part_place_condition.part.type);
                 auto order_instance = std::make_shared<ariac_common::OrderOnPartPlacement>(order_id, order_type, order_priority, impl_->time_limit_, agv, part);
                 // Set the task
                 if (kitting_task)

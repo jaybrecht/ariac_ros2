@@ -437,9 +437,9 @@ class EnvironmentStartup(Node):
                 if key == 'agv':
                     msg.condition.part_place_condition.agv = challenge_dict[
                         'part_place_condition']['agv']
-                elif key == 'as':
-                    msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
-                        challenge_dict['part_place_condition']['as'])
+                # elif key == 'as':
+                #     msg.condition.part_place_condition.station = self.convert_assembly_station_to_int(
+                #         challenge_dict['part_place_condition']['as'])
         elif challenge_dict.get('time_condition'):
             msg.condition.type = Condition.TIME
             msg.condition.time_condition.seconds = float(challenge_dict['time_condition'])
@@ -776,21 +776,21 @@ class EnvironmentStartup(Node):
                         announcement_value)
                 elif announcement_key == 'part_place_condition':
                     condition.type = Condition.PART_PLACE
-                    color = order['announcement']['part_place_condition']['color']
+                    part_color = order['announcement']['part_place_condition']['color']
                     condition.part_place_condition.part.color = self.convert_part_color_to_int(
-                        color)
-                    part = order['announcement']['part_place_condition']['type']
-                    condition.part_place_condition.part.color = self.convert_part_type_to_int(
-                        part)
+                        part_color)
+                    part_type = order['announcement']['part_place_condition']['type']
+                    condition.part_place_condition.part.type = self.convert_part_type_to_int(
+                        part_type)
 
                     for key in order['announcement']['part_place_condition'].keys():
                         if key == 'agv':
                             agv = order['announcement']['part_place_condition']['agv']
                             condition.part_place_condition.agv = agv
-                        elif key == 'as':
-                            station = order['announcement']['part_place_condition']['as']
-                            condition.part_place_condition.station = self.convert_assembly_station_to_int(
-                                station)
+                        # elif key == 'as':
+                        #     station = order['announcement']['part_place_condition']['as']
+                        #     condition.part_place_condition.station = self.convert_assembly_station_to_int(
+                        #         station)
 
                 elif announcement_key == 'submission_condition':
                     condition.type = Condition.SUBMISSION
