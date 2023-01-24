@@ -22,6 +22,6 @@
     - Place sensors:
       - Sensor placement requires a good understanding of part locations and the tasks in ARIAC.
 
-## Improvements
+### Improvements
 
 One of the goals of the beta release is to identify improvements that can be made to the interface so they can be addressed in the final release. Some bugs may still present in this release, so make sure to report the issues you find on the [ARIAC GitHub](https://github.com/usnistgov/ARIAC) page.
