@@ -13,6 +13,7 @@ version = '0.1.0'
 
 extensions = [
         'myst_parser',
+        'sphinx.ext.pngmath',
         'sphinx.ext.mathjax',
         'sphinx_rtd_theme',
 ]
