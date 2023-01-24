@@ -59,12 +59,14 @@ Kitting Task Score
       4. :math:`isFaulty_{q} \rightarrow E` is true if the part in quadrant :math:`q` is faulty.
 
 
-  .. math::
-    
-    \texttt{pt}_{tray} = \begin{cases}
-    3, &\text{if} ~~ A \\
-    0, &\text{otherwise}  \\
-    \end{cases}
+  * Tray score.
+
+    .. math::
+      
+      \texttt{pt}_{tray} = \begin{cases}
+      3, &\text{if} ~~ A \\
+      0, &\text{otherwise}  \\
+      \end{cases}
 
   .. math::
 
@@ -93,7 +95,7 @@ Kitting Task Score
   .. math::
 
     \texttt{destination} = \begin{cases}
-    1, &\text{if} isCorrectDestination=true \\
+    1, &\text{if\,} isCorrectDestination=true \\
     0, &\text{otherwise} \\
     \end{cases}
 
