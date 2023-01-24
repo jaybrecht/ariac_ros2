@@ -53,10 +53,10 @@ Kitting Task Score
       2. :math:`isCorrectDestination` is true if the shipment was sent to the correct destination (as1, as2, as3, as4, kitting, or warehouse).
   * For each quadrant `q` of the kitting tray there are four Boolean condition:
   
-      1. :math:`isCorrectType_{q}` is true if the part type in quadrant :math:`q` is correct.
-      2. :math:`isCorrectColor_{q}` is true if the part color in quadrant :math:`q` is correct.
-      3. :math:`isFlipped_{q}` is true if the part in quadrant :math:`q` is still flipped.
-      4. :math:`isFaulty_{q}` is true if the part in quadrant :math:`q` is faulty.
+      1. :math:`isCorrectType_{q} \rightarrow B` is true if the part type in quadrant :math:`q` is correct.
+      2. :math:`isCorrectColor_{q} \rightarrow C` is true if the part color in quadrant :math:`q` is correct.
+      3. :math:`isFlipped_{q} \rightarrow D` is true if the part in quadrant :math:`q` is still flipped.
+      4. :math:`isFaulty_{q} \rightarrow E` is true if the part in quadrant :math:`q` is faulty.
 
 
   .. math::
@@ -93,7 +93,7 @@ Kitting Task Score
   .. math::
 
     \texttt{destination} = \begin{cases}
-    1, &\text{if AGV is sent to correct station} \\
+    1, &\text{if} isCorrectDestination=true \\
     0, &\text{otherwise} \\
     \end{cases}
 
