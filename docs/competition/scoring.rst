@@ -59,7 +59,9 @@ Kitting Task Score
 
   .. math::
     
-    \texttt{pt}_{tray} = \begin{cases}
-    3, &\text{if} ~~ A \\
-    0, &\text{otherwise}  \\
+    \[ f(n) =
+    \begin{cases}
+    n/2       & \quad \text{if } n \text{ is even}\\
+    -(n+1)/2  & \quad \text{if } n \text{ is odd}
     \end{cases}
+    \]
